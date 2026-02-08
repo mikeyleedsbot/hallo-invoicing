@@ -15,6 +15,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Customers
+    Route::resource('customers', App\Http\Controllers\CustomerController::class)->except(['show', 'create', 'edit']);
+    
+    // Invoices
+    Route::resource('invoices', App\Http\Controllers\InvoiceController::class);
 });
 
 require __DIR__.'/auth.php';
