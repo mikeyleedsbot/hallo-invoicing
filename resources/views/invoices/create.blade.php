@@ -116,17 +116,17 @@
                                         <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
                                             <table class="w-full">
                                                 <tr>
-                                                    <td class="pr-2">
+                                                    <td class="pr-3">
                                                         <input type="text" :name="'lines[' + index + '][description]'" x-model="line.description" required
                                                             placeholder="Bijv: Website ontwikkeling" 
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                     </td>
-                                                    <td class="pr-2 w-28">
+                                                    <td class="pr-3 w-28">
                                                         <input type="number" :name="'lines[' + index + '][quantity]'" x-model="line.quantity" required
                                                             step="0.01" min="0.01" placeholder="1"
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                     </td>
-                                                    <td class="pr-2 w-32">
+                                                    <td class="pr-3 w-32">
                                                         <div class="relative">
                                                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                                                 <span class="text-gray-500 dark:text-gray-400 text-xs">€</span>
@@ -136,7 +136,7 @@
                                                                 class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                         </div>
                                                     </td>
-                                                    <td class="pr-2 w-24">
+                                                    <td class="pr-3 w-24">
                                                         <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
                                                             <option value="0">0%</option>
