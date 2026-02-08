@@ -102,53 +102,81 @@
                     </button>
                 </div>
 
+                {{-- Column Headers --}}
+                <div class="grid grid-cols-12 gap-3 mb-2 px-3">
+                    <div class="col-span-5">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Omschrijving</label>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Aantal</label>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prijs per stuk</label>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">BTW%</label>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase text-center block">Actie</label>
+                    </div>
+                </div>
+
                 <div class="space-y-3">
                     <template x-for="(line, index) in lines" :key="index">
-                        <div class="grid grid-cols-12 gap-3 items-start p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            {{-- Description --}}
-                            <div class="col-span-5">
-                                <input type="text" :name="'lines[' + index + '][description]'" x-model="line.description" required
-                                    placeholder="Omschrijving" 
-                                    class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
+                            <div class="grid grid-cols-12 gap-3 items-center">
+                                {{-- Description --}}
+                                <div class="col-span-5">
+                                    <input type="text" :name="'lines[' + index + '][description]'" x-model="line.description" required
+                                        placeholder="Bijv: Website ontwikkeling" 
+                                        class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
+                                </div>
+
+                                {{-- Quantity --}}
+                                <div class="col-span-2">
+                                    <input type="number" :name="'lines[' + index + '][quantity]'" x-model="line.quantity" required
+                                        step="0.01" min="0.01" placeholder="1"
+                                        class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
+                                </div>
+
+                                {{-- Unit Price --}}
+                                <div class="col-span-2">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <span class="text-gray-500 dark:text-gray-400">€</span>
+                                        </div>
+                                        <input type="number" :name="'lines[' + index + '][unit_price]'" x-model="line.unit_price" required
+                                            step="0.01" min="0" placeholder="0.00"
+                                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-8 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
+                                    </div>
+                                </div>
+
+                                {{-- VAT Rate --}}
+                                <div class="col-span-2">
+                                    <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
+                                        class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                        <option value="0">0%</option>
+                                        <option value="9">9%</option>
+                                        <option value="21">21%</option>
+                                    </select>
+                                </div>
+
+                                {{-- Delete Button --}}
+                                <div class="col-span-1 flex items-center justify-center">
+                                    <button type="button" @click="removeLine(index)" x-show="lines.length > 1"
+                                        class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                        title="Verwijder regel">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
 
-                            {{-- Quantity --}}
-                            <div class="col-span-2">
-                                <input type="number" :name="'lines[' + index + '][quantity]'" x-model="line.quantity" required
-                                    step="0.01" min="0.01" placeholder="Aantal"
-                                    class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
-                            </div>
-
-                            {{-- Unit Price --}}
-                            <div class="col-span-2">
-                                <input type="number" :name="'lines[' + index + '][unit_price]'" x-model="line.unit_price" required
-                                    step="0.01" min="0" placeholder="Prijs"
-                                    class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
-                            </div>
-
-                            {{-- VAT Rate --}}
-                            <div class="col-span-2">
-                                <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
-                                    class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
-                                    <option value="0">0%</option>
-                                    <option value="9">9%</option>
-                                    <option value="21">21%</option>
-                                </select>
-                            </div>
-
-                            {{-- Delete Button --}}
-                            <div class="col-span-1 flex items-center justify-center">
-                                <button type="button" @click="removeLine(index)" x-show="lines.length > 1"
-                                    class="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {{-- Line Total (readonly display) --}}
-                            <div class="col-span-12 text-right text-sm font-semibold text-gray-900 dark:text-white">
-                                Subtotaal: <span x-text="formatCurrency(lineTotal(line))">€ 0,00</span>
+                            {{-- Line Total --}}
+                            <div class="mt-2 pt-2 border-t border-gray-300 dark:border-gray-600 text-right">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">Regeltotaal: </span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white" x-text="formatCurrency(lineTotal(line))">€ 0,00</span>
                             </div>
                         </div>
                     </template>
