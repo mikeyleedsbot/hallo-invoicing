@@ -200,10 +200,8 @@
 
         <!-- Main Content -->
         <div :class="sidebarOpen ? 'lg:ml-64' : ''" 
-             class="p-4 transition-all duration-300 mt-14">
-            <div class="p-4 rounded-lg">
-                {{ $slot }}
-            </div>
+             class="p-6 transition-all duration-300 mt-14">
+            {{ $slot }}
         </div>
     </div>
     
