@@ -21,6 +21,9 @@ Route::middleware('auth')->group(function () {
     
     // Invoices
     Route::resource('invoices', App\Http\Controllers\InvoiceController::class);
+    Route::get('/invoices/{invoice}/pdf', [App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
+    Route::get('/invoices/{invoice}/preview', [App\Http\Controllers\InvoiceController::class, 'preview'])->name('invoices.preview');
+    Route::get('/invoices/{invoice}/print', [App\Http\Controllers\InvoiceController::class, 'print'])->name('invoices.print');
 });
 
 require __DIR__.'/auth.php';

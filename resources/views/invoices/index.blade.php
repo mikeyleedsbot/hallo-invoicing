@@ -114,6 +114,25 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex justify-end gap-2">
+                                            {{-- PDF Download --}}
+                                            <a href="{{ route('invoices.pdf', $invoice) }}"
+                                                class="text-purple-600 hover:text-purple-800 dark:text-purple-500 dark:hover:text-purple-400"
+                                                title="Download PDF">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                                                </svg>
+                                            </a>
+                                            
+                                            {{-- Print --}}
+                                            <a href="{{ route('invoices.print', $invoice) }}" target="_blank"
+                                                class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                                title="Afdrukken">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                                                </svg>
+                                            </a>
+                                            
+                                            {{-- View --}}
                                             <a href="{{ route('invoices.show', $invoice) }}"
                                                 class="text-blue-600 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400"
                                                 title="Bekijken">
@@ -122,13 +141,17 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                 </svg>
                                             </a>
+                                            
+                                            {{-- Edit --}}
                                             <a href="{{ route('invoices.edit', $invoice) }}"
-                                                class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                                class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
                                                 title="Bewerken">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                 </svg>
                                             </a>
+                                            
+                                            {{-- Delete --}}
                                             <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="inline"
                                                 onsubmit="return confirm('Weet je zeker dat je deze factuur wilt verwijderen?');">
                                                 @csrf

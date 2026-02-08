@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -179,5 +180,30 @@ class InvoiceController extends Controller
         return redirect()
             ->route('invoices.index')
             ->with('success', 'Factuur verwijderd!');
+    }
+
+    public function pdf(Invoice $invoice)
+    {
+        $invoice->load('customer', 'lines');
+        
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        
+        return $pdf->download($invoice->invoice_number . '.pdf');
+    }
+
+    public function preview(Invoice $invoice)
+    {
+        $invoice->load('customer', 'lines');
+        
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        
+        return $pdf->stream($invoice->invoice_number . '.pdf');
+    }
+
+    public function print(Invoice $invoice)
+    {
+        $invoice->load('customer', 'lines');
+        
+        return view('invoices.print', compact('invoice'));
     }
 }
