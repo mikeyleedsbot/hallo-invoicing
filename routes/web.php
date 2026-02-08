@@ -30,8 +30,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [App\Http\Controllers\AppSettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [App\Http\Controllers\AppSettingController::class, 'update'])->name('settings.update');
     
-    // Quotes (Offertes) - Coming Soon
-    Route::get('/quotes', [App\Http\Controllers\QuoteController::class, 'index'])->name('quotes.index');
+    // Quotes (Offertes)
+    Route::resource('quotes', App\Http\Controllers\QuoteController::class);
+    Route::get('/quotes/{quote}/pdf', [App\Http\Controllers\QuoteController::class, 'pdf'])->name('quotes.pdf');
+    Route::get('/quotes/{quote}/preview', [App\Http\Controllers\QuoteController::class, 'preview'])->name('quotes.preview');
+    Route::get('/quotes/{quote}/print', [App\Http\Controllers\QuoteController::class, 'print'])->name('quotes.print');
+    Route::post('/quotes/{quote}/convert', [App\Http\Controllers\QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
     
     // Invoices
     Route::resource('invoices', App\Http\Controllers\InvoiceController::class);
