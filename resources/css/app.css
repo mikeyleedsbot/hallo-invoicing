@@ -1,3 +1,29 @@
+/* Tom Select - Searchable dropdowns */
+@import 'tom-select/dist/css/tom-select.bootstrap5.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Tom Select Dark Mode Overrides */
+.dark .ts-wrapper .ts-control,
+.dark .ts-wrapper.single .ts-control,
+.dark .ts-dropdown,
+.dark .ts-dropdown .option {
+    background-color: rgb(55 65 81); /* gray-700 */
+    border-color: rgb(75 85 99); /* gray-600 */
+    color: rgb(243 244 246); /* gray-100 */
+}
+
+.dark .ts-wrapper .ts-control input {
+    color: rgb(243 244 246);
+}
+
+.dark .ts-dropdown .option.active {
+    background-color: rgb(59 130 246); /* blue-500 */
+    color: white;
+}
+
+.dark .ts-dropdown .option:hover {
+    background-color: rgb(75 85 99); /* gray-600 */
+}
