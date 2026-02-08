@@ -103,21 +103,25 @@
                 </div>
 
                 {{-- Column Headers --}}
-                <div class="flex gap-2 mb-2 px-3">
-                    <div class="flex-1 min-w-0">
-                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Omschrijving</label>
-                    </div>
-                    <div class="w-28">
-                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Aantal</label>
-                    </div>
-                    <div class="w-32">
-                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prijs/stuk</label>
-                    </div>
-                    <div class="w-24">
-                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">BTW%</label>
-                    </div>
-                    <div class="w-12">
-                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase text-center block">Actie</label>
+                <div class="mb-2">
+                    <div class="p-3">
+                        <div class="flex gap-2">
+                            <div class="flex-1 min-w-0">
+                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Omschrijving</label>
+                            </div>
+                            <div class="w-28">
+                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Aantal</label>
+                            </div>
+                            <div class="w-32">
+                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prijs/stuk</label>
+                            </div>
+                            <div class="w-24">
+                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">BTW%</label>
+                            </div>
+                            <div class="w-12">
+                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase text-center block">Actie</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
