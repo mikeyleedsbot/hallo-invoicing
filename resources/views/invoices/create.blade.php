@@ -103,32 +103,28 @@
                 </div>
 
                 {{-- Column Headers --}}
-                <div class="mb-2">
-                    <div class="p-3">
-                        <div class="flex gap-2">
-                            <div class="flex-1 min-w-0">
-                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Omschrijving</label>
-                            </div>
-                            <div class="w-28">
-                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Aantal</label>
-                            </div>
-                            <div class="w-32">
-                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prijs/stuk</label>
-                            </div>
-                            <div class="w-24">
-                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">BTW%</label>
-                            </div>
-                            <div class="w-12">
-                                <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase text-center block">Actie</label>
-                            </div>
-                        </div>
+                <div class="flex gap-2 mb-2">
+                    <div class="flex-1 min-w-0">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Omschrijving</label>
+                    </div>
+                    <div class="w-28">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Aantal</label>
+                    </div>
+                    <div class="w-32">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prijs/stuk</label>
+                    </div>
+                    <div class="w-24">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">BTW%</label>
+                    </div>
+                    <div class="w-12">
+                        <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase text-center block"></label>
                     </div>
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-2">
                     <template x-for="(line, index) in lines" :key="index">
                         <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
-                            <div class="flex gap-2 items-center">
+                            <div class="flex gap-2 items-start">
                                 {{-- Description --}}
                                 <div class="flex-1 min-w-0">
                                     <input type="text" :name="'lines[' + index + '][description]'" x-model="line.description" required
@@ -166,11 +162,11 @@
                                 </div>
 
                                 {{-- Delete Button --}}
-                                <div class="w-12 flex items-center justify-center">
-                                    <button type="button" @click="removeLine(index)" x-show="lines.length > 1"
-                                        class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                        title="Verwijder regel">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12">
+                                    <button type="button" @click="removeLine(index)" :disabled="lines.length === 1"
+                                        class="w-full p-2.5 text-red-600 hover:text-white hover:bg-red-600 disabled:text-gray-400 disabled:hover:bg-transparent disabled:cursor-not-allowed border border-red-600 disabled:border-gray-300 dark:border-red-500 dark:disabled:border-gray-600 rounded-lg transition-colors"
+                                        :title="lines.length === 1 ? 'Minimaal 1 regel vereist' : 'Verwijder regel'">
+                                        <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
                                     </button>
