@@ -1,6 +1,6 @@
 <x-app-layout>
-    <div class="p-4 sm:ml-64">
-        <div class="p-4 mt-14">
+    <div class="space-y-6">
+        
             {{-- Coming Soon --}}
             <div class="text-center py-20">
                 <svg class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,6 +1,6 @@
 <x-app-layout>
-    <div class="p-4 sm:ml-64">
-        <div class="p-4 mt-14">
+    <div class="space-y-6">
+        
             {{-- Header --}}
             <div class="mb-6 flex justify-between items-start">
                 <div>
