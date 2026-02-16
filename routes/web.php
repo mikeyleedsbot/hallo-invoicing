@@ -42,6 +42,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{invoice}/pdf', [App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('/invoices/{invoice}/preview', [App\Http\Controllers\InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::get('/invoices/{invoice}/print', [App\Http\Controllers\InvoiceController::class, 'print'])->name('invoices.print');
+    
+    // Invoice Templates
+    Route::resource('templates', App\Http\Controllers\TemplateController::class);
+    Route::post('/templates/{template}/set-default', [App\Http\Controllers\TemplateController::class, 'setDefault'])->name('templates.set-default');
+    Route::get('/templates/{template}/editor', [App\Http\Controllers\TemplateController::class, 'editor'])->name('templates.editor');
+    Route::post('/templates/{template}/positions', [App\Http\Controllers\TemplateController::class, 'savePositions'])->name('templates.save-positions');
+    Route::get('/templates/{template}/test-pdf', [App\Http\Controllers\TemplateController::class, 'testPdf'])->name('templates.test-pdf');
 });
 
 require __DIR__.'/auth.php';

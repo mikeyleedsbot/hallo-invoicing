@@ -183,6 +183,19 @@
                         </a>
                     </li>
                     
+                    <!-- Templates -->
+                    <li>
+                        <a href="{{ route('templates.index') }}" 
+                           class="flex items-center p-2 rounded-lg group {{ request()->routeIs('templates.*') ? 'bg-blue-600 text-white' : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('templates.*') ? 'text-white' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' }}" 
+                                 fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                                <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="ms-3">Templates</span>
+                        </a>
+                    </li>
+                    
                     <!-- Instellingen -->
                     <li>
                         <a href="{{ route('settings.edit') }}" 
