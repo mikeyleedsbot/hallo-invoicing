@@ -155,7 +155,7 @@
                                              :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'};`">
                                             {{-- Artikelen tabel: toon voorbeeldtabel --}}
                                             <template x-if="key === 'items_table'">
-                                                <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px;`">
+                                                <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px; font-family: ${field.fontFamily || 'inherit'};`">
                                                     <table style="width:100%;border-collapse:collapse;">
                                                         <thead>
                                                             <tr style="background:#e5e7eb;">
@@ -266,8 +266,8 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-600">
                         </div>
                         
-                        {{-- Lettertype: verbergen voor artikelen tabel --}}
-                        <div x-show="editingField !== 'items_table'">
+                        {{-- Lettertype --}}
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
                             <select x-model="placedFields[editingField].fontFamily"
                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
