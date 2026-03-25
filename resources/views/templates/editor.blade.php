@@ -153,7 +153,45 @@
                                              }"
                                              :data-field-key="key"
                                              :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'};`">
-                                            <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1" x-text="field.label"></span>
+                                            {{-- Artikelen tabel: toon voorbeeldtabel --}}
+                                            <template x-if="key === 'items_table'">
+                                                <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px;`">
+                                                    <table style="width:100%;border-collapse:collapse;">
+                                                        <thead>
+                                                            <tr style="background:#e5e7eb;">
+                                                                <th style="text-align:left;padding:2px 4px;border:1px solid #d1d5db;">Omschrijving</th>
+                                                                <th style="text-align:right;padding:2px 4px;border:1px solid #d1d5db;width:40px;">Aantal</th>
+                                                                <th style="text-align:right;padding:2px 4px;border:1px solid #d1d5db;width:60px;">Prijs</th>
+                                                                <th style="text-align:right;padding:2px 4px;border:1px solid #d1d5db;width:60px;">Totaal</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style="padding:2px 4px;border:1px solid #e5e7eb;">Webhosting Premium</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">1</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 49,95</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 49,95</td>
+                                                            </tr>
+                                                            <tr style="background:#f9fafb;">
+                                                                <td style="padding:2px 4px;border:1px solid #e5e7eb;">SSL Certificaat</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">1</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 29,95</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 29,95</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="padding:2px 4px;border:1px solid #e5e7eb;">Support (5 uur)</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">5</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 75,00</td>
+                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 375,00</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </template>
+                                            {{-- Overige velden: label tonen --}}
+                                            <template x-if="key !== 'items_table'">
+                                                <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1" x-text="field.label"></span>
+                                            </template>
 
                                             {{-- Actieknoppen --}}
                                             <div class="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition flex gap-1" style="pointer-events: none;" :style="'pointer-events: auto;'">
@@ -228,7 +266,8 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-600">
                         </div>
                         
-                        <div>
+                        {{-- Lettertype: verbergen voor artikelen tabel --}}
+                        <div x-show="editingField !== 'items_table'">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
                             <select x-model="placedFields[editingField].fontFamily"
                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
@@ -241,24 +280,25 @@
                                 <option value="Verdana, sans-serif">Verdana</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Lettergrootte: <span x-text="placedFields[editingField]?.fontSize || 12"></span>px
                             </label>
-                            <input type="range" 
+                            <input type="range"
                                    x-model.number="placedFields[editingField].fontSize"
-                                   min="8" 
-                                   max="48" 
+                                   min="6"
+                                   max="48"
                                    step="1"
                                    class="w-full">
                             <div class="flex justify-between text-xs text-gray-500">
-                                <span>8px</span>
+                                <span>6px</span>
                                 <span>48px</span>
                             </div>
                         </div>
-                        
-                        <div>
+
+                        {{-- Uitlijning: verbergen voor artikelen tabel --}}
+                        <div x-show="editingField !== 'items_table'">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Uitlijning</label>
                             <div class="flex gap-2">
                                 <button @click="placedFields[editingField].align = 'left'"
