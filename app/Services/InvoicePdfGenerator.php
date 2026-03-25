@@ -47,6 +47,11 @@ class InvoicePdfGenerator
         $scaleX = $a4Width / $canvasWidth;
         $scaleY = $a4Height / $canvasHeight;
         
+        // Font scale: canvas px → PDF pt
+        // Canvas 850px = 210mm = 595pt → 1px = 595/850 = 0.7pt
+        // Dit geeft fonts die 1:1 overeenkomen met wat je in de editor ziet
+        $fontScale = 595 / $canvasWidth; // pt per canvas pixel
+        
         $html = '<!DOCTYPE html>
 <html>
 <head>
@@ -121,7 +126,7 @@ class InvoicePdfGenerator
                 continue;
             }
             
-            $html .= $this->renderField($fieldId, $position, $value, $scaleX, $scaleY);
+            $html .= $this->renderField($fieldId, $position, $value, $scaleX, $scaleY, $fontScale);
         }
 
         $html .= '</body></html>';
@@ -145,20 +150,21 @@ class InvoicePdfGenerator
     /**
      * Render a single field as HTML.
      */
-    private function renderField(string $fieldId, array $position, $value, float $scaleX, float $scaleY): string
+    private function renderField(string $fieldId, array $position, $value, float $scaleX, float $scaleY, float $fontScale = 0.7): string
     {
-        // Convert canvas pixels to PDF millimeters
+        // Convert canvas pixels to PDF millimeters (positie + grootte)
         $x = ($position['x'] ?? 0) * $scaleX;
         $y = ($position['y'] ?? 0) * $scaleY;
         $width = ($position['width'] ?? 200) * $scaleX;
         $height = ($position['height'] ?? 30) * $scaleY;
-        $fontSize = ($position['fontSize'] ?? 12) * $scaleX; // Scale font size too
+        // Font: canvas px → pt (aparte schaal, niet mee met positie)
+        $fontSize = ($position['fontSize'] ?? 12) * $fontScale;
         $fontFamily = $position['fontFamily'] ?? 'Arial, sans-serif';
         $align = $position['align'] ?? 'left';
         
         // Special handling for items table
         if ($fieldId === 'items_table' && isset($value) && is_array($value)) {
-            return $this->renderItemsTable($position, $value, $scaleX, $scaleY);
+            return $this->renderItemsTable($position, $value, $scaleX, $scaleY, $fontScale);
         }
         
         // Format multi-line text
@@ -175,13 +181,13 @@ class InvoicePdfGenerator
     /**
      * Render items table.
      */
-    private function renderItemsTable(array $position, array $items, float $scaleX, float $scaleY): string
+    private function renderItemsTable(array $position, array $items, float $scaleX, float $scaleY, float $fontScale = 0.7): string
     {
         // Convert canvas pixels to PDF millimeters
         $x = ($position['x'] ?? 0) * $scaleX;
         $y = ($position['y'] ?? 0) * $scaleY;
         $width = ($position['width'] ?? 700) * $scaleX;
-        $fontSize = ($position['fontSize'] ?? 10) * $scaleX;
+        $fontSize = ($position['fontSize'] ?? 10) * $fontScale;
         
         $html = sprintf(
             '<div class="field" style="position: absolute; left: %smm; top: %smm; width: %smm; font-size: %spt;">',
