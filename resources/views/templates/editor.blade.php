@@ -397,49 +397,25 @@
                     }
 
                     // Make logo draggable AND resizable
+                    // Strategie: update Alpine state LIVE tijdens drag (geen transform flits bij loslaten)
                     interact('.logo-draggable')
                         .draggable({
                             inertia: false,
-                            modifiers: [
-                                interact.modifiers.restrictRect({
-                                    restriction: 'parent',
-                                    endOnly: false
-                                })
-                            ],
                             listeners: {
                                 start(event) {
                                     event.target.style.zIndex = '100';
                                 },
                                 move(event) {
-                                    const target = event.target;
-                                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-                                    target.style.transform = `translate(${x}px, ${y}px)`;
-                                    target.setAttribute('data-x', x);
-                                    target.setAttribute('data-y', y);
+                                    if (self.logoPosition) {
+                                        self.logoPosition.x = Math.round(self.logoPosition.x + (event.dx / scale));
+                                        self.logoPosition.y = Math.round(self.logoPosition.y + (event.dy / scale));
+                                        // Clamp binnen canvas
+                                        self.logoPosition.x = Math.max(0, Math.min(self.logoPosition.x, 850 - self.logoPosition.width));
+                                        self.logoPosition.y = Math.max(0, Math.min(self.logoPosition.y, 1200 - self.logoPosition.height));
+                                    }
                                 },
                                 end(event) {
-                                    const target = event.target;
-                                    target.style.zIndex = '';
-
-                                    const transformX = parseFloat(target.getAttribute('data-x')) || 0;
-                                    const transformY = parseFloat(target.getAttribute('data-y')) || 0;
-
-                                    if (self.logoPosition) {
-                                        const newX = Math.round(self.logoPosition.x + (transformX / scale));
-                                        const newY = Math.round(self.logoPosition.y + (transformY / scale));
-
-                                        self.logoPosition.x = newX;
-                                        self.logoPosition.y = newY;
-
-                                        target.style.transform = '';
-                                        target.setAttribute('data-x', 0);
-                                        target.setAttribute('data-y', 0);
-
-                                        self.logoPosition = { ...self.logoPosition };
-                                        console.log(`Logo repositioned to (${newX}, ${newY})`);
-                                    }
+                                    event.target.style.zIndex = '';
                                 }
                             }
                         })
@@ -454,59 +430,21 @@
                             inertia: false,
                             listeners: {
                                 move(event) {
-                                    const target = event.target;
-                                    let x = parseFloat(target.getAttribute('data-x')) || 0;
-                                    let y = parseFloat(target.getAttribute('data-y')) || 0;
-
-                                    x += event.deltaRect.left;
-                                    y += event.deltaRect.top;
-
-                                    target.style.width = `${event.rect.width}px`;
-                                    target.style.height = `${event.rect.height}px`;
-                                    target.style.transform = `translate(${x}px, ${y}px)`;
-
-                                    target.setAttribute('data-x', x);
-                                    target.setAttribute('data-y', y);
-                                },
-                                end(event) {
-                                    const target = event.target;
-                                    const transformX = parseFloat(target.getAttribute('data-x')) || 0;
-                                    const transformY = parseFloat(target.getAttribute('data-y')) || 0;
-                                    const width = event.rect.width;
-                                    const height = event.rect.height;
-
                                     if (self.logoPosition) {
-                                        const newX = Math.round(self.logoPosition.x + (transformX / scale));
-                                        const newY = Math.round(self.logoPosition.y + (transformY / scale));
-                                        const newWidth = Math.round(width / scale);
-                                        const newHeight = Math.round(height / scale);
-
-                                        self.logoPosition.x = newX;
-                                        self.logoPosition.y = newY;
-                                        self.logoPosition.width = newWidth;
-                                        self.logoPosition.height = newHeight;
-
-                                        target.style.transform = '';
-                                        target.setAttribute('data-x', 0);
-                                        target.setAttribute('data-y', 0);
-
-                                        self.logoPosition = { ...self.logoPosition };
-                                        console.log(`Logo resized to ${newWidth}x${newHeight} at (${newX}, ${newY})`);
+                                        self.logoPosition.x = Math.round(self.logoPosition.x + (event.deltaRect.left / scale));
+                                        self.logoPosition.y = Math.round(self.logoPosition.y + (event.deltaRect.top / scale));
+                                        self.logoPosition.width = Math.round(event.rect.width / scale);
+                                        self.logoPosition.height = Math.round(event.rect.height / scale);
                                     }
                                 }
                             }
                         });
 
                     // Make placed fields draggable AND resizable on canvas
+                    // Strategie: update Alpine state LIVE tijdens drag — geen transform, geen flits
                     interact('.draggable-placed')
                         .draggable({
                         inertia: false,
-                        modifiers: [
-                            interact.modifiers.restrictRect({
-                                restriction: 'parent',
-                                endOnly: false
-                            })
-                        ],
                         listeners: {
                             start(event) {
                                 const target = event.target;
@@ -516,40 +454,21 @@
                                 target.classList.add('ring-2', 'ring-blue-500');
                             },
                             move(event) {
-                                const target = event.target;
-                                const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                                const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-                                target.style.transform = `translate(${x}px, ${y}px)`;
-                                target.setAttribute('data-x', x);
-                                target.setAttribute('data-y', y);
+                                const fieldKey = event.target.dataset.fieldKey;
+                                if (self.placedFields[fieldKey]) {
+                                    self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.dx / scale));
+                                    self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.dy / scale));
+                                    // Clamp binnen canvas
+                                    self.placedFields[fieldKey].x = Math.max(0, Math.min(self.placedFields[fieldKey].x, 850 - self.placedFields[fieldKey].width));
+                                    self.placedFields[fieldKey].y = Math.max(0, Math.min(self.placedFields[fieldKey].y, 1200 - self.placedFields[fieldKey].height));
+                                }
                             },
                             end(event) {
                                 const target = event.target;
-                                const fieldKey = target.dataset.fieldKey;
-
                                 target.style.zIndex = '';
                                 target.style.opacity = '';
                                 target.style.boxShadow = '';
                                 target.classList.remove('ring-2', 'ring-blue-500');
-
-                                const transformX = parseFloat(target.getAttribute('data-x')) || 0;
-                                const transformY = parseFloat(target.getAttribute('data-y')) || 0;
-
-                                if (self.placedFields[fieldKey]) {
-                                    const newX = Math.round(self.placedFields[fieldKey].x + (transformX / scale));
-                                    const newY = Math.round(self.placedFields[fieldKey].y + (transformY / scale));
-
-                                    self.placedFields[fieldKey].x = newX;
-                                    self.placedFields[fieldKey].y = newY;
-
-                                    target.style.transform = '';
-                                    target.setAttribute('data-x', 0);
-                                    target.setAttribute('data-y', 0);
-
-                                    self.placedFields = { ...self.placedFields };
-                                    console.log(`Repositioned ${fieldKey} to (${newX}, ${newY})`);
-                                }
                             }
                         }
                     })
@@ -564,45 +483,12 @@
                         inertia: false,
                         listeners: {
                             move(event) {
-                                const target = event.target;
-                                let x = parseFloat(target.getAttribute('data-x')) || 0;
-                                let y = parseFloat(target.getAttribute('data-y')) || 0;
-
-                                x += event.deltaRect.left;
-                                y += event.deltaRect.top;
-
-                                target.style.width = `${event.rect.width}px`;
-                                target.style.height = `${event.rect.height}px`;
-                                target.style.transform = `translate(${x}px, ${y}px)`;
-
-                                target.setAttribute('data-x', x);
-                                target.setAttribute('data-y', y);
-                            },
-                            end(event) {
-                                const target = event.target;
-                                const fieldKey = target.dataset.fieldKey;
-                                const transformX = parseFloat(target.getAttribute('data-x')) || 0;
-                                const transformY = parseFloat(target.getAttribute('data-y')) || 0;
-                                const width = event.rect.width;
-                                const height = event.rect.height;
-
+                                const fieldKey = event.target.dataset.fieldKey;
                                 if (self.placedFields[fieldKey]) {
-                                    const newX = Math.round(self.placedFields[fieldKey].x + (transformX / scale));
-                                    const newY = Math.round(self.placedFields[fieldKey].y + (transformY / scale));
-                                    const newWidth = Math.round(width / scale);
-                                    const newHeight = Math.round(height / scale);
-
-                                    self.placedFields[fieldKey].x = newX;
-                                    self.placedFields[fieldKey].y = newY;
-                                    self.placedFields[fieldKey].width = newWidth;
-                                    self.placedFields[fieldKey].height = newHeight;
-
-                                    target.style.transform = '';
-                                    target.setAttribute('data-x', 0);
-                                    target.setAttribute('data-y', 0);
-
-                                    self.placedFields = { ...self.placedFields };
-                                    console.log(`Field ${fieldKey} resized to ${newWidth}x${newHeight} at (${newX}, ${newY})`);
+                                    self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.deltaRect.left / scale));
+                                    self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.deltaRect.top / scale));
+                                    self.placedFields[fieldKey].width = Math.round(event.rect.width / scale);
+                                    self.placedFields[fieldKey].height = Math.round(event.rect.height / scale);
                                 }
                             }
                         }
