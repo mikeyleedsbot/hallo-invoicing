@@ -56,67 +56,7 @@
                     @enderror
                 </div>
 
-                <!-- Logo Upload -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Logo Upload
-                    </label>
-                    
-                    @if($template->logo_path)
-                    <!-- Existing Logo -->
-                    <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div class="flex items-center gap-4">
-                            <img src="{{ Storage::url($template->logo_path) }}" alt="Current logo" class="w-24 h-24 object-contain border border-gray-300 dark:border-gray-600 rounded-lg">
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">Huidige Logo</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ basename($template->logo_path) }}</p>
-                            </div>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    name="remove_logo" 
-                                    value="1"
-                                    class="w-4 h-4 text-red-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600"
-                                >
-                                <span class="text-sm text-red-600 dark:text-red-400">Verwijder</span>
-                            </label>
-                        </div>
-                    </div>
-                    @endif
-
-                    <div class="flex items-center gap-4">
-                        <label for="logo" class="flex-1 cursor-pointer">
-                            <div class="relative group border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
-                                <div class="text-center">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                    </svg>
-                                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                        <span class="font-medium text-blue-600 dark:text-blue-400">Upload nieuwe logo</span>
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                        PNG, JPG tot 5MB
-                                    </p>
-                                </div>
-                                <input 
-                                    type="file" 
-                                    id="logo" 
-                                    name="logo" 
-                                    accept="image/png,image/jpeg,image/jpg"
-                                    class="hidden"
-                                    onchange="previewImage(this, 'logo-preview')"
-                                >
-                            </div>
-                        </label>
-                        <!-- Preview -->
-                        <div id="logo-preview" class="hidden w-32 h-32 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-700">
-                            <img src="" alt="Logo preview" class="w-full h-full object-contain">
-                        </div>
-                    </div>
-                    @error('logo')
-                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                </div>
+                {{-- Logo upload is verplaatst naar de Template Editor (Layout tabblad) --}}
 
                 <!-- Background Upload -->
                 <div>

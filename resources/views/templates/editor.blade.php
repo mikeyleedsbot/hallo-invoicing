@@ -43,6 +43,45 @@
                             </ul>
                         </div>
 
+                        {{-- Logo Upload --}}
+                        <div class="bg-white border border-gray-300 rounded-lg p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">🖼️ Logo</h3>
+
+                            {{-- Huidig logo --}}
+                            <template x-if="logoUrl">
+                                <div class="mb-3 flex items-center gap-3">
+                                    <img :src="logoUrl" class="h-12 w-auto object-contain border border-gray-200 rounded">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs text-gray-500 truncate">Logo geladen</p>
+                                        <button @click="logoPosition = logoPosition || { x: 50, y: 50, width: 150, height: 80 }"
+                                                x-show="!logoPosition"
+                                                class="mt-1 text-xs text-blue-600 hover:underline">
+                                            + Plaatsen op canvas
+                                        </button>
+                                        <span x-show="logoPosition" class="mt-1 text-xs text-green-600">✓ Op canvas</span>
+                                    </div>
+                                    <button @click="logoUrl = null; logoPosition = null"
+                                            class="text-red-500 hover:text-red-700 text-xs font-medium">✕</button>
+                                </div>
+                            </template>
+
+                            {{-- Upload --}}
+                            <label class="cursor-pointer block">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-orange-400 transition"
+                                     :class="logoUploading ? 'opacity-50' : ''">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <p class="text-xs text-gray-500" x-text="logoUploading ? 'Uploading...' : (logoUrl ? 'Ander logo uploaden' : 'Logo uploaden')"></p>
+                                    <p class="text-xs text-gray-400">PNG, JPG tot 5MB</p>
+                                </div>
+                                <input type="file" accept="image/png,image/jpeg,image/jpg" class="hidden"
+                                       :disabled="logoUploading"
+                                       @change="uploadLogo($event)">
+                            </label>
+                            <p x-show="logoUploadError" x-text="logoUploadError" class="mt-1 text-xs text-red-600"></p>
+                        </div>
+
                         {{-- Available Fields --}}
                         <div class="bg-white border border-gray-300 rounded-lg p-4">
                             <h3 class="font-bold text-gray-900 mb-4">📋 Beschikbare Velden</h3>
@@ -369,6 +408,8 @@
                 logoPosition: null,
                 editingField: null,
                 newTextLabel: '',
+                logoUploading: false,
+                logoUploadError: null,
                 logoUrl: '{{ $template->logo_path ? asset("storage/" . $template->logo_path) : null }}',
                 backgroundUrl: '{{ $template->background_path ? asset("storage/" . $template->background_path) : null }}',
                 
@@ -641,6 +682,41 @@
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
                     });
+                },
+
+                async uploadLogo(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    this.logoUploading = true;
+                    this.logoUploadError = null;
+
+                    const formData = new FormData();
+                    formData.append('logo', file);
+                    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+                    try {
+                        const response = await fetch(`/templates/${this.template.id}/upload-logo`, {
+                            method: 'POST',
+                            body: formData,
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            this.logoUrl = data.url + '?t=' + Date.now(); // Cache bust
+                            // Automatisch op canvas plaatsen als er nog geen positie is
+                            if (!this.logoPosition) {
+                                this.logoPosition = { x: 50, y: 50, width: 150, height: 80 };
+                            }
+                            this.$nextTick(() => { this.setupDragAndDrop(); });
+                        } else {
+                            this.logoUploadError = 'Upload mislukt.';
+                        }
+                    } catch (e) {
+                        this.logoUploadError = 'Upload mislukt: ' + e.message;
+                    } finally {
+                        this.logoUploading = false;
+                        event.target.value = ''; // Reset input
+                    }
                 },
 
                 addTextBlock() {

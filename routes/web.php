@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/templates/{template}/editor', [App\Http\Controllers\TemplateController::class, 'editor'])->name('templates.editor');
     Route::post('/templates/{template}/positions', [App\Http\Controllers\TemplateController::class, 'savePositions'])->name('templates.save-positions');
     Route::get('/templates/{template}/test-pdf', [App\Http\Controllers\TemplateController::class, 'testPdf'])->name('templates.test-pdf');
+    Route::post('/templates/{template}/upload-logo', [App\Http\Controllers\TemplateController::class, 'uploadLogo'])->name('templates.upload-logo');
 });
 
 require __DIR__.'/auth.php';

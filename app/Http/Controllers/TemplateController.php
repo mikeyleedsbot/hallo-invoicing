@@ -214,6 +214,30 @@ class TemplateController extends Controller
     }
 
     /**
+     * Upload logo via AJAX vanuit de editor.
+     */
+    public function uploadLogo(Request $request, InvoiceTemplate $template)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        // Verwijder oud logo
+        if ($template->logo_path) {
+            Storage::disk('public')->delete($template->logo_path);
+        }
+
+        $path = $request->file('logo')->store('logos', 'public');
+        $template->logo_path = $path;
+        $template->save();
+
+        return response()->json([
+            'success' => true,
+            'url'     => asset('storage/' . $path),
+        ]);
+    }
+
+    /**
      * Generate test PDF with mockup data.
      */
     public function testPdf(InvoiceTemplate $template)
