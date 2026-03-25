@@ -188,10 +188,11 @@ class InvoicePdfGenerator
         $y = ($position['y'] ?? 0) * $scaleY;
         $width = ($position['width'] ?? 700) * $scaleX;
         $fontSize = ($position['fontSize'] ?? 10) * $fontScale;
-        
+        $fontFamily = $position['fontFamily'] ?? 'Arial, sans-serif';
+
         $html = sprintf(
-            '<div class="field" style="position: absolute; left: %smm; top: %smm; width: %smm; font-size: %spt;">',
-            $x, $y, $width, $fontSize
+            '<div class="field" style="position: absolute; left: %smm; top: %smm; width: %smm; font-size: %spt; font-family: %s;">',
+            $x, $y, $width, $fontSize, $fontFamily
         );
         
         $html .= '<table class="items-table">
