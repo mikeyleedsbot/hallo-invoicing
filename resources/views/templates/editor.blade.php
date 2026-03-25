@@ -242,9 +242,9 @@
                                             <template x-if="key !== 'items_table' && field.staticText !== undefined">
                                                 <span class="pointer-events-none select-none px-1 w-full" x-text="field.staticText || field.label"></span>
                                             </template>
-                                            {{-- Overige velden: label tonen --}}
+                                            {{-- Dynamische velden: toon met {label} --}}
                                             <template x-if="key !== 'items_table' && field.staticText === undefined">
-                                                <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1" x-text="field.label"></span>
+                                                <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1 italic" x-text="'{' + field.label + '}'"></span>
                                             </template>
 
                                             {{-- Actieknoppen --}}
@@ -694,23 +694,37 @@
                         const response = await fetch(`/templates/${this.template.id}/upload-logo`, {
                             method: 'POST',
                             body: formData,
+                            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         });
-                        const data = await response.json();
+
+                        const text = await response.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch(e) {
+                            this.logoUploadError = 'Server fout: ' + text.slice(0, 100);
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            this.logoUploadError = data.message || `Fout ${response.status}`;
+                            return;
+                        }
+
                         if (data.success) {
-                            this.logoUrl = data.url + '?t=' + Date.now(); // Cache bust
-                            // Automatisch op canvas plaatsen als er nog geen positie is
+                            this.logoUrl = data.url + '?t=' + Date.now();
                             if (!this.logoPosition) {
                                 this.logoPosition = { x: 50, y: 50, width: 150, height: 80 };
                             }
                             this.$nextTick(() => { this.setupDragAndDrop(); });
                         } else {
-                            this.logoUploadError = 'Upload mislukt.';
+                            this.logoUploadError = data.message || 'Upload mislukt.';
                         }
                     } catch (e) {
                         this.logoUploadError = 'Upload mislukt: ' + e.message;
                     } finally {
                         this.logoUploading = false;
-                        event.target.value = ''; // Reset input
+                        event.target.value = '';
                     }
                 },
 
