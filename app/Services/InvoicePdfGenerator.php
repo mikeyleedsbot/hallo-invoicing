@@ -6,28 +6,22 @@ use App\Models\InvoiceTemplate;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
- * PDF Generator - drie secties aanpak:
+ * PDF Generator — handmatige paginering.
  *
- * 1. HEADER  : position:relative container, hoogte = table Y
- *              Alle velden boven de tabel staan hier absoluut gepositioneerd
- *
- * 2. TABEL   : normale document flow in een wrapper met exact de breedte
- *              en linkermarge van het tabelblok. DomPDF laat dit automatisch
- *              doorlopen over pagina's binnen die breedte.
- *
- * 3. FOOTER  : position:relative container na de tabel
- *              Alle velden onder de tabel staan hier absoluut gepositioneerd,
- *              Y-offset is relatief aan het einde van de tabel.
+ * Elke pagina is een position:relative blok van 210×297mm.
+ * Alle velden (logo, tekst) zijn absoluut gepositioneerd op paginacoördinaten.
+ * De tabel-rijen worden verdeeld over pagina's op basis van de tabelblok-hoogte.
+ * Zo blijft de tabel exact op de gedefinieerde positie/breedte/hoogte op elke pagina.
  */
 class InvoicePdfGenerator
 {
     private float $cW = 850;
     private float $cH = 1200;
-    private float $pW = 210; // mm A4
-    private float $pH = 297; // mm A4
+    private float $pW = 210;  // mm
+    private float $pH = 297;  // mm
 
-    private function x(float $px): float { return round($px * $this->pW / $this->cW, 3); }
-    private function y(float $px): float { return round($px * $this->pH / $this->cH, 3); }
+    private function x(float $px): float  { return round($px * $this->pW / $this->cW, 3); }
+    private function y(float $px): float  { return round($px * $this->pH / $this->cH, 3); }
     private function pt(float $px): float { return round($px * 595 / $this->cW, 3); }
 
     public function generateFromTemplate(InvoiceTemplate $template, array $data)
@@ -40,18 +34,43 @@ class InvoicePdfGenerator
     {
         $tp = $pos['items_table'] ?? null;
 
-        // Tabelblok in mm (paginacoördinaten)
+        // Tabelblok (paginacoördinaten in mm)
         $tX = $tp ? $this->x($tp['x']      ?? 0)   : 12;
         $tY = $tp ? $this->y($tp['y']      ?? 0)   : 60;
         $tW = $tp ? $this->x($tp['width']  ?? 700) : 186;
-        $tH = $tp ? $this->y($tp['height'] ?? 400) : 180;
+        $tH = $tp ? $this->y($tp['height'] ?? 400) : 180;  // max hoogte tabel per pagina
 
-        $tFontSize = $tp ? $this->pt($tp['fontSize'] ?? 10) : 7;
-        $tFontFam  = $tp ? ($tp['fontFamily'] ?? 'Arial') : 'Arial';
+        $tFontPt  = $tp ? $this->pt($tp['fontSize'] ?? 10) : 7;
+        $tFontFam = $tp ? ($tp['fontFamily'] ?? 'Arial') : 'Arial';
 
-        // Hoogte footer sectie (onderkant tabel → onderkant pagina)
-        $footerH = $this->pH - $tY - $tH;
+        // Schatting: rijen per pagina op basis van font + padding
+        // Rij hoogte ≈ fontPt * 1.4 (line-height) + 6pt padding = in mm: pt * 0.353mm/pt
+        $rowHeightMm = ($tFontPt * 1.4 + 6) * 0.353;
+        $headerRowMm = ($tFontPt * 1.4 + 6) * 0.353 * 1.2; // header iets groter
+        $availableMm = $tH - $headerRowMm;
+        $rowsPerPage = max(1, (int) floor($availableMm / $rowHeightMm));
 
+        // Velden splitsen: boven tabel = op elke pagina, onder tabel = alleen laatste pagina
+        $aboveFields = [];
+        $belowFields = [];
+        foreach ($pos as $id => $p) {
+            if (in_array($id, ['logo', 'background', 'items_table'])) continue;
+            if ($this->y($p['y'] ?? 0) < $tY) {
+                $aboveFields[$id] = $p;
+            } else {
+                $belowFields[$id] = $p;
+            }
+        }
+
+        // Rijen opdelen in pagina-chunks
+        $items  = $data['items_table'] ?? [];
+        $chunks = is_array($items) && count($items) > 0
+            ? array_chunk($items, $rowsPerPage)
+            : [[]];
+
+        $totalPages = max(1, count($chunks));
+
+        // CSS
         $bgCss = '';
         if ($template->background_path) {
             $p = public_path('storage/' . $template->background_path);
@@ -60,78 +79,81 @@ class InvoicePdfGenerator
 
         $html = "<!DOCTYPE html><html><head><meta charset='utf-8'>
 <style>
-@page { margin: 0; }
+@page { margin:0; }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:Arial,sans-serif; width:{$this->pW}mm; $bgCss }
-
-/* ── Secties ── */
-.sec-header {
+body { font-family:Arial,sans-serif; }
+.page {
     position: relative;
     width: {$this->pW}mm;
-    height: {$tY}mm;
-    overflow: visible;
+    height: {$this->pH}mm;
+    overflow: hidden;
+    page-break-after: always;
+    $bgCss
 }
-.sec-footer {
-    position: relative;
-    width: {$this->pW}mm;
-    height: {$footerH}mm;
-    overflow: visible;
-}
-.abs { position: absolute; overflow: visible; word-wrap: break-word; }
-
-/* ── Tabel ── */
-.tabel-wrap {
-    margin-left: {$tX}mm;
+.page:last-child { page-break-after: auto; }
+.abs { position:absolute; overflow:hidden; word-wrap:break-word; }
+.tabel-blok {
+    position: absolute;
+    left: {$tX}mm;
+    top: {$tY}mm;
     width: {$tW}mm;
+    height: {$tH}mm;
+    overflow: hidden;
 }
-.items-table { width:100%; border-collapse:collapse; page-break-inside:auto; }
-.items-table thead { display:table-header-group; }
-.items-table tr { page-break-inside:avoid; page-break-after:auto; }
+.items-table { width:100%; border-collapse:collapse; }
 .items-table th, .items-table td { border:1px solid #ccc; padding:3px 5px; }
 .items-table th { background:#f0f0f0; font-weight:bold; }
 .items-table tr:nth-child(even) td { background:#fafafa; }
 </style></head><body>";
 
-        // ── SECTIE 1: HEADER (velden boven de tabel) ──
-        $html .= '<div class="sec-header">';
+        // Elke pagina opbouwen
+        for ($page = 0; $page < $totalPages; $page++) {
+            $isLast = ($page === $totalPages - 1);
+            $html  .= '<div class="page">';
 
-        // Logo
-        if ($template->logo_path && isset($pos['logo'])) {
-            $lp = public_path('storage/' . $template->logo_path);
-            if (file_exists($lp)) {
-                $l = $pos['logo'];
-                $html .= sprintf(
-                    '<img src="%s" class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;">',
-                    $lp,
-                    $this->x($l['x'] ?? 0), $this->y($l['y'] ?? 0),
-                    $this->x($l['width'] ?? 150), $this->y($l['height'] ?? 80)
-                );
+            // Logo (op elke pagina)
+            if ($template->logo_path && isset($pos['logo'])) {
+                $lp = public_path('storage/' . $template->logo_path);
+                if (file_exists($lp)) {
+                    $l = $pos['logo'];
+                    $html .= sprintf(
+                        '<img src="%s" class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;">',
+                        $lp,
+                        $this->x($l['x'] ?? 0), $this->y($l['y'] ?? 0),
+                        $this->x($l['width'] ?? 150), $this->y($l['height'] ?? 80)
+                    );
+                }
             }
-        }
 
-        foreach ($pos as $id => $p) {
-            if (in_array($id, ['logo', 'background', 'items_table'])) continue;
-            // Alleen velden die boven de tabel staan (Y < tabelY)
-            if ($this->y($p['y'] ?? 0) >= $tY) continue;
-            $value = $this->getValue($id, $p, $data);
-            if ($value === null && !str_starts_with($id, 'static_text_')) continue;
-            $html .= $this->renderAbs($p, $value ?? '', 0, 0);
-        }
+            // Velden boven tabel (op elke pagina)
+            foreach ($aboveFields as $id => $p) {
+                $value = $this->getValue($id, $p, $data);
+                if ($value === null) continue;
+                $html .= $this->renderAbs($p, $value);
+            }
 
-        $html .= '</div>'; // einde sec-header
+            // Velden onder tabel (alleen op laatste pagina)
+            if ($isLast) {
+                foreach ($belowFields as $id => $p) {
+                    $value = $this->getValue($id, $p, $data);
+                    if ($value === null) continue;
+                    $html .= $this->renderAbs($p, $value);
+                }
+            }
 
-        // ── SECTIE 2: TABEL ──
-        $items = $data['items_table'] ?? [];
-        if ($tp && is_array($items) && count($items) > 0) {
-            $html .= "<div class='tabel-wrap'>";
-            $html .= "<table class='items-table' style='font-size:{$tFontSize}pt;font-family:{$tFontFam};'>";
+            // Tabelblok met rijen van deze pagina
+            $html .= "<div class='tabel-blok'>";
+            $html .= "<table class='items-table' style='font-size:{$tFontPt}pt;font-family:{$tFontFam};'>";
+
+            // Koptekst op elke pagina
             $html .= '<thead><tr>
                 <th style="text-align:left;">Omschrijving</th>
                 <th style="text-align:right;width:36px;">Aantal</th>
                 <th style="text-align:right;width:52px;">Prijs</th>
                 <th style="text-align:right;width:52px;">Totaal</th>
             </tr></thead><tbody>';
-            foreach ($items as $item) {
+
+            foreach ($chunks[$page] as $item) {
                 $total = ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
                 $html .= sprintf('<tr>
                     <td>%s</td>
@@ -145,45 +167,26 @@ body { font-family:Arial,sans-serif; width:{$this->pW}mm; $bgCss }
                     number_format($total,               2, ',', '.')
                 );
             }
-            $html .= '</tbody></table></div>';
-        }
 
-        // ── SECTIE 3: FOOTER (velden onder de tabel) ──
-        $footerFields = [];
-        foreach ($pos as $id => $p) {
-            if (in_array($id, ['logo', 'background', 'items_table'])) continue;
-            if ($this->y($p['y'] ?? 0) < $tY) continue; // al in header
-            $footerFields[$id] = $p;
-        }
-
-        if (!empty($footerFields)) {
-            $html .= '<div class="sec-footer">';
-            foreach ($footerFields as $id => $p) {
-                $value = $this->getValue($id, $p, $data);
-                if ($value === null && !str_starts_with($id, 'static_text_')) continue;
-                // Y relatief aan onderkant tabel
-                $html .= $this->renderAbs($p, $value ?? '', 0, $tY + $tH);
-            }
-            $html .= '</div>';
+            $html .= '</tbody></table></div>'; // einde tabel-blok
+            $html .= '</div>'; // einde page
         }
 
         $html .= '</body></html>';
         return $html;
     }
 
-    private function renderAbs(array $p, mixed $value, float $offsetX, float $offsetY): string
+    private function renderAbs(array $p, mixed $value): string
     {
-        $left  = round($this->x($p['x']      ?? 0) - $offsetX, 3);
-        $top   = round($this->y($p['y']      ?? 0) - $offsetY, 3);
-        $w     = $this->x($p['width']  ?? 200);
-        $h     = $this->y($p['height'] ?? 30);
-        $fs    = $this->pt($p['fontSize'] ?? 12);
-        $ff    = $p['fontFamily'] ?? 'Arial';
-        $align = $p['align']      ?? 'left';
-
         return sprintf(
             '<div class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;">%s</div>',
-            $left, $top, $w, $h, $fs, $ff, $align,
+            $this->x($p['x']      ?? 0),
+            $this->y($p['y']      ?? 0),
+            $this->x($p['width']  ?? 200),
+            $this->y($p['height'] ?? 30),
+            $this->pt($p['fontSize'] ?? 12),
+            $p['fontFamily'] ?? 'Arial',
+            $p['align']      ?? 'left',
             nl2br(htmlspecialchars((string)$value))
         );
     }
