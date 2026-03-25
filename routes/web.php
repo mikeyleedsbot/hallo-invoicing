@@ -36,12 +36,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/quotes/{quote}/preview', [App\Http\Controllers\QuoteController::class, 'preview'])->name('quotes.preview');
     Route::get('/quotes/{quote}/print', [App\Http\Controllers\QuoteController::class, 'print'])->name('quotes.print');
     Route::post('/quotes/{quote}/convert', [App\Http\Controllers\QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
+    Route::post('/quotes/{quote}/mark-sent', [App\Http\Controllers\QuoteController::class, 'markSent'])->name('quotes.mark-sent');
     
     // Invoices
     Route::resource('invoices', App\Http\Controllers\InvoiceController::class);
     Route::get('/invoices/{invoice}/pdf', [App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('/invoices/{invoice}/preview', [App\Http\Controllers\InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::get('/invoices/{invoice}/print', [App\Http\Controllers\InvoiceController::class, 'print'])->name('invoices.print');
+    Route::post('/invoices/{invoice}/mark-sent', [App\Http\Controllers\InvoiceController::class, 'markSent'])->name('invoices.mark-sent');
+    Route::post('/invoices/{invoice}/mark-paid', [App\Http\Controllers\InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
+    Route::post('/invoices/{invoice}/duplicate', [App\Http\Controllers\InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
     
     // Invoice Templates
     Route::resource('templates', App\Http\Controllers\TemplateController::class);

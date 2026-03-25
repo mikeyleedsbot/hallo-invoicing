@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\InvoiceTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -24,6 +25,8 @@ class InvoiceController extends Controller
     {
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
+        $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
+        $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
         
         // Generate next invoice number
         $lastInvoice = Invoice::orderBy('id', 'desc')->first();
@@ -32,13 +35,14 @@ class InvoiceController extends Controller
             : 1;
         $invoiceNumber = 'INV' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
         
-        return view('invoices.create', compact('customers', 'products', 'invoiceNumber'));
+        return view('invoices.create', compact('customers', 'products', 'templates', 'defaultTemplate', 'invoiceNumber'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'template_id' => 'nullable|exists:invoice_templates,id',
             'invoice_number' => 'required|unique:invoices',
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
@@ -68,6 +72,7 @@ class InvoiceController extends Controller
             // Create invoice
             $invoice = Invoice::create([
                 'customer_id' => $validated['customer_id'],
+                'template_id' => $validated['template_id'] ?? InvoiceTemplate::where('is_default', true)->first()?->id,
                 'invoice_number' => $validated['invoice_number'],
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
@@ -106,15 +111,17 @@ class InvoiceController extends Controller
     {
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
+        $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $invoice->load('lines');
         
-        return view('invoices.edit', compact('invoice', 'customers', 'products'));
+        return view('invoices.edit', compact('invoice', 'customers', 'products', 'templates'));
     }
 
     public function update(Request $request, Invoice $invoice)
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'template_id' => 'nullable|exists:invoice_templates,id',
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',
@@ -144,6 +151,7 @@ class InvoiceController extends Controller
             // Update invoice
             $invoice->update([
                 'customer_id' => $validated['customer_id'],
+                'template_id' => $validated['template_id'] ?? InvoiceTemplate::where('is_default', true)->first()?->id,
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
                 'payment_terms' => $validated['payment_terms'] ?? 14,
@@ -184,20 +192,90 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice)
     {
-        $invoice->load('customer', 'lines');
+        $invoice->load('customer', 'lines', 'template');
         
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        // Use template if selected, otherwise fall back to default view
+        if ($invoice->template) {
+            $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
+            $data = $this->prepareInvoiceData($invoice);
+            $pdf = $pdfGenerator->generateFromTemplate($invoice->template, $data);
+        } else {
+            $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        }
         
         return $pdf->download($invoice->invoice_number . '.pdf');
     }
 
     public function preview(Invoice $invoice)
     {
-        $invoice->load('customer', 'lines');
+        $invoice->load('customer', 'lines', 'template');
         
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        // Use template if selected, otherwise fall back to default view
+        if ($invoice->template) {
+            $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
+            $data = $this->prepareInvoiceData($invoice);
+            $pdf = $pdfGenerator->generateFromTemplate($invoice->template, $data);
+        } else {
+            $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        }
         
         return $pdf->stream($invoice->invoice_number . '.pdf');
+    }
+
+    /**
+     * Prepare invoice data for template rendering.
+     */
+    private function prepareInvoiceData(Invoice $invoice): array
+    {
+        $company = \App\Models\CompanySetting::get();
+        
+        return [
+            // Invoice data
+            'invoice_number' => $invoice->invoice_number,
+            'invoice_date' => $invoice->invoice_date->format('d-m-Y'),
+            'due_date' => $invoice->due_date->format('d-m-Y'),
+            
+            // Customer data
+            'customer_name' => $invoice->customer->name,
+            'customer_company' => $invoice->customer->company_name ?? '',
+            'customer_address' => $invoice->customer->address ?? '',
+            'customer_city' => $invoice->customer->city ?? '',
+            'customer_postal_code' => $invoice->customer->postal_code ?? '',
+            'customer_email' => $invoice->customer->email ?? '',
+            'customer_phone' => $invoice->customer->phone ?? '',
+            
+            // Company data
+            'company_name' => $company->company_name ?? '',
+            'company_address' => $company->address ?? '',
+            'company_postal_code' => $company->postal_code ?? '',
+            'company_city' => $company->city ?? '',
+            'company_country' => $company->country ?? '',
+            'company_phone' => $company->phone ?? '',
+            'company_email' => $company->email ?? '',
+            'company_website' => $company->website ?? '',
+            'company_kvk' => $company->kvk_number ?? '',
+            'company_vat' => $company->vat_number ?? '',
+            'company_iban' => $company->iban ?? '',
+            'company_bic' => $company->bic ?? '',
+            'company_bank' => $company->bank_name ?? '',
+            
+            // Amounts
+            'subtotal' => '€ ' . number_format($invoice->subtotal, 2, ',', '.'),
+            'vat_amount' => '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
+            'total' => '€ ' . number_format($invoice->total, 2, ',', '.'),
+            
+            // Notes & items
+            'notes' => $invoice->notes ?? '',
+            'invoice_footer' => $company->invoice_footer ?? '',
+            'items_table' => $invoice->lines->map(function($line) {
+                return [
+                    'description' => $line->description,
+                    'quantity' => $line->quantity,
+                    'price' => $line->unit_price,
+                    'vat_rate' => $line->vat_rate,
+                ];
+            })->toArray(),
+        ];
     }
 
     public function print(Invoice $invoice)
@@ -205,5 +283,68 @@ class InvoiceController extends Controller
         $invoice->load('customer', 'lines');
         
         return view('invoices.print', compact('invoice'));
+    }
+
+    public function markSent(Request $request, Invoice $invoice)
+    {
+        $validated = $request->validate([
+            'sent_date' => 'required|date',
+        ]);
+
+        $invoice->update([
+            'status' => 'sent',
+            'sent_at' => $validated['sent_date'],
+        ]);
+
+        return redirect()
+            ->route('invoices.show', $invoice)
+            ->with('success', 'Factuur gemarkeerd als verzonden!');
+    }
+
+    public function markPaid(Request $request, Invoice $invoice)
+    {
+        $validated = $request->validate([
+            'paid_date' => 'required|date',
+        ]);
+
+        $invoice->update([
+            'status' => 'paid',
+            'paid_at' => $validated['paid_date'],
+        ]);
+
+        return redirect()
+            ->route('invoices.show', $invoice)
+            ->with('success', 'Factuur gemarkeerd als betaald!');
+    }
+
+    public function duplicate(Invoice $invoice)
+    {
+        // Generate new invoice number
+        $lastInvoice = Invoice::orderBy('id', 'desc')->first();
+        $nextNumber = $lastInvoice 
+            ? (int)substr($lastInvoice->invoice_number, 3) + 1 
+            : 1;
+        $newInvoiceNumber = 'INV' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+        // Create duplicate invoice
+        $newInvoice = $invoice->replicate();
+        $newInvoice->invoice_number = $newInvoiceNumber;
+        $newInvoice->status = 'draft';
+        $newInvoice->sent_at = null;
+        $newInvoice->paid_at = null;
+        $newInvoice->invoice_date = now();
+        $newInvoice->due_date = now()->addDays($invoice->payment_terms ?? 14);
+        $newInvoice->save();
+
+        // Duplicate invoice lines
+        foreach ($invoice->lines as $line) {
+            $newLine = $line->replicate();
+            $newLine->invoice_id = $newInvoice->id;
+            $newLine->save();
+        }
+
+        return redirect()
+            ->route('invoices.edit', $newInvoice)
+            ->with('success', 'Factuur gedupliceerd! Je kunt deze nu bewerken.');
     }
 }

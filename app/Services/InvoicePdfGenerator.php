@@ -35,6 +35,18 @@ class InvoicePdfGenerator
      */
     private function buildHtml(array $positions, array $data, InvoiceTemplate $template): string
     {
+        // Canvas dimensions (from editor)
+        $canvasWidth = 850;  // pixels
+        $canvasHeight = 1200; // pixels
+        
+        // A4 dimensions in mm
+        $a4Width = 210;  // mm
+        $a4Height = 297; // mm
+        
+        // Calculate scale factor (canvas pixels to PDF mm)
+        $scaleX = $a4Width / $canvasWidth;
+        $scaleY = $a4Height / $canvasHeight;
+        
         $html = '<!DOCTYPE html>
 <html>
 <head>
@@ -54,6 +66,7 @@ class InvoicePdfGenerator
         .field {
             position: absolute;
             overflow: hidden;
+            word-wrap: break-word;
         }
         .items-table {
             width: 100%;
@@ -87,12 +100,12 @@ class InvoicePdfGenerator
             if (file_exists($logoUrl)) {
                 $logo = $positions['logo'];
                 $html .= sprintf(
-                    '<img src="%s" style="position: absolute; left: %spx; top: %spx; width: %spx; height: %spx;">',
+                    '<img src="%s" style="position: absolute; left: %smm; top: %smm; width: %smm; height: %smm;">',
                     $logoUrl,
-                    $logo['x'] ?? 0,
-                    $logo['y'] ?? 0,
-                    $logo['width'] ?? 150,
-                    $logo['height'] ?? 80
+                    ($logo['x'] ?? 0) * $scaleX,
+                    ($logo['y'] ?? 0) * $scaleY,
+                    ($logo['width'] ?? 150) * $scaleX,
+                    ($logo['height'] ?? 80) * $scaleY
                 );
             }
         }
@@ -108,7 +121,7 @@ class InvoicePdfGenerator
                 continue;
             }
             
-            $html .= $this->renderField($fieldId, $position, $value);
+            $html .= $this->renderField($fieldId, $position, $value, $scaleX, $scaleY);
         }
 
         $html .= '</body></html>';
@@ -132,26 +145,27 @@ class InvoicePdfGenerator
     /**
      * Render a single field as HTML.
      */
-    private function renderField(string $fieldId, array $position, $value): string
+    private function renderField(string $fieldId, array $position, $value, float $scaleX, float $scaleY): string
     {
-        $x = $position['x'] ?? 0;
-        $y = $position['y'] ?? 0;
-        $width = $position['width'] ?? 200;
-        $height = $position['height'] ?? 30;
-        $fontSize = $position['fontSize'] ?? 12;
+        // Convert canvas pixels to PDF millimeters
+        $x = ($position['x'] ?? 0) * $scaleX;
+        $y = ($position['y'] ?? 0) * $scaleY;
+        $width = ($position['width'] ?? 200) * $scaleX;
+        $height = ($position['height'] ?? 30) * $scaleY;
+        $fontSize = ($position['fontSize'] ?? 12) * $scaleX; // Scale font size too
         $fontFamily = $position['fontFamily'] ?? 'Arial, sans-serif';
         $align = $position['align'] ?? 'left';
         
         // Special handling for items table
         if ($fieldId === 'items_table' && isset($value) && is_array($value)) {
-            return $this->renderItemsTable($position, $value);
+            return $this->renderItemsTable($position, $value, $scaleX, $scaleY);
         }
         
         // Format multi-line text
         $formattedValue = nl2br(htmlspecialchars($value));
         
         $style = sprintf(
-            'position: absolute; left: %spx; top: %spx; width: %spx; height: %spx; font-size: %spx; font-family: %s; text-align: %s;',
+            'position: absolute; left: %smm; top: %smm; width: %smm; height: %smm; font-size: %spt; font-family: %s; text-align: %s;',
             $x, $y, $width, $height, $fontSize, $fontFamily, $align
         );
         
@@ -161,15 +175,16 @@ class InvoicePdfGenerator
     /**
      * Render items table.
      */
-    private function renderItemsTable(array $position, array $items): string
+    private function renderItemsTable(array $position, array $items, float $scaleX, float $scaleY): string
     {
-        $x = $position['x'] ?? 0;
-        $y = $position['y'] ?? 0;
-        $width = $position['width'] ?? 700;
-        $fontSize = $position['fontSize'] ?? 10;
+        // Convert canvas pixels to PDF millimeters
+        $x = ($position['x'] ?? 0) * $scaleX;
+        $y = ($position['y'] ?? 0) * $scaleY;
+        $width = ($position['width'] ?? 700) * $scaleX;
+        $fontSize = ($position['fontSize'] ?? 10) * $scaleX;
         
         $html = sprintf(
-            '<div class="field" style="position: absolute; left: %spx; top: %spx; width: %spx; font-size: %spx;">',
+            '<div class="field" style="position: absolute; left: %smm; top: %smm; width: %smm; font-size: %spt;">',
             $x, $y, $width, $fontSize
         );
         

@@ -19,7 +19,6 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'unit' => 'nullable|string|max:50',
         ]);
 
         Product::create($validated);
@@ -35,7 +34,6 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'unit' => 'nullable|string|max:50',
         ]);
 
         $product->update($validated);

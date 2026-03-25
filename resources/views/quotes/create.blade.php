@@ -20,9 +20,9 @@
             </a>
         </div>
 
-        <form action="{{ route('quotes.store') }}" method="POST" @submit="submitForm">
+        <form action="{{ route('quotes.store') }}" method="POST" @submit="submitForm" class="space-y-6">
             @csrf
-            
+
             {{-- Summary Card (Top) --}}
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-sm border border-blue-200 dark:border-gray-600 p-6">
                 <div class="grid grid-cols-3 gap-6">
@@ -41,17 +41,20 @@
                 </div>
             </div>
 
-            {{-- Invoice Details --}}
+            {{-- Quote Details --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Offertegegevens</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Offertenummer <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="quote_number" value="{{ $quoteNumber }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        @error('quote_number')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -62,34 +65,60 @@
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">Selecteer klant...</option>
                             @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}@if($customer->company_name) ({{ $customer->company_name }})@endif</option>
+                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}@if($customer->company_name) ({{ $customer->company_name }})@endif</option>
                             @endforeach
                         </select>
+                        @error('customer_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Offertedatum <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="quote_date" value="{{ now()->format('Y-m-d') }}" required
+                        <input type="date" name="quote_date" value="{{ old('quote_date', now()->format('Y-m-d')) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        @error('quote_date')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Geldig tot <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="valid_until" value="{{ now()->addDays(14)->format('Y-m-d') }}" required
+                        <input type="date" name="valid_until" value="{{ old('valid_until', now()->addDays(30)->format('Y-m-d')) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        @error('valid_until')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                            Template
+                        </label>
+                        <select name="template_id" x-tom-select="{placeholder: 'Selecteer template...'}"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Standaard template</option>
+                            @foreach($templates as $template)
+                                <option value="{{ $template->id }}" @if($defaultTemplate && $template->id === $defaultTemplate->id) selected @endif>
+                                    {{ $template->name }}@if($template->is_default) (standaard)@endif
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
 
-            {{-- Invoice Lines (Table Layout) --}}
+            {{-- Quote Lines --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Offerteregels</h2>
-                    <button type="button" @click="addLine()" 
+                    <button type="button" @click="addLine()"
                         class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2 inline-flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -109,7 +138,7 @@
                                 <th class="text-center pb-2 w-12"></th>
                             </tr>
                         </thead>
-                        <tbody class="space-y-2">
+                        <tbody>
                             <template x-for="(line, index) in lines" :key="index">
                                 <tr>
                                     <td colspan="5" class="pt-2">
@@ -118,7 +147,7 @@
                                                 <tr>
                                                     <td class="pr-3">
                                                         <input type="text" :name="'lines[' + index + '][description]'" x-model="line.description" required
-                                                            placeholder="Bijv: Website ontwikkeling" 
+                                                            placeholder="Bijv: Website ontwikkeling"
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                     </td>
                                                     <td class="pr-3 w-28">
@@ -172,7 +201,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Opmerkingen</label>
                 <textarea name="notes" rows="3" placeholder="Extra opmerkingen of voorwaarden..."
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('notes') }}</textarea>
             </div>
 
             {{-- Actions --}}
@@ -200,15 +229,12 @@
                 }],
 
                 get subtotal() {
-                    return this.lines.reduce((sum, line) => {
-                        return sum + this.lineTotal(line);
-                    }, 0);
+                    return this.lines.reduce((sum, line) => sum + this.lineTotal(line), 0);
                 },
 
                 get vatAmount() {
                     return this.lines.reduce((sum, line) => {
-                        const lineTotal = this.lineTotal(line);
-                        return sum + (lineTotal * (parseFloat(line.vat_rate) / 100));
+                        return sum + (this.lineTotal(line) * (parseFloat(line.vat_rate) / 100));
                     }, 0);
                 },
 
@@ -225,18 +251,11 @@
                 },
 
                 addLine() {
-                    this.lines.push({
-                        description: '',
-                        quantity: 1,
-                        unit_price: 0,
-                        vat_rate: 21
-                    });
+                    this.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate: 21 });
                 },
 
                 removeLine(index) {
-                    if (this.lines.length > 1) {
-                        this.lines.splice(index, 1);
-                    }
+                    if (this.lines.length > 1) this.lines.splice(index, 1);
                 },
 
                 submitForm(event) {

@@ -1,5 +1,9 @@
 <x-app-layout>
-    <div class="space-y-6">
+    <script>
+        window.productsData = @json($products->items());
+    </script>
+
+    <div class="space-y-6" x-data="productManager()">
         
             {{-- Header --}}
             <div class="mb-6 flex justify-between items-start">
@@ -40,7 +44,6 @@
                                     <th scope="col" class="px-6 py-3">Naam</th>
                                     <th scope="col" class="px-6 py-3">Beschrijving</th>
                                     <th scope="col" class="px-6 py-3">Prijs</th>
-                                    <th scope="col" class="px-6 py-3">Eenheid</th>
                                     <th scope="col" class="px-6 py-3 text-right">Acties</th>
                                 </tr>
                             </thead>
@@ -55,9 +58,6 @@
                                     </td>
                                     <td class="px-6 py-4 font-medium">
                                         € {{ number_format($product->price, 2, ',', '.') }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {{ $product->unit ?? '-' }}
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex justify-end gap-2">
@@ -112,50 +112,10 @@
                     </div>
                 @endif
             </div>
-        </div>
-    </div>
 
-    {{-- Create/Edit Modal --}}
-    <div x-data="{
-        showModal: false,
-        isEdit: false,
-        productId: null,
-        form: {
-            name: '',
-            description: '',
-            price: '',
-            unit: 'uur'
-        },
-        openModal() {
-            this.isEdit = false;
-            this.productId = null;
-            this.form = { name: '', description: '', price: '', unit: 'uur' };
-            this.showModal = true;
-        },
-        editProduct(id) {
-            this.isEdit = true;
-            this.productId = id;
-            
-            const products = @json($products->items());
-            const product = products.find(p => p.id === id);
-            
-            if (product) {
-                this.form = {
-                    name: product.name,
-                    description: product.description || '',
-                    price: product.price,
-                    unit: product.unit || 'uur'
-                };
-            }
-            
-            this.showModal = true;
-        },
-        submitForm() {
-            const form = document.getElementById('productForm');
-            form.submit();
-        }
-    }">
+        {{-- Create/Edit Modal --}}
         <div x-show="showModal" 
+            x-cloak
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -163,8 +123,7 @@
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80 z-50 flex items-center justify-center p-4"
-            @click.self="showModal = false"
-            style="display: none;">
+            @click.self="showModal = false">
             
             <div x-show="showModal"
                 x-transition:enter="transition ease-out duration-300"
@@ -197,9 +156,9 @@
                     @csrf
                     <input x-show="isEdit" type="hidden" name="_method" value="PUT">
                     
-                    <div class="grid gap-4 mb-4 grid-cols-2">
+                    <div class="grid gap-4 mb-4 grid-cols-1">
                         {{-- Naam --}}
-                        <div class="col-span-2">
+                        <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Naam <span class="text-red-500">*</span>
                             </label>
@@ -209,7 +168,7 @@
                         </div>
 
                         {{-- Beschrijving --}}
-                        <div class="col-span-2">
+                        <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Beschrijving
                             </label>
@@ -219,29 +178,13 @@
                         </div>
 
                         {{-- Prijs --}}
-                        <div class="col-span-1">
+                        <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Prijs (€) <span class="text-red-500">*</span>
                             </label>
                             <input type="number" name="price" x-model="form.price" step="0.01" min="0" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                                 placeholder="99.00">
-                        </div>
-
-                        {{-- Eenheid --}}
-                        <div class="col-span-1">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                Eenheid
-                            </label>
-                            <select name="unit" x-model="form.unit"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="uur">Uur</option>
-                                <option value="dag">Dag</option>
-                                <option value="stuk">Stuk</option>
-                                <option value="maand">Maand</option>
-                                <option value="jaar">Jaar</option>
-                                <option value="project">Project</option>
-                            </select>
                         </div>
                     </div>
 
@@ -260,5 +203,57 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> {{-- Einde x-data scope --}}
+
+    <script>
+        function productManager() {
+            return {
+                showModal: false,
+                isEdit: false,
+                productId: null,
+                form: {
+                    name: '',
+                    description: '',
+                    price: ''
+                },
+                openModal() {
+                    console.log('openModal called');
+                    this.isEdit = false;
+                    this.productId = null;
+                    this.form = { 
+                        name: '', 
+                        description: '', 
+                        price: ''
+                    };
+                    this.showModal = true;
+                    console.log('Modal should be visible now:', this.showModal);
+                },
+                editProduct(id) {
+                    console.log('editProduct called with id:', id);
+                    this.isEdit = true;
+                    this.productId = id;
+                    
+                    const products = window.productsData || [];
+                    console.log('Available products:', products);
+                    const product = products.find(p => p.id === id);
+                    console.log('Found product:', product);
+                    
+                    if (product) {
+                        this.form = {
+                            name: product.name,
+                            description: product.description || '',
+                            price: product.price
+                        };
+                    }
+                    
+                    this.showModal = true;
+                    console.log('Modal should be visible now:', this.showModal);
+                },
+                submitForm() {
+                    const form = document.getElementById('productForm');
+                    form.submit();
+                }
+            }
+        }
+    </script>
 </x-app-layout>
