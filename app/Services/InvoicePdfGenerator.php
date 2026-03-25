@@ -82,8 +82,6 @@ class InvoicePdfGenerator
             word-wrap: break-word;
         }
         .table-section {
-            width: 210mm;
-            padding: 0 ' . round($tableXmm ?? 12) . 'mm;
             page-break-inside: auto;
         }
         .items-table {
@@ -162,10 +160,14 @@ class InvoicePdfGenerator
 
         // ── SECTIE 2: Artikelentabel (normale flow, pagina-overloop) ──
         if ($tablePosition && isset($data['items_table']) && is_array($data['items_table'])) {
-            $fontSize  = ($tablePosition['fontSize'] ?? 10) * $fontScale;
+            $fontSize   = ($tablePosition['fontSize'] ?? 10) * $fontScale;
             $fontFamily = $tablePosition['fontFamily'] ?? 'Arial, sans-serif';
 
-            $html .= sprintf('<div class="table-section" style="font-size: %spt; font-family: %s;">', $fontSize, $fontFamily);
+            // Gebruik exacte X-positie en breedte uit de editor
+            $html .= sprintf(
+                '<div class="table-section" style="font-size: %spt; font-family: %s; margin-left: %smm; width: %smm; padding: 0;">',
+                $fontSize, $fontFamily, round($tableXmm, 2), round($tableWidthmm, 2)
+            );
             $html .= '<table class="items-table">
                 <thead>
                     <tr>
