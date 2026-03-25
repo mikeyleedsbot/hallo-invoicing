@@ -403,14 +403,7 @@
                             modifiers: [
                                 interact.modifiers.restrictRect({
                                     restriction: 'parent',
-                                    endOnly: true
-                                }),
-                                interact.modifiers.snap({
-                                    targets: [
-                                        interact.snappers.grid({ x: 10, y: 10 })
-                                    ],
-                                    range: Infinity,
-                                    relativePoints: [{ x: 0, y: 0 }]
+                                    endOnly: false
                                 })
                             ],
                             listeners: {
@@ -429,14 +422,14 @@
                                 end(event) {
                                     const target = event.target;
                                     target.style.zIndex = '';
-                                    
+
                                     const transformX = parseFloat(target.getAttribute('data-x')) || 0;
                                     const transformY = parseFloat(target.getAttribute('data-y')) || 0;
 
                                     if (self.logoPosition) {
-                                        const newX = Math.round((self.logoPosition.x + (transformX / scale)) / 10) * 10;
-                                        const newY = Math.round((self.logoPosition.y + (transformY / scale)) / 10) * 10;
-                                        
+                                        const newX = Math.round(self.logoPosition.x + (transformX / scale));
+                                        const newY = Math.round(self.logoPosition.y + (transformY / scale));
+
                                         self.logoPosition.x = newX;
                                         self.logoPosition.y = newY;
 
@@ -444,7 +437,7 @@
                                         target.setAttribute('data-x', 0);
                                         target.setAttribute('data-y', 0);
 
-                                        self.logoPosition = { ...self.logoPosition }; // Force reactivity
+                                        self.logoPosition = { ...self.logoPosition };
                                         console.log(`Logo repositioned to (${newX}, ${newY})`);
                                     }
                                 }
@@ -456,12 +449,6 @@
                                 interact.modifiers.restrictSize({
                                     min: { width: 50, height: 30 },
                                     max: { width: 400, height: 300 }
-                                }),
-                                interact.modifiers.snap({
-                                    targets: [
-                                        interact.snappers.grid({ x: 10, y: 10 })
-                                    ],
-                                    range: Infinity
                                 })
                             ],
                             inertia: false,
@@ -489,11 +476,11 @@
                                     const height = event.rect.height;
 
                                     if (self.logoPosition) {
-                                        const newX = Math.round((self.logoPosition.x + (transformX / scale)) / 10) * 10;
-                                        const newY = Math.round((self.logoPosition.y + (transformY / scale)) / 10) * 10;
-                                        const newWidth = Math.round((width / scale) / 10) * 10;
-                                        const newHeight = Math.round((height / scale) / 10) * 10;
-                                        
+                                        const newX = Math.round(self.logoPosition.x + (transformX / scale));
+                                        const newY = Math.round(self.logoPosition.y + (transformY / scale));
+                                        const newWidth = Math.round(width / scale);
+                                        const newHeight = Math.round(height / scale);
+
                                         self.logoPosition.x = newX;
                                         self.logoPosition.y = newY;
                                         self.logoPosition.width = newWidth;
@@ -503,7 +490,7 @@
                                         target.setAttribute('data-x', 0);
                                         target.setAttribute('data-y', 0);
 
-                                        self.logoPosition = { ...self.logoPosition }; // Force reactivity
+                                        self.logoPosition = { ...self.logoPosition };
                                         console.log(`Logo resized to ${newWidth}x${newHeight} at (${newX}, ${newY})`);
                                     }
                                 }
@@ -517,22 +504,12 @@
                         modifiers: [
                             interact.modifiers.restrictRect({
                                 restriction: 'parent',
-                                endOnly: true
-                            }),
-                            interact.modifiers.snap({
-                                targets: [
-                                    interact.snappers.grid({ x: 10, y: 10 })
-                                ],
-                                range: Infinity,
-                                relativePoints: [{ x: 0, y: 0 }]
+                                endOnly: false
                             })
                         ],
                         listeners: {
                             start(event) {
                                 const target = event.target;
-                                console.log('Reposition start:', target.dataset.fieldKey);
-                                
-                                // Visual feedback during repositioning
                                 target.style.zIndex = '100';
                                 target.style.opacity = '0.9';
                                 target.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
@@ -540,13 +517,9 @@
                             },
                             move(event) {
                                 const target = event.target;
-                                const fieldKey = target.dataset.fieldKey;
-                                
-                                // Get current transform
                                 const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
                                 const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
 
-                                // Update element position
                                 target.style.transform = `translate(${x}px, ${y}px)`;
                                 target.setAttribute('data-x', x);
                                 target.setAttribute('data-y', y);
@@ -554,33 +527,27 @@
                             end(event) {
                                 const target = event.target;
                                 const fieldKey = target.dataset.fieldKey;
-                                
-                                // Reset visual feedback
+
                                 target.style.zIndex = '';
                                 target.style.opacity = '';
                                 target.style.boxShadow = '';
                                 target.classList.remove('ring-2', 'ring-blue-500');
-                                
-                                // Get final transform
+
                                 const transformX = parseFloat(target.getAttribute('data-x')) || 0;
                                 const transformY = parseFloat(target.getAttribute('data-y')) || 0;
 
-                                // Update Alpine state (scale back to 100% and snap)
                                 if (self.placedFields[fieldKey]) {
-                                    const newX = Math.round((self.placedFields[fieldKey].x + (transformX / scale)) / 10) * 10;
-                                    const newY = Math.round((self.placedFields[fieldKey].y + (transformY / scale)) / 10) * 10;
-                                    
+                                    const newX = Math.round(self.placedFields[fieldKey].x + (transformX / scale));
+                                    const newY = Math.round(self.placedFields[fieldKey].y + (transformY / scale));
+
                                     self.placedFields[fieldKey].x = newX;
                                     self.placedFields[fieldKey].y = newY;
 
-                                    // Reset transform, update position in style binding
                                     target.style.transform = '';
                                     target.setAttribute('data-x', 0);
                                     target.setAttribute('data-y', 0);
 
-                                    // Force Alpine reactivity
                                     self.placedFields = { ...self.placedFields };
-
                                     console.log(`Repositioned ${fieldKey} to (${newX}, ${newY})`);
                                 }
                             }
@@ -592,12 +559,6 @@
                             interact.modifiers.restrictSize({
                                 min: { width: 50, height: 20 },
                                 max: { width: 800, height: 400 }
-                            }),
-                            interact.modifiers.snap({
-                                targets: [
-                                    interact.snappers.grid({ x: 10, y: 10 })
-                                ],
-                                range: Infinity
                             })
                         ],
                         inertia: false,
@@ -626,11 +587,11 @@
                                 const height = event.rect.height;
 
                                 if (self.placedFields[fieldKey]) {
-                                    const newX = Math.round((self.placedFields[fieldKey].x + (transformX / scale)) / 10) * 10;
-                                    const newY = Math.round((self.placedFields[fieldKey].y + (transformY / scale)) / 10) * 10;
-                                    const newWidth = Math.round((width / scale) / 10) * 10;
-                                    const newHeight = Math.round((height / scale) / 10) * 10;
-                                    
+                                    const newX = Math.round(self.placedFields[fieldKey].x + (transformX / scale));
+                                    const newY = Math.round(self.placedFields[fieldKey].y + (transformY / scale));
+                                    const newWidth = Math.round(width / scale);
+                                    const newHeight = Math.round(height / scale);
+
                                     self.placedFields[fieldKey].x = newX;
                                     self.placedFields[fieldKey].y = newY;
                                     self.placedFields[fieldKey].width = newWidth;
@@ -685,8 +646,8 @@
                     const fieldWidth = 200;
                     const fieldHeight = 30;
 
-                    const x = Math.round((Math.random() * (canvasWidth - fieldWidth - 100) + 50) / 10) * 10;
-                    const y = Math.round((Math.random() * (canvasHeight - fieldHeight - 100) + 50) / 10) * 10;
+                    const x = Math.round(Math.random() * (canvasWidth - fieldWidth - 100) + 50);
+                    const y = Math.round(Math.random() * (canvasHeight - fieldHeight - 100) + 50);
 
                     // Add to canvas
                     this.placedFields[fieldId] = {
