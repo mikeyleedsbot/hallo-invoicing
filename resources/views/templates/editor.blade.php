@@ -153,19 +153,27 @@
                                              }"
                                              :data-field-key="key"
                                              :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'};`">
-                                            <span class="font-semibold text-gray-800" x-text="field.label"></span>
-                                            <div class="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition flex gap-1">
-                                                <button @click.stop="openFieldEditor(key)" 
+                                            <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1" x-text="field.label"></span>
+
+                                            {{-- Actieknoppen --}}
+                                            <div class="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition flex gap-1" style="pointer-events: none;" :style="'pointer-events: auto;'">
+                                                <button @click.stop="openFieldEditor(key)"
                                                         class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 shadow-lg"
-                                                        title="Veld bewerken">
-                                                    ✎
-                                                </button>
-                                                <button @click.stop="removeField(key)" 
+                                                        title="Veld bewerken">✎</button>
+                                                <button @click.stop="removeField(key)"
                                                         class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
-                                                        title="Veld verwijderen">
-                                                    ✕
-                                                </button>
+                                                        title="Veld verwijderen">✕</button>
                                             </div>
+
+                                            {{-- Resize handles: alleen in de 4 hoeken (8x8px), zodat midden altijd sleepbaar blijft --}}
+                                            <div class="resize-tl absolute bg-white border border-indigo-400 rounded-sm opacity-0 group-hover:opacity-100 transition"
+                                                 style="width:8px;height:8px;top:-3px;left:-3px;cursor:nw-resize;"></div>
+                                            <div class="resize-tr absolute bg-white border border-indigo-400 rounded-sm opacity-0 group-hover:opacity-100 transition"
+                                                 style="width:8px;height:8px;top:-3px;right:-3px;cursor:ne-resize;"></div>
+                                            <div class="resize-bl absolute bg-white border border-indigo-400 rounded-sm opacity-0 group-hover:opacity-100 transition"
+                                                 style="width:8px;height:8px;bottom:-3px;left:-3px;cursor:sw-resize;"></div>
+                                            <div class="resize-br absolute bg-white border border-indigo-400 rounded-sm opacity-0 group-hover:opacity-100 transition"
+                                                 style="width:8px;height:8px;bottom:-3px;right:-3px;cursor:se-resize;"></div>
                                         </div>
                                     </template>
 
@@ -441,58 +449,65 @@
                         });
 
                     // Make placed fields draggable AND resizable on canvas
-                    // Strategie: update Alpine state LIVE tijdens drag — geen transform, geen flits
+                    // Resize alleen via hoek-handles zodat midden altijd sleepbaar blijft
                     interact('.draggable-placed')
                         .draggable({
-                        inertia: false,
-                        listeners: {
-                            start(event) {
-                                const target = event.target;
-                                target.style.zIndex = '100';
-                                target.style.opacity = '0.9';
-                                target.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
-                                target.classList.add('ring-2', 'ring-blue-500');
-                            },
-                            move(event) {
-                                const fieldKey = event.target.dataset.fieldKey;
-                                if (self.placedFields[fieldKey]) {
-                                    self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.dx / scale));
-                                    self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.dy / scale));
-                                    // Clamp binnen canvas
-                                    self.placedFields[fieldKey].x = Math.max(0, Math.min(self.placedFields[fieldKey].x, 850 - self.placedFields[fieldKey].width));
-                                    self.placedFields[fieldKey].y = Math.max(0, Math.min(self.placedFields[fieldKey].y, 1200 - self.placedFields[fieldKey].height));
-                                }
-                            },
-                            end(event) {
-                                const target = event.target;
-                                target.style.zIndex = '';
-                                target.style.opacity = '';
-                                target.style.boxShadow = '';
-                                target.classList.remove('ring-2', 'ring-blue-500');
-                            }
-                        }
-                    })
-                    .resizable({
-                        edges: { left: true, right: true, bottom: true, top: true },
-                        modifiers: [
-                            interact.modifiers.restrictSize({
-                                min: { width: 50, height: 20 },
-                                max: { width: 800, height: 400 }
-                            })
-                        ],
-                        inertia: false,
-                        listeners: {
-                            move(event) {
-                                const fieldKey = event.target.dataset.fieldKey;
-                                if (self.placedFields[fieldKey]) {
-                                    self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.deltaRect.left / scale));
-                                    self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.deltaRect.top / scale));
-                                    self.placedFields[fieldKey].width = Math.round(event.rect.width / scale);
-                                    self.placedFields[fieldKey].height = Math.round(event.rect.height / scale);
+                            inertia: false,
+                            // Ignoreer clicks op de resize-handles en actieknoppen
+                            ignoreFrom: '.resize-tl, .resize-tr, .resize-bl, .resize-br, button',
+                            listeners: {
+                                start(event) {
+                                    const target = event.target;
+                                    target.style.zIndex = '100';
+                                    target.style.opacity = '0.9';
+                                    target.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
+                                    target.classList.add('ring-2', 'ring-blue-500');
+                                },
+                                move(event) {
+                                    const fieldKey = event.target.dataset.fieldKey;
+                                    if (self.placedFields[fieldKey]) {
+                                        self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.dx / scale));
+                                        self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.dy / scale));
+                                        self.placedFields[fieldKey].x = Math.max(0, Math.min(self.placedFields[fieldKey].x, 850 - self.placedFields[fieldKey].width));
+                                        self.placedFields[fieldKey].y = Math.max(0, Math.min(self.placedFields[fieldKey].y, 1200 - self.placedFields[fieldKey].height));
+                                    }
+                                },
+                                end(event) {
+                                    const target = event.target;
+                                    target.style.zIndex = '';
+                                    target.style.opacity = '';
+                                    target.style.boxShadow = '';
+                                    target.classList.remove('ring-2', 'ring-blue-500');
                                 }
                             }
-                        }
-                    });
+                        })
+                        .resizable({
+                            // Alleen de 4 hoek-divs triggeren resize
+                            edges: {
+                                top:    '.resize-tl, .resize-tr',
+                                bottom: '.resize-bl, .resize-br',
+                                left:   '.resize-tl, .resize-bl',
+                                right:  '.resize-tr, .resize-br',
+                            },
+                            modifiers: [
+                                interact.modifiers.restrictSize({
+                                    min: { width: 30, height: 16 },
+                                    max: { width: 800, height: 400 }
+                                })
+                            ],
+                            inertia: false,
+                            listeners: {
+                                move(event) {
+                                    const fieldKey = event.target.dataset.fieldKey;
+                                    if (self.placedFields[fieldKey]) {
+                                        self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.deltaRect.left / scale));
+                                        self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.deltaRect.top / scale));
+                                        self.placedFields[fieldKey].width = Math.round(event.rect.width / scale);
+                                        self.placedFields[fieldKey].height = Math.round(event.rect.height / scale);
+                                    }
+                                }
+                            }
+                        });
 
                     console.log('Drag & Drop initialized');
                 },
