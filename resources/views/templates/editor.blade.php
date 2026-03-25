@@ -285,12 +285,43 @@
                             
                             {{-- Action Buttons --}}
                             <div class="mt-6 flex justify-center gap-4">
-                                <a :href="`/templates/${template.id}/test-pdf`" 
-                                   target="_blank"
-                                   class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg text-lg transition transform hover:scale-105">
-                                    📄 PDF Testen
-                                </a>
-                                <button @click="savePositions" 
+                                {{-- PDF Test dropdown --}}
+                                <div class="relative" x-data="{ open: false }">
+                                    <div class="flex">
+                                        <a :href="`/templates/${template.id}/test-pdf?rows=short`"
+                                           target="_blank"
+                                           class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-l-lg shadow-lg text-lg transition">
+                                            📄 PDF Testen
+                                        </a>
+                                        <button @click="open = !open" @click.outside="open = false"
+                                                class="bg-green-700 hover:bg-green-800 text-white font-bold py-4 px-3 rounded-r-lg shadow-lg border-l border-green-500 transition">
+                                            ▾
+                                        </button>
+                                    </div>
+                                    <div x-show="open" x-cloak
+                                         class="absolute bottom-full mb-1 left-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-64 overflow-hidden">
+                                        <a :href="`/templates/${template.id}/test-pdf?rows=short`"
+                                           target="_blank" @click="open = false"
+                                           class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100">
+                                            <span class="text-xl">📄</span>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-900">Korte tabel (1 pagina)</p>
+                                                <p class="text-xs text-gray-500">3 artikelen, past op 1 pagina</p>
+                                            </div>
+                                        </a>
+                                        <a :href="`/templates/${template.id}/test-pdf?rows=long`"
+                                           target="_blank" @click="open = false"
+                                           class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition">
+                                            <span class="text-xl">📋</span>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-900">Lange tabel (2+ pagina's)</p>
+                                                <p class="text-xs text-gray-500">25 artikelen, doorlopend over pagina's</p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <button @click="savePositions"
                                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg text-lg transition transform hover:scale-105">
                                     💾 Posities Opslaan
                                 </button>

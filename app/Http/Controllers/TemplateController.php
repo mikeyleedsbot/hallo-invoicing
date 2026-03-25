@@ -240,34 +240,56 @@ class TemplateController extends Controller
     /**
      * Generate test PDF with mockup data.
      */
-    public function testPdf(InvoiceTemplate $template)
+    public function testPdf(Request $request, InvoiceTemplate $template)
     {
-        // Mockup data voor test PDF
+        $rows = $request->query('rows', 'short');
+
+        $shortItems = [
+            ['description' => 'Webhosting Premium', 'quantity' => 1, 'price' => 49.95],
+            ['description' => 'E-mail accounts (10x)', 'quantity' => 10, 'price' => 2.50],
+            ['description' => 'SSL Certificaat', 'quantity' => 1, 'price' => 29.95],
+        ];
+
+        $longItems = [];
+        $products = [
+            'Webhosting Premium', 'E-mail account', 'SSL Certificaat', 'Domeinnaam registratie',
+            'Support (uur)', 'Backup service', 'Firewall configuratie', 'VPN instelling',
+            'Office 365 licentie', 'Antivirus licentie', 'Remote monitoring', 'Server onderhoud',
+            'Network scan', 'Helpdesk (uur)', 'Training (dagdeel)', 'Software update',
+            'Security audit', 'Cloud opslag (100GB)', 'Printer instelling', 'Laptop configuratie',
+            'Switch installatie', 'UPS batterij', 'Kabelwerk (m)', 'Patch panel',
+            'Documentatie opstellen',
+        ];
+        foreach ($products as $i => $name) {
+            $longItems[] = [
+                'description' => $name,
+                'quantity'    => rand(1, 10),
+                'price'       => round(rand(500, 25000) / 100, 2),
+            ];
+        }
+
+        $items = $rows === 'long' ? $longItems : $shortItems;
+        $subtotal = array_sum(array_map(fn($i) => $i['quantity'] * $i['price'], $items));
+        $tax      = round($subtotal * 0.21, 2);
+        $total    = $subtotal + $tax;
+
         $mockData = [
-            'company_name' => 'Hallo ICT B.V.',
+            'company_name'    => 'Hallo ICT B.V.',
             'company_address' => "Teststraat 123\n1234 AB Amsterdam",
-            'company_email' => 'info@hallo.test',
-            'company_phone' => '+31 20 123 4567',
-            
-            'client_name' => 'Test Klant B.V.',
-            'client_address' => "Klantenweg 456\n5678 CD Rotterdam",
-            'client_email' => 'contact@testklant.nl',
-            
-            'invoice_number' => 'INV-2026-001',
-            'invoice_date' => now()->format('d-m-Y'),
-            'due_date' => now()->addDays(30)->format('d-m-Y'),
+            'company_email'   => 'info@hallo.test',
+            'company_phone'   => '+31 20 123 4567',
+            'client_name'     => 'Test Klant B.V.',
+            'client_address'  => "Klantenweg 456\n5678 CD Rotterdam",
+            'client_email'    => 'contact@testklant.nl',
+            'invoice_number'  => $rows === 'long' ? 'INV-2026-002' : 'INV-2026-001',
+            'invoice_date'    => now()->format('d-m-Y'),
+            'due_date'        => now()->addDays(30)->format('d-m-Y'),
             'invoice_reference' => 'REF-12345',
-            
-            'items_table' => [
-                ['description' => 'Webhosting Premium', 'quantity' => 1, 'price' => 49.95],
-                ['description' => 'E-mail accounts (10x)', 'quantity' => 10, 'price' => 2.50],
-                ['description' => 'SSL Certificaat', 'quantity' => 1, 'price' => 29.95],
-            ],
-            
-            'subtotal' => '€ 104,90',
-            'tax' => '€ 22,03',
-            'total' => '€ 126,93',
-            'payment_terms' => 'Betaling binnen 30 dagen op bankrekeningnummer NL12 BANK 0123 4567 89',
+            'items_table'     => $items,
+            'subtotal'        => '€ ' . number_format($subtotal, 2, ',', '.'),
+            'tax'             => '€ ' . number_format($tax, 2, ',', '.'),
+            'total'           => '€ ' . number_format($total, 2, ',', '.'),
+            'payment_terms'   => 'Betaling binnen 30 dagen op bankrekeningnummer NL12 BANK 0123 4567 89',
         ];
 
         // Generate PDF using InvoicePdfGenerator
