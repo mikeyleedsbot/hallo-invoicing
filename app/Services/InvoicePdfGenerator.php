@@ -6,25 +6,25 @@ use App\Models\InvoiceTemplate;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
- * PDF Generator met fixed tabelblok over meerdere pagina's.
+ * PDF strategie:
  *
- * Strategie:
- *   @page margins worden ingesteld zodat de content area EXACT het tabelblok is.
- *   De tabel vloeit als normale content door die ruimte heen over meerdere pagina's.
- *   Alle andere velden worden via position:fixed op de VOLLEDIGE pagina geplaatst
- *   (met negatieve offset t.o.v. de content area) zodat ze op elke pagina herhalen.
+ * - @page margins = tabelblok grenzen → content area = exact het tabelblok
+ * - Tabel = normale HTML flow binnen die content area, loopt door over pagina's
+ * - Alle andere velden = position:fixed met DIRECTE paginacoördinaten (geen offset!)
+ *   In DomPDF is position:fixed altijd t.o.v. de pagina zelf (0,0 = linksboven pagina)
  */
 class InvoicePdfGenerator
 {
-    // Canvas = 850×1200px, A4 = 210×297mm = 595×842pt
-    private float $cW = 850;
-    private float $cH = 1200;
-    private float $pW = 210;  // mm
-    private float $pH = 297;  // mm
+    private float $cW = 850;   // canvas breedte px
+    private float $cH = 1200;  // canvas hoogte px
+    private float $pW = 210;   // A4 breedte mm
+    private float $pH = 297;   // A4 hoogte mm
 
-    private function mmX(float $px): float { return round($px * $this->pW / $this->cW, 3); }
-    private function mmY(float $px): float { return round($px * $this->pH / $this->cH, 3); }
-    private function pt(float $px): float  { return round($px * 595 / $this->cW, 3); }
+    private function mmX(float $px): string { return round($px * $this->pW / $this->cW, 2) . 'mm'; }
+    private function mmY(float $px): string { return round($px * $this->pH / $this->cH, 2) . 'mm'; }
+    private function fmmX(float $px): float { return round($px * $this->pW / $this->cW, 2); }
+    private function fmmY(float $px): float { return round($px * $this->pH / $this->cH, 2); }
+    private function pt(float $px): string  { return round($px * 595 / $this->cW, 2)  . 'pt'; }
 
     public function generateFromTemplate(InvoiceTemplate $template, array $data)
     {
@@ -34,34 +34,30 @@ class InvoicePdfGenerator
 
     private function build(array $pos, array $data, InvoiceTemplate $template): string
     {
-        $tp = $pos['items_table'] ?? null; // tabel positie config
+        $tp = $pos['items_table'] ?? null;
 
-        // Tabelblok in mm (= content area van elke pagina)
-        $tX = $tp ? $this->mmX($tp['x']      ?? 0)   : 12;
-        $tY = $tp ? $this->mmY($tp['y']      ?? 0)   : 60;
-        $tW = $tp ? $this->mmX($tp['width']  ?? 700) : 186;
-        $tH = $tp ? $this->mmY($tp['height'] ?? 400) : 180;
+        // Tabelblok in mm (paginacoördinaten)
+        $tX = $tp ? $this->fmmX($tp['x']      ?? 0)   : 12;
+        $tY = $tp ? $this->fmmY($tp['y']      ?? 0)   : 60;
+        $tW = $tp ? $this->fmmX($tp['width']  ?? 700) : 186;
+        $tH = $tp ? $this->fmmY($tp['height'] ?? 400) : 180;
 
-        // Marges: content area = tabelblok
+        // @page margins zodat content area = tabelblok
         $mTop    = $tY;
         $mLeft   = $tX;
-        $mRight  = max(0, round($this->pW - $tX - $tW, 3));
-        $mBottom = max(0, round($this->pH - $tY - $tH, 3));
+        $mRight  = max(0, $this->pW - $tX - $tW);
+        $mBottom = max(0, $this->pH - $tY - $tH);
 
-        // Tabel font
-        $tFontSize = $tp ? $this->pt($tp['fontSize'] ?? 10) : 7;
-        $tFontFam  = $tp ? ($tp['fontFamily'] ?? 'Arial, sans-serif') : 'Arial, sans-serif';
+        $tFontSize = $tp ? $this->pt($tp['fontSize'] ?? 10) : '7pt';
+        $tFontFam  = $tp ? ($tp['fontFamily'] ?? 'Arial') : 'Arial';
 
-        // Achtergrond
         $bgCss = '';
         if ($template->background_path) {
             $p = public_path('storage/' . $template->background_path);
             if (file_exists($p)) $bgCss = "background-image:url('$p');background-size:cover;";
         }
 
-        // HTML opbouwen
-        $html = <<<HTML
-<!DOCTYPE html><html><head><meta charset="utf-8">
+        $html = "<!DOCTYPE html><html><head><meta charset='utf-8'>
 <style>
 @page {
     margin-top:    {$mTop}mm;
@@ -70,68 +66,65 @@ class InvoicePdfGenerator
     margin-bottom: {$mBottom}mm;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:Arial,sans-serif; {$bgCss} }
+body { font-family:Arial,sans-serif; $bgCss }
 
-/*
- * Elk fixed element wordt gepositioneerd t.o.v. de PAGINA (0,0 = linksboven pagina).
- * Omdat de content area begint op (mLeft, mTop), moeten we compenseren:
- *   left in content = pageLeft - mLeft
- *   top  in content = pageTop  - mTop
- */
-.pf { position:fixed; overflow:visible; word-wrap:break-word; }
+/* Fixed = t.o.v. PAGINA (0,0 = linksboven pagina) — herhaalt op elke pagina */
+.pf {
+    position: fixed;
+    overflow: visible;
+    word-wrap: break-word;
+}
 
-/* Artikelentabel */
+/* Tabel vloeit door in de content area (= tabelblok) */
 .items-table { width:100%; border-collapse:collapse; page-break-inside:auto; }
 .items-table thead { display:table-header-group; }
-.items-table tr { page-break-inside:avoid; page-break-after:auto; }
+.items-table tr { page-break-inside:avoid; }
 .items-table th, .items-table td { border:1px solid #ccc; padding:3px 5px; }
 .items-table th { background:#f0f0f0; font-weight:bold; }
 .items-table tr:nth-child(even) td { background:#fafafa; }
 </style>
-</head><body>
-HTML;
+</head><body>";
 
-        // ── LOGO ──
+        // ── LOGO (fixed, directe paginacoördinaten) ──
         if ($template->logo_path && isset($pos['logo'])) {
             $lp = public_path('storage/' . $template->logo_path);
             if (file_exists($lp)) {
                 $l = $pos['logo'];
-                // Pagina-coördinaten → content-coördinaten: aftrekken van margin
-                $lLeft = round($this->mmX($l['x'] ?? 0) - $mLeft, 3);
-                $lTop  = round($this->mmY($l['y'] ?? 0) - $mTop,  3);
-                $lW    = $this->mmX($l['width']  ?? 150);
-                $lH    = $this->mmY($l['height'] ?? 80);
-                $html .= "<img src=\"$lp\" style=\"position:fixed;left:{$lLeft}mm;top:{$lTop}mm;width:{$lW}mm;height:{$lH}mm;\">";
+                $html .= sprintf(
+                    '<img src="%s" class="pf" style="left:%s;top:%s;width:%s;height:%s;">',
+                    $lp,
+                    $this->mmX($l['x']      ?? 0),
+                    $this->mmY($l['y']      ?? 0),
+                    $this->mmX($l['width']  ?? 150),
+                    $this->mmY($l['height'] ?? 80)
+                );
             }
         }
 
-        // ── ALLE ANDERE VELDEN (fixed, herhalen op elke pagina) ──
+        // ── ALLE ANDERE VELDEN (fixed, directe paginacoördinaten) ──
         foreach ($pos as $id => $p) {
             if (in_array($id, ['logo', 'background', 'items_table'])) continue;
 
             $value = $this->getValue($id, $p, $data);
             if ($value === null || $value === '') continue;
 
-            // Pagina-coördinaten → content-coördinaten
-            $left = round($this->mmX($p['x'] ?? 0) - $mLeft, 3);
-            $top  = round($this->mmY($p['y'] ?? 0) - $mTop,  3);
-            $w    = $this->mmX($p['width']  ?? 200);
-            $h    = $this->mmY($p['height'] ?? 30);
-            $fs   = $this->pt($p['fontSize'] ?? 12);
-            $ff   = $p['fontFamily'] ?? 'Arial, sans-serif';
-            $al   = $p['align']      ?? 'left';
-
             $html .= sprintf(
-                '<div class="pf" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;">%s</div>',
-                $left, $top, $w, $h, $fs, $ff, $al,
+                '<div class="pf" style="left:%s;top:%s;width:%s;height:%s;font-size:%s;font-family:%s;text-align:%s;">%s</div>',
+                $this->mmX($p['x']      ?? 0),
+                $this->mmY($p['y']      ?? 0),
+                $this->mmX($p['width']  ?? 200),
+                $this->mmY($p['height'] ?? 30),
+                $this->pt($p['fontSize'] ?? 12),
+                $p['fontFamily'] ?? 'Arial',
+                $p['align']      ?? 'left',
                 nl2br(htmlspecialchars((string)$value))
             );
         }
 
-        // ── ARTIKELENTABEL (normale flow = vult content area = tabelblok) ──
+        // ── ARTIKELENTABEL (normale flow = vult content area op elke pagina) ──
         $items = $data['items_table'] ?? [];
         if ($tp && is_array($items) && count($items) > 0) {
-            $html .= "<table class=\"items-table\" style=\"font-size:{$tFontSize}pt;font-family:{$tFontFam};\">";
+            $html .= "<table class='items-table' style='font-size:{$tFontSize};font-family:{$tFontFam};'>";
             $html .= '<thead><tr>
                 <th style="text-align:left;">Omschrijving</th>
                 <th style="text-align:right;width:36px;">Aantal</th>
