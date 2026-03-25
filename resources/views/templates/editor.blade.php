@@ -47,38 +47,33 @@
                         <div class="bg-white border border-gray-300 rounded-lg p-4">
                             <h3 class="font-bold text-gray-900 mb-3">🖼️ Logo</h3>
 
-                            {{-- Huidig logo --}}
-                            <template x-if="logoUrl">
-                                <div class="mb-3 flex items-center gap-3">
-                                    <img :src="logoUrl" class="h-12 w-auto object-contain border border-gray-200 rounded">
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs text-gray-500 truncate">Logo geladen</p>
-                                        <button @click="logoPosition = logoPosition || { x: 50, y: 50, width: 150, height: 80 }"
-                                                x-show="!logoPosition"
-                                                class="mt-1 text-xs text-blue-600 hover:underline">
-                                            + Plaatsen op canvas
-                                        </button>
-                                        <span x-show="logoPosition" class="mt-1 text-xs text-green-600">✓ Op canvas</span>
-                                    </div>
+                            {{-- Huidig logo preview --}}
+                            <div x-show="logoUrl" class="mb-3">
+                                <img :src="logoUrl" class="h-16 w-auto max-w-full object-contain border border-gray-200 rounded bg-gray-50 p-1">
+                                <div class="flex items-center gap-2 mt-2">
+                                    <button @click="logoPosition = logoPosition || { x: 50, y: 50, width: 150, height: 80 }; $nextTick(() => setupDragAndDrop())"
+                                            x-show="!logoPosition"
+                                            class="text-xs bg-orange-100 text-orange-700 border border-orange-300 rounded px-2 py-1 hover:bg-orange-200">
+                                        + Plaatsen op canvas
+                                    </button>
+                                    <span x-show="logoPosition" class="text-xs text-green-600 font-medium">✓ Op canvas</span>
                                     <button @click="logoUrl = null; logoPosition = null"
-                                            class="text-red-500 hover:text-red-700 text-xs font-medium">✕</button>
+                                            class="ml-auto text-xs text-red-500 hover:text-red-700">✕ Verwijderen</button>
                                 </div>
-                            </template>
+                            </div>
 
-                            {{-- Upload --}}
-                            <label class="cursor-pointer block">
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-orange-400 transition"
-                                     :class="logoUploading ? 'opacity-50' : ''">
-                                    <svg class="mx-auto h-8 w-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                    </svg>
-                                    <p class="text-xs text-gray-500" x-text="logoUploading ? 'Uploading...' : (logoUrl ? 'Ander logo uploaden' : 'Logo uploaden')"></p>
-                                    <p class="text-xs text-gray-400">PNG, JPG tot 5MB</p>
-                                </div>
-                                <input type="file" accept="image/png,image/jpeg,image/jpg" class="hidden"
-                                       :disabled="logoUploading"
-                                       @change="uploadLogo($event)">
-                            </label>
+                            {{-- Upload zone --}}
+                            <div class="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-orange-400 transition"
+                                 :class="logoUploading ? 'border-orange-300 bg-orange-50' : 'border-gray-300'"
+                                 @click="$refs.logoInput.click()">
+                                <svg class="mx-auto h-8 w-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <p class="text-xs text-gray-500" x-text="logoUploading ? 'Uploading...' : (logoUrl ? 'Ander logo uploaden' : 'Klik om logo te uploaden')"></p>
+                                <p class="text-xs text-gray-400">PNG, JPG tot 5MB</p>
+                            </div>
+                            <input type="file" x-ref="logoInput" accept="image/png,image/jpeg,image/jpg" class="hidden"
+                                   x-on:change="uploadLogo($event)">
                             <p x-show="logoUploadError" x-text="logoUploadError" class="mt-1 text-xs text-red-600"></p>
                         </div>
 
