@@ -110,6 +110,22 @@
                                     </template>
                                 </div>
                             </div>
+
+                            {{-- Vrije tekstvelden --}}
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <h4 class="text-xs font-semibold text-gray-600 uppercase mb-2">Vrije tekst</h4>
+                                <div class="space-y-2">
+                                    <input type="text" x-model="newTextLabel"
+                                           placeholder="Bijv: Totaal excl. BTW"
+                                           @keydown.enter="addTextBlock()"
+                                           class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
+                                    <button @click="addTextBlock()"
+                                            :disabled="!newTextLabel.trim()"
+                                            class="w-full bg-pink-100 border border-pink-300 text-pink-800 rounded px-3 py-2 hover:bg-pink-200 transition text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+                                        + Tekstveld toevoegen
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -188,8 +204,12 @@
                                                     </table>
                                                 </div>
                                             </template>
+                                            {{-- Vrije tekstvelden: toon de ingestelde tekst --}}
+                                            <template x-if="key !== 'items_table' && field.staticText !== undefined">
+                                                <span class="pointer-events-none select-none px-1 w-full" x-text="field.staticText || field.label"></span>
+                                            </template>
                                             {{-- Overige velden: label tonen --}}
-                                            <template x-if="key !== 'items_table'">
+                                            <template x-if="key !== 'items_table' && field.staticText === undefined">
                                                 <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1" x-text="field.label"></span>
                                             </template>
 
@@ -260,10 +280,19 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Veld Naam</label>
-                            <input type="text" 
-                                   :value="placedFields[editingField]?.label" 
+                            <input type="text"
+                                   :value="placedFields[editingField]?.label"
                                    disabled
                                    class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-600">
+                        </div>
+
+                        {{-- Tekst inhoud: alleen voor vrije tekstvelden --}}
+                        <div x-show="placedFields[editingField]?.staticText !== undefined">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekst inhoud</label>
+                            <input type="text"
+                                   x-model="placedFields[editingField].staticText"
+                                   placeholder="Typ hier je tekst..."
+                                   class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
                         </div>
                         
                         {{-- Lettertype --}}
@@ -339,6 +368,7 @@
                 placedFields: {},
                 logoPosition: null,
                 editingField: null,
+                newTextLabel: '',
                 logoUrl: '{{ $template->logo_path ? asset("storage/" . $template->logo_path) : null }}',
                 backgroundUrl: '{{ $template->background_path ? asset("storage/" . $template->background_path) : null }}',
                 
@@ -611,6 +641,34 @@
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
                     });
+                },
+
+                addTextBlock() {
+                    const text = this.newTextLabel.trim();
+                    if (!text) return;
+
+                    // Unieke key zodat meerdere tekstvelden mogelijk zijn
+                    const key = 'static_text_' + Date.now();
+                    const canvasWidth = 850, canvasHeight = 1200;
+                    const fieldWidth = 200, fieldHeight = 30;
+                    const x = Math.round(Math.random() * (canvasWidth - fieldWidth - 100) + 50);
+                    const y = Math.round(Math.random() * (canvasHeight - fieldHeight - 100) + 50);
+
+                    this.placedFields[key] = {
+                        x, y,
+                        width: fieldWidth,
+                        height: fieldHeight,
+                        fontSize: 12,
+                        fontFamily: 'inherit',
+                        align: 'left',
+                        label: text,
+                        staticText: text, // Markeert dit als vrij tekstveld
+                    };
+
+                    this.placedFields = { ...this.placedFields };
+                    this.newTextLabel = '';
+
+                    this.$nextTick(() => { this.setupDragAndDrop(); });
                 },
 
                 removeField(fieldKey) {

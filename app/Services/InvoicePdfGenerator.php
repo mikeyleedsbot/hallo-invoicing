@@ -118,14 +118,21 @@ class InvoicePdfGenerator
         // Render each field
         foreach ($positions as $fieldId => $position) {
             if ($fieldId === 'logo' || $fieldId === 'background') {
-                continue; // Skip special fields
+                continue;
             }
-            
+
+            // Vrije tekstvelden: gebruik staticText direct als waarde
+            if (str_starts_with($fieldId, 'static_text_')) {
+                $value = $position['staticText'] ?? ($position['label'] ?? '');
+                $html .= $this->renderField($fieldId, $position, $value, $scaleX, $scaleY, $fontScale);
+                continue;
+            }
+
             $value = $this->getFieldValue($fieldId, $data);
             if ($value === null) {
                 continue;
             }
-            
+
             $html .= $this->renderField($fieldId, $position, $value, $scaleX, $scaleY, $fontScale);
         }
 
