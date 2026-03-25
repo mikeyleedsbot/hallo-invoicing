@@ -7,330 +7,273 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoicePdfGenerator
 {
-    /**
-     * Generate PDF from template with data.
-     */
+    private float $canvasWidth  = 850;
+    private float $canvasHeight = 1200;
+    private float $a4Width      = 210; // mm
+    private float $a4Height     = 297; // mm
+
+    private function scaleX(float $px): float { return round($px * $this->a4Width  / $this->canvasWidth,  3); }
+    private function scaleY(float $px): float { return round($px * $this->a4Height / $this->canvasHeight, 3); }
+    private function scaleFont(float $px): float { return round($px * 595 / $this->canvasWidth, 3); } // canvas px → pt
+
     public function generateFromTemplate(InvoiceTemplate $template, array $data)
     {
-        // Get field positions from template
         $positions = $template->field_positions ?? [];
-        
-        // A4 dimensions in pixels at 72 DPI (standard PDF resolution)
-        // A4 = 210mm x 297mm = 595pt x 842pt
-        $canvasWidth = 850;
-        $canvasHeight = 1200;
-        
-        // Build HTML with absolute positioning
-        $html = $this->buildHtml($positions, $data, $template);
-        
-        // Generate PDF
+        $html      = $this->buildHtml($positions, $data, $template);
+
         $pdf = Pdf::loadHTML($html);
         $pdf->setPaper('a4', 'portrait');
-        
         return $pdf;
     }
-    
-    /**
-     * Build HTML from field positions and data.
-     */
+
     private function buildHtml(array $positions, array $data, InvoiceTemplate $template): string
     {
-        // Canvas dimensions (from editor)
-        $canvasWidth = 850;  // pixels
-        $canvasHeight = 1200; // pixels
-        
-        // A4 dimensions in mm
-        $a4Width = 210;  // mm
-        $a4Height = 297; // mm
-        
-        // Calculate scale factor (canvas pixels to PDF mm)
-        $scaleX = $a4Width / $canvasWidth;
-        $scaleY = $a4Height / $canvasHeight;
-        
-        // Font scale: canvas px → PDF pt
-        // Canvas 850px = 210mm = 595pt → 1px = 595/850 = 0.7pt
-        // Dit geeft fonts die 1:1 overeenkomen met wat je in de editor ziet
-        $fontScale = 595 / $canvasWidth; // pt per canvas pixel
-        
-        // Bepaal positie van de artikelentabel (als die er is)
-        $tablePosition = $positions['items_table'] ?? null;
-        $tableYmm      = $tablePosition ? ($tablePosition['y'] ?? 0) * $scaleY : null;
-        $tableXmm      = $tablePosition ? ($tablePosition['x'] ?? 0) * $scaleX : null;
-        $tableWidthmm  = $tablePosition ? ($tablePosition['width'] ?? 700) * $scaleX : null;
+        // Splits velden op in categorieën
+        $tablePos    = $positions['items_table'] ?? null;
+        $tableYmm    = $tablePos ? $this->scaleY($tablePos['y'] ?? 0) : null;
 
-        // Velden ONDER de tabel: absolute positie omzetten naar relatief (y - tableY - tableHeight)
-        // We splitsen: alles boven tabel = absoluut, tabel = flow, alles onder tabel = absoluut op volgende positie
+        // Velden gesorteerd op Y
+        $allFields = [];
+        foreach ($positions as $id => $pos) {
+            if (in_array($id, ['logo', 'background', 'items_table'])) continue;
+            $allFields[$id] = $pos;
+        }
+
+        // Categoriseer per pageVisibility
+        $fixedFields = [];  // 'all' → position:fixed (elke pagina)
+        $firstFields = [];  // 'first' of geen instelling
+        $lastFields  = [];  // 'last' → na de tabel
+
+        foreach ($allFields as $id => $pos) {
+            $vis = $pos['pageVisibility'] ?? 'first';
+            if ($vis === 'all') {
+                $fixedFields[$id] = $pos;
+            } elseif ($vis === 'last') {
+                $lastFields[$id] = $pos;
+            } else {
+                // 'first': alles boven tabel = eerste pagina, alles onder = na tabel
+                $firstFields[$id] = $pos;
+            }
+        }
+
+        // Hoogte header (tot aan tabel, of volledige pagina als geen tabel)
+        $headerHeight = $tableYmm ?? $this->a4Height;
+
+        // Tabel afmetingen
+        $tableXmm    = $tablePos ? $this->scaleX($tablePos['x']     ?? 0)   : 12;
+        $tableWidthmm = $tablePos ? $this->scaleX($tablePos['width'] ?? 700) : 186;
+
+        // Achtergrond URL
+        $bgStyle = '';
+        if ($template->background_path) {
+            $bgPath = public_path('storage/' . $template->background_path);
+            if (file_exists($bgPath)) {
+                $bgStyle = "background-image: url('$bgPath'); background-size: cover; background-repeat: no-repeat;";
+            }
+        }
 
         $html = '<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            width: 210mm;
-        }
-        .page-header {
-            position: relative;
-            width: 210mm;
-            height: ' . round($tableYmm ?? 100) . 'mm;
-        }
-        .field {
-            position: absolute;
-            overflow: visible;
-            word-wrap: break-word;
-        }
-        .table-section {
-            page-break-inside: auto;
-        }
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            page-break-inside: auto;
-        }
-        .items-table thead { display: table-header-group; }
-        .items-table tbody tr { page-break-inside: avoid; page-break-after: auto; }
-        .items-table th,
-        .items-table td {
-            border: 1px solid #ddd;
-            padding: 4px 6px;
-            text-align: left;
-        }
-        .items-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .page-footer {
-            position: relative;
-            width: 210mm;
-        }
-        .page-footer .field {
-            position: absolute;
-        }
-    </style>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: Arial, sans-serif;
+    width: 210mm;
+    ' . $bgStyle . '
+}
+
+/* Velden die op ELKE pagina herhalen (logo, bedrijfsnaam, etc.) */
+.fixed-field {
+    position: fixed;
+    overflow: visible;
+}
+
+/* Eerste pagina header: absoluut in een container van vaste hoogte */
+.page-header {
+    position: relative;
+    width: 210mm;
+    height: ' . round($headerHeight, 2) . 'mm;
+    page-break-inside: avoid;
+}
+.header-field {
+    position: absolute;
+    overflow: visible;
+    word-wrap: break-word;
+}
+
+/* Tabel sectie: normale flow zodat hij door paginas loopt */
+.table-section {
+    margin-left: ' . round($tableXmm, 2) . 'mm;
+    width: ' . round($tableWidthmm, 2) . 'mm;
+    page-break-before: avoid;
+}
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: auto;
+}
+.items-table thead { display: table-header-group; }
+.items-table tr    { page-break-inside: avoid; page-break-after: auto; }
+.items-table th, .items-table td {
+    border: 1px solid #ccc;
+    padding: 3px 5px;
+    text-align: left;
+}
+.items-table th { background-color: #f0f0f0; font-weight: bold; }
+.items-table tr:nth-child(even) td { background-color: #fafafa; }
+
+/* Footer: velden na de tabel */
+.page-footer {
+    position: relative;
+    width: 210mm;
+    margin-top: 4mm;
+}
+.footer-field {
+    position: absolute;
+    overflow: visible;
+    word-wrap: break-word;
+}
+</style>
 </head>
 <body>';
 
-        // Achtergrond
-        if ($template->background_path) {
-            $backgroundUrl = public_path('storage/' . $template->background_path);
-            if (file_exists($backgroundUrl)) {
-                $html .= '<img src="' . $backgroundUrl . '" style="position: fixed; top: 0; left: 0; width: 210mm; height: 297mm; z-index: -1;">';
-            }
+        // ── FIXED FIELDS (herhalen op elke pagina) ──
+        foreach ($fixedFields as $id => $pos) {
+            $value = $this->getValue($id, $pos, $data);
+            if ($value === null) continue;
+            $html .= $this->renderFixed($id, $pos, $value);
         }
 
-        // ── SECTIE 1: Page header (alles boven de tabel, absoluut) ──
-        $html .= '<div class="page-header">';
-
-        // Logo
+        // ── LOGO ──
         if ($template->logo_path && isset($positions['logo'])) {
-            $logoUrl = public_path('storage/' . $template->logo_path);
-            if (file_exists($logoUrl)) {
+            $logoPath = public_path('storage/' . $template->logo_path);
+            if (file_exists($logoPath)) {
                 $logo = $positions['logo'];
+                $vis  = $logo['pageVisibility'] ?? 'first';
+                $posStyle = $vis === 'all' ? 'position:fixed;' : 'position:absolute;';
                 $html .= sprintf(
-                    '<img src="%s" style="position: absolute; left: %smm; top: %smm; width: %smm; height: %smm;">',
-                    $logoUrl,
-                    ($logo['x'] ?? 0) * $scaleX,
-                    ($logo['y'] ?? 0) * $scaleY,
-                    ($logo['width'] ?? 150) * $scaleX,
-                    ($logo['height'] ?? 80) * $scaleY
+                    '<img src="%s" style="%s left:%smm; top:%smm; width:%smm; height:%smm;">',
+                    $logoPath, $posStyle,
+                    $this->scaleX($logo['x'] ?? 0),
+                    $this->scaleY($logo['y'] ?? 0),
+                    $this->scaleX($logo['width'] ?? 150),
+                    $this->scaleY($logo['height'] ?? 80)
                 );
             }
         }
 
-        // Alle velden BOVEN de tabel (of zonder tabel: allemaal)
-        foreach ($positions as $fieldId => $position) {
-            if (in_array($fieldId, ['logo', 'background', 'items_table'])) continue;
-
-            // Velden die ONDER de tabel staan bewaren we voor sectie 3
-            if ($tableYmm !== null && (($position['y'] ?? 0) * $scaleY) >= $tableYmm) continue;
-
-            if (str_starts_with($fieldId, 'static_text_')) {
-                $value = $position['staticText'] ?? ($position['label'] ?? '');
-            } else {
-                $value = $this->getFieldValue($fieldId, $data);
-                if ($value === null) continue;
-            }
-
-            $html .= $this->renderField($fieldId, $position, $value, $scaleX, $scaleY, $fontScale);
+        // ── PAGE HEADER (eerste pagina velden boven tabel) ──
+        $html .= '<div class="page-header">';
+        foreach ($firstFields as $id => $pos) {
+            // Sla velden onder de tabel over — die komen in de footer
+            if ($tableYmm !== null && $this->scaleY($pos['y'] ?? 0) >= $tableYmm) continue;
+            $value = $this->getValue($id, $pos, $data);
+            if ($value === null) continue;
+            $html .= $this->renderAbsolute($id, $pos, $value, 'header-field');
         }
+        $html .= '</div>';
 
-        $html .= '</div>'; // einde page-header
-
-        // ── SECTIE 2: Artikelentabel (normale flow, pagina-overloop) ──
-        if ($tablePosition && isset($data['items_table']) && is_array($data['items_table'])) {
-            $fontSize   = ($tablePosition['fontSize'] ?? 10) * $fontScale;
-            $fontFamily = $tablePosition['fontFamily'] ?? 'Arial, sans-serif';
-
-            // Gebruik exacte X-positie en breedte uit de editor
-            $html .= sprintf(
-                '<div class="table-section" style="font-size: %spt; font-family: %s; margin-left: %smm; width: %smm; padding: 0;">',
-                $fontSize, $fontFamily, round($tableXmm, 2), round($tableWidthmm, 2)
-            );
+        // ── ARTIKELENTABEL ──
+        $items = $data['items_table'] ?? [];
+        if ($tablePos && is_array($items) && count($items) > 0) {
+            $fontSize   = $this->scaleFont($tablePos['fontSize'] ?? 10);
+            $fontFamily = $tablePos['fontFamily'] ?? 'Arial, sans-serif';
+            $html .= sprintf('<div class="table-section" style="font-size:%spt; font-family:%s;">', $fontSize, $fontFamily);
             $html .= '<table class="items-table">
-                <thead>
-                    <tr>
-                        <th>Omschrijving</th>
-                        <th style="text-align:right;">Aantal</th>
-                        <th style="text-align:right;">Prijs</th>
-                        <th style="text-align:right;">Totaal</th>
-                    </tr>
-                </thead>
-                <tbody>';
-
-            foreach ($data['items_table'] as $item) {
+                <thead><tr>
+                    <th>Omschrijving</th>
+                    <th style="text-align:right;width:40px;">Aantal</th>
+                    <th style="text-align:right;width:55px;">Prijs</th>
+                    <th style="text-align:right;width:55px;">Totaal</th>
+                </tr></thead><tbody>';
+            foreach ($items as $item) {
                 $total = ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
-                $html .= sprintf(
-                    '<tr>
-                        <td>%s</td>
-                        <td style="text-align:right;">%s</td>
-                        <td style="text-align:right;">€ %s</td>
-                        <td style="text-align:right;">€ %s</td>
-                    </tr>',
+                $html .= sprintf('<tr>
+                    <td>%s</td>
+                    <td style="text-align:right;">%s</td>
+                    <td style="text-align:right;">€ %s</td>
+                    <td style="text-align:right;">€ %s</td>
+                </tr>',
                     htmlspecialchars($item['description'] ?? ''),
                     number_format($item['quantity'] ?? 0, 0, ',', '.'),
                     number_format($item['price'] ?? 0, 2, ',', '.'),
                     number_format($total, 2, ',', '.')
                 );
             }
-
             $html .= '</tbody></table></div>';
         }
 
-        // ── SECTIE 3: Velden ONDER de tabel (relatief gepositioneerd) ──
-        $belowFields = [];
-        foreach ($positions as $fieldId => $position) {
-            if (in_array($fieldId, ['logo', 'background', 'items_table'])) continue;
-            if ($tableYmm === null) continue;
-            if ((($position['y'] ?? 0) * $scaleY) < $tableYmm) continue;
-            $belowFields[] = ['id' => $fieldId, 'pos' => $position];
+        // ── PAGE FOOTER (velden na tabel + 'last' velden) ──
+        // Collect: firstFields onder tabel + lastFields
+        $footerFields = $lastFields;
+        foreach ($firstFields as $id => $pos) {
+            if ($tableYmm !== null && $this->scaleY($pos['y'] ?? 0) >= $tableYmm) {
+                $footerFields[$id] = $pos;
+            }
         }
 
-        if (!empty($belowFields)) {
-            // Hoogste Y onder de tabel bepaalt de hoogte van de footer sectie
-            $maxY = max(array_map(fn($f) => (($f['pos']['y'] ?? 0) + ($f['pos']['height'] ?? 30)) * $scaleY, $belowFields));
-            $minY = min(array_map(fn($f) => ($f['pos']['y'] ?? 0) * $scaleY, $belowFields));
-            $footerHeight = $maxY - $tableYmm + 10;
+        if (!empty($footerFields)) {
+            // Bereken hoogte footer sectie
+            $minY = min(array_map(fn($p) => $this->scaleY($p['y'] ?? 0), $footerFields));
+            $maxY = max(array_map(fn($p) => $this->scaleY(($p['y'] ?? 0) + ($p['height'] ?? 30)), $footerFields));
+            $footerHeight = $maxY - ($tableYmm ?? $minY) + 10;
 
-            $html .= '<div class="page-footer" style="height: ' . round($footerHeight) . 'mm; margin-top: 4mm;">';
-
-            foreach ($belowFields as $item) {
-                $fieldId  = $item['id'];
-                $position = $item['pos'];
-
-                // Pas Y aan: relatief tov tabel startpositie
-                $adjustedPosition = $position;
-                $adjustedPosition['y'] = (($position['y'] ?? 0) * $scaleY - $tableYmm) / $scaleY;
-
-                if (str_starts_with($fieldId, 'static_text_')) {
-                    $value = $position['staticText'] ?? ($position['label'] ?? '');
-                } else {
-                    $value = $this->getFieldValue($fieldId, $data);
-                    if ($value === null) continue;
-                }
-
-                $html .= $this->renderField($fieldId, $adjustedPosition, $value, $scaleX, $scaleY, $fontScale);
+            $html .= '<div class="page-footer" style="height:' . round($footerHeight) . 'mm;">';
+            foreach ($footerFields as $id => $pos) {
+                $value = $this->getValue($id, $pos, $data);
+                if ($value === null) continue;
+                // Y relatief ten opzichte van tabel start
+                $adjustedPos = $pos;
+                $adjustedPos['y'] = (($this->scaleY($pos['y'] ?? 0) - ($tableYmm ?? 0)) / $this->a4Height) * $this->canvasHeight;
+                $html .= $this->renderAbsolute($id, $adjustedPos, $value, 'footer-field');
             }
-
             $html .= '</div>';
         }
 
         $html .= '</body></html>';
-        
         return $html;
     }
-    
-    /**
-     * Get value for a field from data.
-     */
-    private function getFieldValue(string $fieldId, array $data)
-    {
-        // Direct mapping
-        if (isset($data[$fieldId])) {
-            return $data[$fieldId];
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Render a single field as HTML.
-     */
-    private function renderField(string $fieldId, array $position, $value, float $scaleX, float $scaleY, float $fontScale = 0.7): string
-    {
-        // Convert canvas pixels to PDF millimeters (positie + grootte)
-        $x = ($position['x'] ?? 0) * $scaleX;
-        $y = ($position['y'] ?? 0) * $scaleY;
-        $width = ($position['width'] ?? 200) * $scaleX;
-        $height = ($position['height'] ?? 30) * $scaleY;
-        // Font: canvas px → pt (aparte schaal, niet mee met positie)
-        $fontSize = ($position['fontSize'] ?? 12) * $fontScale;
-        $fontFamily = $position['fontFamily'] ?? 'Arial, sans-serif';
-        $align = $position['align'] ?? 'left';
-        
-        // Special handling for items table
-        if ($fieldId === 'items_table' && isset($value) && is_array($value)) {
-            return $this->renderItemsTable($position, $value, $scaleX, $scaleY, $fontScale);
-        }
-        
-        // Format multi-line text
-        $formattedValue = nl2br(htmlspecialchars($value));
-        
-        $style = sprintf(
-            'position: absolute; left: %smm; top: %smm; width: %smm; height: %smm; font-size: %spt; font-family: %s; text-align: %s;',
-            $x, $y, $width, $height, $fontSize, $fontFamily, $align
-        );
-        
-        return sprintf('<div class="field" style="%s">%s</div>', $style, $formattedValue);
-    }
-    
-    /**
-     * Render items table.
-     */
-    private function renderItemsTable(array $position, array $items, float $scaleX, float $scaleY, float $fontScale = 0.7): string
-    {
-        // Convert canvas pixels to PDF millimeters
-        $x = ($position['x'] ?? 0) * $scaleX;
-        $y = ($position['y'] ?? 0) * $scaleY;
-        $width = ($position['width'] ?? 700) * $scaleX;
-        $fontSize = ($position['fontSize'] ?? 10) * $fontScale;
-        $fontFamily = $position['fontFamily'] ?? 'Arial, sans-serif';
 
-        $html = sprintf(
-            '<div class="field" style="position: absolute; left: %smm; top: %smm; width: %smm; font-size: %spt; font-family: %s;">',
-            $x, $y, $width, $fontSize, $fontFamily
-        );
-        
-        $html .= '<table class="items-table">
-            <thead>
-                <tr>
-                    <th>Omschrijving</th>
-                    <th style="text-align: right;">Aantal</th>
-                    <th style="text-align: right;">Prijs</th>
-                    <th style="text-align: right;">Totaal</th>
-                </tr>
-            </thead>
-            <tbody>';
-        
-        foreach ($items as $item) {
-            $total = ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
-            $html .= sprintf(
-                '<tr>
-                    <td>%s</td>
-                    <td style="text-align: right;">%s</td>
-                    <td style="text-align: right;">€ %s</td>
-                    <td style="text-align: right;">€ %s</td>
-                </tr>',
-                htmlspecialchars($item['description'] ?? ''),
-                number_format($item['quantity'] ?? 0, 0, ',', '.'),
-                number_format($item['price'] ?? 0, 2, ',', '.'),
-                number_format($total, 2, ',', '.')
-            );
+    private function getValue(string $id, array $pos, array $data): mixed
+    {
+        if (str_starts_with($id, 'static_text_')) {
+            return $pos['staticText'] ?? ($pos['label'] ?? '');
         }
-        
-        $html .= '</tbody></table></div>';
-        
-        return $html;
+        return $data[$id] ?? null;
+    }
+
+    private function renderFixed(string $id, array $pos, mixed $value): string
+    {
+        $x       = $this->scaleX($pos['x'] ?? 0);
+        $y       = $this->scaleY($pos['y'] ?? 0);
+        $w       = $this->scaleX($pos['width'] ?? 200);
+        $h       = $this->scaleY($pos['height'] ?? 30);
+        $fs      = $this->scaleFont($pos['fontSize'] ?? 12);
+        $ff      = $pos['fontFamily'] ?? 'Arial, sans-serif';
+        $align   = $pos['align'] ?? 'left';
+
+        return sprintf(
+            '<div class="fixed-field" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;">%s</div>',
+            $x, $y, $w, $h, $fs, $ff, $align, nl2br(htmlspecialchars((string)$value))
+        );
+    }
+
+    private function renderAbsolute(string $id, array $pos, mixed $value, string $class = 'header-field'): string
+    {
+        $x     = $this->scaleX($pos['x'] ?? 0);
+        $y     = $this->scaleY($pos['y'] ?? 0);
+        $w     = $this->scaleX($pos['width'] ?? 200);
+        $h     = $this->scaleY($pos['height'] ?? 30);
+        $fs    = $this->scaleFont($pos['fontSize'] ?? 12);
+        $ff    = $pos['fontFamily'] ?? 'Arial, sans-serif';
+        $align = $pos['align'] ?? 'left';
+
+        return sprintf(
+            '<div class="%s" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;">%s</div>',
+            $class, $x, $y, $w, $h, $fs, $ff, $align, nl2br(htmlspecialchars((string)$value))
+        );
     }
 }

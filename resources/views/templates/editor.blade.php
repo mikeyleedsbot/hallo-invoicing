@@ -413,8 +413,33 @@
                             </div>
                         </div>
                         
+                        {{-- Pagina zichtbaarheid --}}
+                        <div x-show="editingField !== 'items_table'">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
+                            <div class="grid grid-cols-3 gap-1">
+                                <button @click="placedFields[editingField].pageVisibility = 'all'"
+                                        :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                        class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                    📄 Alle
+                                </button>
+                                <button @click="placedFields[editingField].pageVisibility = 'first'"
+                                        :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                        class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                    1️⃣ Eerste
+                                </button>
+                                <button @click="placedFields[editingField].pageVisibility = 'last'"
+                                        :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                        class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                    🔚 Laatste
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">
+                                "Alle" = herhaalt op elke pagina bij lange facturen
+                            </p>
+                        </div>
+
                         <div class="pt-4 flex gap-2">
-                            <button @click="closeFieldEditor()" 
+                            <button @click="closeFieldEditor()"
                                     class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                                 Sluiten
                             </button>
