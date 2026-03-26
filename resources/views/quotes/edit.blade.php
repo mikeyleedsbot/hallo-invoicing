@@ -176,9 +176,9 @@
                                                     <td class="pr-3 w-24">
                                                         <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
-                                                            <option value="0">0%</option>
-                                                            <option value="9">9%</option>
-                                                            <option value="21">21%</option>
+                                                            @foreach($vatRates as $vat)
+                                                                <option value="{{ (int)$vat->rate }}">{{ number_format($vat->rate, 0) }}%</option>
+                                                            @endforeach
                                                         </select>
                                                     </td>
                                                     <td class="w-12 text-center">
@@ -261,7 +261,7 @@
                 },
 
                 addLine() {
-                    this.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate: 21 });
+                    this.lines.push({ description: '', quantity: 1, unit_price: 0, vat_rate: {{ $defaultVat }} });
                 },
 
                 removeLine(index) {

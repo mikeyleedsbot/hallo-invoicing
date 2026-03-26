@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\InvoiceTemplate;
+use App\Models\VatRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -35,7 +36,10 @@ class InvoiceController extends Controller
             : 1;
         $invoiceNumber = 'INV' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
         
-        return view('invoices.create', compact('customers', 'products', 'templates', 'defaultTemplate', 'invoiceNumber'));
+        $vatRates    = VatRate::ordered()->get();
+        $defaultVat  = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
+
+        return view('invoices.create', compact('customers', 'products', 'templates', 'defaultTemplate', 'invoiceNumber', 'vatRates', 'defaultVat'));
     }
 
     public function store(Request $request)
@@ -114,7 +118,10 @@ class InvoiceController extends Controller
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $invoice->load('lines');
         
-        return view('invoices.edit', compact('invoice', 'customers', 'products', 'templates'));
+        $vatRates   = VatRate::ordered()->get();
+        $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
+
+        return view('invoices.edit', compact('invoice', 'customers', 'products', 'templates', 'vatRates', 'defaultVat'));
     }
 
     public function update(Request $request, Invoice $invoice)

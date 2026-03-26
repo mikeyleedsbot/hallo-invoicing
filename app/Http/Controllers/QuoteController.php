@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Invoice;
 use App\Models\InvoiceTemplate;
+use App\Models\VatRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -36,7 +37,10 @@ class QuoteController extends Controller
             : 1;
         $quoteNumber = 'OFF' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
         
-        return view('quotes.create', compact('customers', 'products', 'templates', 'defaultTemplate', 'quoteNumber'));
+        $vatRates   = VatRate::ordered()->get();
+        $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
+
+        return view('quotes.create', compact('customers', 'products', 'templates', 'defaultTemplate', 'quoteNumber', 'vatRates', 'defaultVat'));
     }
 
     public function store(Request $request)
@@ -115,7 +119,10 @@ class QuoteController extends Controller
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $quote->load('lines');
         
-        return view('quotes.edit', compact('quote', 'customers', 'products', 'templates'));
+        $vatRates   = VatRate::ordered()->get();
+        $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
+
+        return view('quotes.edit', compact('quote', 'customers', 'products', 'templates', 'vatRates', 'defaultVat'));
     }
 
     public function update(Request $request, Quote $quote)

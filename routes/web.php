@@ -7,6 +7,7 @@ use App\Http\Controllers\InviteController;
 use App\Http\Controllers\MfaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\VatRateController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -44,6 +45,13 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     // App Settings
     Route::get('/settings',  [AppSettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings',  [AppSettingController::class, 'update'])->name('settings.update');
+
+    // BTW Tarieven
+    Route::get('/btw-tarieven',                    [VatRateController::class, 'index'])->name('vat-rates.index');
+    Route::post('/btw-tarieven',                   [VatRateController::class, 'store'])->name('vat-rates.store');
+    Route::put('/btw-tarieven/{vatRate}',           [VatRateController::class, 'update'])->name('vat-rates.update');
+    Route::delete('/btw-tarieven/{vatRate}',        [VatRateController::class, 'destroy'])->name('vat-rates.destroy');
+    Route::post('/btw-tarieven/{vatRate}/default',  [VatRateController::class, 'setDefault'])->name('vat-rates.set-default');
 
     // Gebruikersbeheer (admin only)
     Route::get('/gebruikers',                              [UserManagementController::class, 'index'])->name('users.index');
