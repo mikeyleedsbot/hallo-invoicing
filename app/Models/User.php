@@ -12,6 +12,11 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Invoice::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -21,6 +26,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'company_name',
+        'phone',
+        'address',
+        'city',
+        'mfa_secret',
+        'mfa_enabled',
+        'mfa_confirmed_at',
+        'is_admin',
+        'invite_token',
+        'invite_sent_at',
     ];
 
     /**
@@ -31,6 +46,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_secret',
     ];
 
     /**
@@ -42,7 +58,11 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'mfa_confirmed_at'  => 'datetime',
+            'invite_sent_at'    => 'datetime',
+            'password'          => 'hashed',
+            'mfa_enabled'       => 'boolean',
+            'is_admin'          => 'boolean',
         ];
     }
 }

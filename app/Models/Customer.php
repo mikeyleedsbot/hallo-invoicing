@@ -22,4 +22,14 @@ class Customer extends Model
     protected $casts = [
         'active' => 'boolean',
     ];
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class);
+    }
 }

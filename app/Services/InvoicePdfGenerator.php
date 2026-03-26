@@ -50,15 +50,27 @@ class InvoicePdfGenerator
         $availableMm = $tH - $headerRowMm;
         $rowsPerPage = max(1, (int) floor($availableMm / $rowHeightMm));
 
-        // Velden splitsen: boven tabel = op elke pagina, onder tabel = alleen laatste pagina
-        $aboveFields = [];
-        $belowFields = [];
+        // Velden splitsen op basis van pageVisibility (editor-instelling heeft prioriteit).
+        // Fallback: boven tabel Y = alle pagina's, onder tabel Y = alleen laatste pagina.
+        $firstOnlyFields = [];  // alleen pagina 1
+        $allPageFields   = [];  // elke pagina
+        $lastOnlyFields  = [];  // alleen laatste pagina
         foreach ($pos as $id => $p) {
             if (in_array($id, ['logo', 'background', 'items_table'])) continue;
-            if ($this->y($p['y'] ?? 0) < $tY) {
-                $aboveFields[$id] = $p;
+            $visibility = $p['pageVisibility'] ?? null;
+            if ($visibility === 'first') {
+                $firstOnlyFields[$id] = $p;
+            } elseif ($visibility === 'last') {
+                $lastOnlyFields[$id] = $p;
+            } elseif ($visibility === 'all') {
+                $allPageFields[$id] = $p;
             } else {
-                $belowFields[$id] = $p;
+                // Geen instelling: gebruik positie-gebaseerde fallback
+                if ($this->y($p['y'] ?? 0) < $tY) {
+                    $allPageFields[$id] = $p;
+                } else {
+                    $lastOnlyFields[$id] = $p;
+                }
             }
         }
 
@@ -125,16 +137,25 @@ body { font-family:Arial,sans-serif; }
                 }
             }
 
-            // Velden boven tabel (op elke pagina)
-            foreach ($aboveFields as $id => $p) {
+            // Velden die op alle pagina's verschijnen
+            foreach ($allPageFields as $id => $p) {
                 $value = $this->getValue($id, $p, $data);
                 if ($value === null) continue;
                 $html .= $this->renderAbs($p, $value);
             }
 
-            // Velden onder tabel (alleen op laatste pagina)
+            // Velden die alleen op de eerste pagina verschijnen
+            if ($page === 0) {
+                foreach ($firstOnlyFields as $id => $p) {
+                    $value = $this->getValue($id, $p, $data);
+                    if ($value === null) continue;
+                    $html .= $this->renderAbs($p, $value);
+                }
+            }
+
+            // Velden die alleen op de laatste pagina verschijnen
             if ($isLast) {
-                foreach ($belowFields as $id => $p) {
+                foreach ($lastOnlyFields as $id => $p) {
                     $value = $this->getValue($id, $p, $data);
                     if ($value === null) continue;
                     $html .= $this->renderAbs($p, $value);
