@@ -279,7 +279,7 @@
                                             @csrf
                                             <button type="submit" onclick="return confirm('MFA resetten voor {{ $u->name }}?')"
                                                     class="px-3 py-1.5 text-xs font-medium text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors">
-                                                Reset MFA
+                                                MFA resetten
                                             </button>
                                         </form>
                                         @endif

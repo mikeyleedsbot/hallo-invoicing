@@ -1,0 +1,47 @@
+{
+    "Dashboard": "Dashboard",
+    "Profile": "Profiel",
+    "Log Out": "Uitloggen",
+    "Log in": "Inloggen",
+    "Logout": "Uitloggen",
+
+    "Email": "E-mailadres",
+    "Password": "Wachtwoord",
+    "Remember me": "Onthoud mij",
+    "Forgot your password?": "Wachtwoord vergeten?",
+
+    "Name": "Naam",
+    "Confirm Password": "Bevestig wachtwoord",
+    "Already registered?": "Al een account?",
+    "Register": "Registreren",
+
+    "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.": "Wachtwoord vergeten? Geen probleem. Geef je e-mailadres op en we sturen je een link waarmee je een nieuw wachtwoord kunt instellen.",
+    "Email Password Reset Link": "Stuur wachtwoord-resetlink",
+
+    "Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn't receive the email, we will gladly send you another.": "Bedankt voor je registratie! Voordat je begint, kun je je e-mailadres bevestigen door op de link te klikken die we je zojuist hebben gemaild. Als je de e-mail niet hebt ontvangen, sturen we er graag nog een.",
+    "A new verification link has been sent to the email address you provided during registration.": "Er is een nieuwe verificatielink gestuurd naar het e-mailadres dat je bij de registratie hebt opgegeven.",
+    "Resend Verification Email": "Verificatie-e-mail opnieuw versturen",
+
+    "This is a secure area of the application. Please confirm your password before continuing.": "Dit is een beveiligd gedeelte van de applicatie. Bevestig je wachtwoord om door te gaan.",
+    "Confirm": "Bevestigen",
+
+    "Reset Password": "Wachtwoord opnieuw instellen",
+
+    "Update Password": "Wachtwoord wijzigen",
+    "Ensure your account is using a long, random password to stay secure.": "Gebruik een lang, willekeurig wachtwoord om je account veilig te houden.",
+    "Current Password": "Huidig wachtwoord",
+    "New Password": "Nieuw wachtwoord",
+    "Save": "Opslaan",
+    "Saved.": "Opgeslagen.",
+
+    "Delete Account": "Account verwijderen",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Zodra je account is verwijderd, worden alle gegevens permanent gewist. Download eerst alle informatie die je wilt bewaren.",
+    "Are you sure you want to delete your account?": "Weet je zeker dat je je account wilt verwijderen?",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Zodra je account is verwijderd, worden alle gegevens permanent gewist. Voer je wachtwoord in om te bevestigen.",
+    "Cancel": "Annuleren",
+
+    "Template Editor": "Sjablooneditor",
+
+    "Profiel": "Profiel",
+    "Uitloggen": "Uitloggen"
+}
