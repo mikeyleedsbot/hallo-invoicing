@@ -17,11 +17,8 @@ class RequireMfa
 
         $user = Auth::user();
 
-        // MFA nog niet ingesteld → stuur naar setup
+        // MFA niet ingeschakeld → gewoon doorlaten (MFA is optioneel)
         if (!$user->mfa_enabled) {
-            if (!$request->routeIs('mfa.*')) {
-                return redirect()->route('mfa.setup');
-            }
             return $next($request);
         }
 

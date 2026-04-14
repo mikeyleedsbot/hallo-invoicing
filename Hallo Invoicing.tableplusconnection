@@ -1,0 +1,11 @@
+{
+  "ConnectionName": "Hallo Invoicing (DBngin)",
+  "DatabaseHost": "127.0.0.1",
+  "DatabasePort": "3306",
+  "DatabaseUser": "root",
+  "DatabasePassword": "",
+  "DatabaseName": "hallo_invoicing",
+  "Driver": "MySQL",
+  "Enviroment": "local",
+  "LabelColor": "8"
+}

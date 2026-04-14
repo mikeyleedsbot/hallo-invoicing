@@ -8,10 +8,10 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Facturen
+                        Offertes
                     </h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Beheer al je facturen
+                        Beheer al je offertes
                     </p>
                 </div>
                 <a href="{{ route('quotes.create') }}"
@@ -96,16 +96,16 @@
                                             $statusColors = [
                                                 'draft' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                                                 'sent' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                                                'paid' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                                                'overdue' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                                                'cancelled' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                'accepted' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                                'expired' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
                                             ];
                                             $statusLabels = [
                                                 'draft' => 'Concept',
                                                 'sent' => 'Verzonden',
-                                                'paid' => 'Betaald',
-                                                'overdue' => 'Verlopen',
-                                                'cancelled' => 'Geannuleerd'
+                                                'accepted' => 'Geaccepteerd',
+                                                'rejected' => 'Afgewezen',
+                                                'expired' => 'Verlopen'
                                             ];
                                         @endphp
                                         <span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $statusColors[$quote->status] ?? '' }}">

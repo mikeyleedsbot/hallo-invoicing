@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Invoice Templates 📄</h1>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Factuursjablonen</h1>
                 <p class="mt-2 text-gray-600 dark:text-gray-400">Beheer je factuur templates met logo's en achtergronden.</p>
             </div>
             <a href="{{ route('templates.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">

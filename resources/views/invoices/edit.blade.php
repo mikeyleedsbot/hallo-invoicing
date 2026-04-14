@@ -325,7 +325,7 @@
                 hasVisibleProducts() {
                     if (this.productSearch === '') return true;
                     const q = this.productSearch.toLowerCase();
-                    return {{ collect($products->where('active', true))->map(fn($p) => strtolower($p->name . ' ' . $p->description))->toJson() }}.some(s => s.includes(q));
+                    return @json(collect($products->where('active', true))->map(fn($p) => strtolower($p->name . ' ' . $p->description))->values()).some(s => s.includes(q));
                 },
 
                 removeLine(index) {

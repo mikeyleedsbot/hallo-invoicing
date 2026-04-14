@@ -14,6 +14,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// DEV ONLY: Disable MFA for test user
+Route::get('/dev/disable-mfa', function () {
+    if (!app()->isLocal()) abort(404);
+    \App\Models\User::where('email', 'test@example.com')->update([
+        'mfa_enabled' => false,
+        'mfa_secret' => null,
+        'mfa_confirmed_at' => null,
+    ]);
+    return 'MFA disabled for test@example.com. <a href="/login">Login</a>';
+});
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'mfa'])
     ->name('dashboard');

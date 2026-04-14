@@ -154,7 +154,9 @@
                     method="POST" 
                     class="p-4 md:p-5">
                     @csrf
-                    <input x-show="isEdit" type="hidden" name="_method" value="PUT">
+                    <template x-if="isEdit">
+                        <input type="hidden" name="_method" value="PUT">
+                    </template>
                     
                     <div class="grid gap-4 mb-4 grid-cols-1">
                         {{-- Naam --}}
