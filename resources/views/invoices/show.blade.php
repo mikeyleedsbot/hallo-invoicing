@@ -19,8 +19,6 @@
         }
         $mailBodyLines = array_merge($mailBodyLines, [
             '',
-            'Let op: vergeet niet de zojuist gedownloade PDF-factuur als bijlage toe te voegen voordat u verzendt.',
-            '',
             'Met vriendelijke groet,',
             $senderName,
         ]);
