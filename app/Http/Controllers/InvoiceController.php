@@ -101,11 +101,6 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            // Forceer alle regels naar 0%
-            foreach ($validated['lines'] as $i => $line) {
-                $validated['lines'][$i]['vat_rate'] = 0;
-            }
-
             // Voeg opmerking toe als die er nog niet staat
             $reverseNote = 'BTW verlegd. BTW-nummer afnemer: ' . trim($customer->vat_number);
             $existing = trim((string) ($validated['notes'] ?? ''));
@@ -115,17 +110,19 @@ class InvoiceController extends Controller
         }
 
         DB::transaction(function () use ($validated, $reverseCharged) {
-            // Calculate totals
+            // Calculate totals (originele vat_rates blijven op de regels staan,
+            // maar als BTW verlegd is wordt er geen BTW berekend op het totaal)
             $subtotal = 0;
             $totalVat = 0;
-            
+
             foreach ($validated['lines'] as $line) {
                 $lineTotal = $line['quantity'] * $line['unit_price'];
-                $lineVat = $lineTotal * ($line['vat_rate'] / 100);
                 $subtotal += $lineTotal;
-                $totalVat += $lineVat;
+                if (! $reverseCharged) {
+                    $totalVat += $lineTotal * ($line['vat_rate'] / 100);
+                }
             }
-            
+
             $total = $subtotal + $totalVat;
             
             // Create invoice
@@ -208,10 +205,6 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            foreach ($validated['lines'] as $i => $line) {
-                $validated['lines'][$i]['vat_rate'] = 0;
-            }
-
             $reverseNote = 'BTW verlegd. BTW-nummer afnemer: ' . trim($customer->vat_number);
             $existing = trim((string) ($validated['notes'] ?? ''));
             if (stripos($existing, 'BTW verlegd') === false) {
@@ -220,17 +213,19 @@ class InvoiceController extends Controller
         }
 
         DB::transaction(function () use ($validated, $invoice, $reverseCharged) {
-            // Calculate totals
+            // Calculate totals (originele vat_rates blijven op de regels staan,
+            // maar als BTW verlegd is wordt er geen BTW berekend op het totaal)
             $subtotal = 0;
             $totalVat = 0;
-            
+
             foreach ($validated['lines'] as $line) {
                 $lineTotal = $line['quantity'] * $line['unit_price'];
-                $lineVat = $lineTotal * ($line['vat_rate'] / 100);
                 $subtotal += $lineTotal;
-                $totalVat += $lineVat;
+                if (! $reverseCharged) {
+                    $totalVat += $lineTotal * ($line['vat_rate'] / 100);
+                }
             }
-            
+
             $total = $subtotal + $totalVat;
             
             // Update invoice

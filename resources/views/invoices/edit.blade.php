@@ -218,7 +218,6 @@
                                                             @foreach($vatRates as $vat)
                                                                 <option value="{{ (int)$vat->rate }}">{{ number_format($vat->rate, 0) }}%</option>
                                                             @endforeach
-                                                            <option value="0" x-show="vatReverseCharged">0%</option>
                                                         </select>
                                                     </td>
                                                     <td class="w-12 text-center">
@@ -317,14 +316,11 @@
                 },
 
                 toggleReverseCharge(event) {
-                    if (this.vatReverseCharged) {
-                        if (!this.customerVatNumber()) {
-                            alert('Deze klant heeft geen BTW-nummer. Vul eerst een BTW-nummer in op de klantkaart.');
-                            this.vatReverseCharged = false;
-                            return;
-                        }
-                        this.lines.forEach(l => l.vat_rate = 0);
+                    if (this.vatReverseCharged && !this.customerVatNumber()) {
+                        alert('Deze klant heeft geen BTW-nummer. Vul eerst een BTW-nummer in op de klantkaart.');
+                        this.vatReverseCharged = false;
                     }
+                    // Originele BTW-percentages blijven staan; berekening negeert ze als verlegd.
                 },
 
                 get subtotal() {
@@ -334,6 +330,7 @@
                 },
 
                 get vatAmount() {
+                    if (this.vatReverseCharged) return 0;
                     return this.lines.reduce((sum, line) => {
                         const lineTotal = this.lineTotal(line);
                         return sum + (lineTotal * (parseFloat(line.vat_rate) / 100));
@@ -357,7 +354,7 @@
                         description: '',
                         quantity: 1,
                         unit_price: 0,
-                        vat_rate: this.vatReverseCharged ? 0 : {{ $defaultVat }}
+                        vat_rate: {{ $defaultVat }}
                     });
                 },
 
@@ -366,7 +363,7 @@
                         description: product.description,
                         quantity: product.quantity,
                         unit_price: product.unit_price,
-                        vat_rate: this.vatReverseCharged ? 0 : {{ $defaultVat }}
+                        vat_rate: {{ $defaultVat }}
                     });
                     this.showProductModal = false;
                     this.productSearch = '';
