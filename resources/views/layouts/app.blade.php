@@ -226,6 +226,18 @@
                         </a>
                     </li>
 
+                    <!-- Mailverbindingen -->
+                    <li>
+                        <a href="{{ route('mail-connections.index') }}"
+                           class="flex items-center p-2 rounded-lg group {{ request()->routeIs('mail-connections.*') ? 'bg-blue-600 text-white' : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('mail-connections.*') ? 'text-white' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' }}"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8l-8.5 5.5L4 8m16 10H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v9a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="ms-3">E-mailverbindingen</span>
+                        </a>
+                    </li>
+
                     @if(Auth::user()->is_admin)
                     <!-- Admin sectie -->
                     <li class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">

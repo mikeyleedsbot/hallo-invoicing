@@ -15,8 +15,61 @@ class UserManagementController extends Controller
     public function index()
     {
         abort_unless(Auth::user()->is_admin, 403);
-        $users = User::orderBy('name')->get();
-        return view('admin.users', compact('users'));
+
+        $pendingUsers  = User::pending()->orderByDesc('created_at')->get();
+        $approvedUsers = User::approved()->orderBy('name')->get();
+        $rejectedUsers = User::rejected()->orderBy('name')->get();
+
+        // Backwards-compat: sommige oudere views verwachten nog 'users'.
+        $users = $approvedUsers;
+
+        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers'));
+    }
+
+    public function approve(User $user)
+    {
+        abort_unless(Auth::user()->is_admin, 403);
+
+        if ($user->isApproved()) {
+            return back()->with('info', $user->name . ' is al goedgekeurd.');
+        }
+
+        $user->status      = User::STATUS_APPROVED;
+        $user->approved_at = now();
+        $user->approved_by = Auth::id();
+        $user->rejection_reason = null;
+        $user->save();
+
+        try {
+            (new MailService())->sendAccountApproved($user);
+        } catch (\Throwable $e) {
+            \Log::error('Approval mail versturen mislukt', ['error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', $user->name . ' is goedgekeurd en heeft een e-mail ontvangen.');
+    }
+
+    public function reject(Request $request, User $user)
+    {
+        abort_unless(Auth::user()->is_admin, 403);
+
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $user->status           = User::STATUS_REJECTED;
+        $user->rejection_reason = $validated['reason'] ?? null;
+        $user->approved_at      = null;
+        $user->approved_by      = null;
+        $user->save();
+
+        try {
+            (new MailService())->sendAccountRejected($user, $validated['reason'] ?? null);
+        } catch (\Throwable $e) {
+            \Log::error('Rejection mail versturen mislukt', ['error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', $user->name . ' is afgewezen.');
     }
 
     public function store(Request $request)

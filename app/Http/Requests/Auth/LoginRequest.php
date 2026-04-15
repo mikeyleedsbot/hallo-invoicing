@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +47,23 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Account approval check: alleen 'approved' users mogen inloggen.
+        $user = Auth::user();
+        if ($user instanceof User && ! $user->isApproved()) {
+            Auth::logout();
+            RateLimiter::clear($this->throttleKey());
+
+            $message = match (true) {
+                $user->isPending()  => 'Je account wacht nog op goedkeuring door een beheerder. We sturen je een e-mail zodra het is goedgekeurd.',
+                $user->isRejected() => 'Je aanvraag is helaas afgewezen. Neem contact op als je denkt dat dit een vergissing is.',
+                default             => 'Je account is niet actief.',
+            };
+
+            throw ValidationException::withMessages([
+                'email' => $message,
             ]);
         }
 

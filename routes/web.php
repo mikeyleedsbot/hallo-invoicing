@@ -71,11 +71,23 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::delete('/gebruikers/{user}',                    [UserManagementController::class, 'destroy'])->name('users.destroy');
     Route::post('/gebruikers/{user}/reset-mfa',            [UserManagementController::class, 'resetMfa'])->name('users.reset-mfa');
     Route::post('/gebruikers/{user}/resend-invite',        [UserManagementController::class, 'resendInvite'])->name('users.resend-invite');
+    Route::post('/gebruikers/{user}/approve',              [UserManagementController::class, 'approve'])->name('users.approve');
+    Route::post('/gebruikers/{user}/reject',               [UserManagementController::class, 'reject'])->name('users.reject');
 
     // E-mailinstellingen (admin only)
     Route::get('/email-instellingen',                      [EmailSettingController::class, 'edit'])->name('email-settings.edit');
     Route::put('/email-instellingen',                      [EmailSettingController::class, 'update'])->name('email-settings.update');
     Route::post('/email-instellingen/test',                [EmailSettingController::class, 'test'])->name('email-settings.test');
+
+    // Persoonlijke mailverbindingen (OAuth Google/Microsoft)
+    Route::get('/mailverbindingen',                                        [App\Http\Controllers\MailConnectionController::class, 'index'])->name('mail-connections.index');
+    Route::get('/mailverbindingen/oauth/{provider}/redirect',              [App\Http\Controllers\MailConnectionController::class, 'redirect'])->name('mail-connections.redirect');
+    Route::get('/mailverbindingen/oauth/{provider}/callback',              [App\Http\Controllers\MailConnectionController::class, 'callback'])->name('mail-connections.callback');
+    Route::post('/mailverbindingen/{account}/default',                     [App\Http\Controllers\MailConnectionController::class, 'setDefault'])->name('mail-connections.set-default');
+    Route::delete('/mailverbindingen/{account}',                           [App\Http\Controllers\MailConnectionController::class, 'destroy'])->name('mail-connections.destroy');
+    // Per-user OAuth-credentials (client_id / client_secret) — staan op users tabel
+    Route::post('/mailverbindingen/credentials/{provider}',                [App\Http\Controllers\MailConnectionController::class, 'saveCredentials'])->name('mail-connections.credentials.save');
+    Route::delete('/mailverbindingen/credentials/{provider}',              [App\Http\Controllers\MailConnectionController::class, 'deleteCredentials'])->name('mail-connections.credentials.delete');
 
     // Quotes
     Route::resource('quotes', App\Http\Controllers\QuoteController::class);

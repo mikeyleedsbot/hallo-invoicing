@@ -45,6 +45,63 @@
         </div>
         @endif
 
+        {{-- Aanvragen in behandeling --}}
+        @if(isset($pendingUsers) && $pendingUsers->count() > 0)
+        <div class="bg-white rounded-xl shadow-sm border border-amber-200 dark:bg-gray-800 dark:border-amber-800">
+            <div class="px-6 py-4 border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 rounded-t-xl">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                        Aanvragen in behandeling
+                        <span class="ml-2 inline-flex items-center justify-center w-6 h-6 text-xs font-semibold text-white bg-amber-600 rounded-full">{{ $pendingUsers->count() }}</span>
+                    </h2>
+                </div>
+                <p class="mt-1 text-sm text-amber-800 dark:text-amber-200">Deze gebruikers hebben zichzelf geregistreerd en wachten op jouw goedkeuring.</p>
+            </div>
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th class="px-6 py-3">Naam</th>
+                        <th class="px-6 py-3">E-mail</th>
+                        <th class="px-6 py-3">Bedrijf</th>
+                        <th class="px-6 py-3">Telefoon</th>
+                        <th class="px-6 py-3">Aangevraagd</th>
+                        <th class="px-6 py-3 text-right">Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($pendingUsers as $pending)
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $pending->name }}</td>
+                        <td class="px-6 py-4">{{ $pending->email }}</td>
+                        <td class="px-6 py-4">{{ $pending->company_name ?: '—' }}</td>
+                        <td class="px-6 py-4">{{ $pending->phone ?: '—' }}</td>
+                        <td class="px-6 py-4">{{ $pending->created_at->diffForHumans() }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button type="button"
+                                        onclick="openApproveModal({{ $pending->id }}, '{{ addslashes($pending->name) }}', '{{ addslashes($pending->email) }}')"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Goedkeuren
+                                </button>
+                                <button type="button"
+                                        onclick="openRejectModal({{ $pending->id }}, '{{ addslashes($pending->name) }}')"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Afwijzen
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
         <!-- Table -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700" style="overflow:visible;">
             <div>
@@ -299,7 +356,83 @@
         </div>
 
     </div>
+
+    {{-- Goedkeuren-modal --}}
+    <div id="approveModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <form method="POST" id="approveForm" class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+                @csrf
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Aanvraag goedkeuren</h3>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Je keurt <strong id="approveUserName"></strong> (<span id="approveUserEmail"></span>) goed. De gebruiker krijgt per mail bericht en kan daarna inloggen.
+                    </p>
+                </div>
+                <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="closeApproveModal()"
+                            class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                        Annuleren
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg">
+                        Goedkeuren
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Afwijzen-modal --}}
+    <div id="rejectModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <form method="POST" id="rejectForm" class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+                @csrf
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Aanvraag afwijzen</h3>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Je wijst <strong id="rejectUserName"></strong> af. Deze gebruiker krijgt per mail bericht (optioneel met reden).</p>
+                </div>
+                <div class="p-6">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Reden (optioneel)</label>
+                    <textarea name="reason" rows="3" maxlength="500"
+                              placeholder="Bijv. bedrijfsgegevens niet compleet of dubbele registratie…"
+                              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                </div>
+                <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="closeRejectModal()"
+                            class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                        Annuleren
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">
+                        Afwijzen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 <script>
+function openApproveModal(userId, userName, userEmail) {
+    document.getElementById('approveUserName').textContent = userName;
+    document.getElementById('approveUserEmail').textContent = userEmail;
+    document.getElementById('approveForm').action = '/gebruikers/' + userId + '/approve';
+    document.getElementById('approveModal').classList.remove('hidden');
+}
+function closeApproveModal() {
+    document.getElementById('approveModal').classList.add('hidden');
+}
+
+function openRejectModal(userId, userName) {
+    document.getElementById('rejectUserName').textContent = userName;
+    document.getElementById('rejectForm').action = '/gebruikers/' + userId + '/reject';
+    document.getElementById('rejectModal').classList.remove('hidden');
+}
+function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+}
+
 function closeAllMenus() {
     document.querySelectorAll('[id^="menu-"]').forEach(el => el.classList.add('hidden'));
 }

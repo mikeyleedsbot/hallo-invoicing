@@ -154,6 +154,149 @@ HTML;
         return $this->send($to, $subject, $html);
     }
 
+    /**
+     * Notificatie naar een admin dat er een nieuwe (publieke) registratie is.
+     */
+    public function sendNewRegistrationNotification(\App\Models\User $admin, \App\Models\User $newUser): bool
+    {
+        $subject = 'Nieuwe aanvraag: ' . $newUser->name;
+        $url     = url(route('users.index'));
+        $html    = $this->buildRegistrationNotificationHtml($admin, $newUser, $url);
+
+        return $this->send($admin->email, $subject, $html);
+    }
+
+    /**
+     * Bericht naar de gebruiker dat z'n account is goedgekeurd.
+     */
+    public function sendAccountApproved(\App\Models\User $user): bool
+    {
+        $subject  = 'Je ' . $this->settings->from_name . ' account is goedgekeurd';
+        $loginUrl = url(route('login'));
+        $html     = $this->buildAccountApprovedHtml($user, $loginUrl);
+
+        return $this->send($user->email, $subject, $html);
+    }
+
+    /**
+     * Bericht naar de gebruiker dat z'n account is afgewezen.
+     */
+    public function sendAccountRejected(\App\Models\User $user, ?string $reason = null): bool
+    {
+        $subject = 'Je aanvraag voor ' . $this->settings->from_name . ' is afgewezen';
+        $html    = $this->buildAccountRejectedHtml($user, $reason);
+
+        return $this->send($user->email, $subject, $html);
+    }
+
+    private function buildRegistrationNotificationHtml(\App\Models\User $admin, \App\Models\User $newUser, string $url): string
+    {
+        $fromName = $this->settings->from_name;
+        $company  = $newUser->company_name ?: '-';
+        $phone    = $newUser->phone ?: '-';
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="nl">
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);border-radius:12px 12px 0 0;padding:40px 40px 32px;text-align:center;">
+        <h1 style="margin:0;color:white;font-size:22px;font-weight:700;">Nieuwe aanvraag voor {$fromName}</h1>
+      </td></tr>
+      <tr><td style="background:white;padding:40px;">
+        <p style="margin:0 0 16px;color:#111827;">Hoi {$admin->name},</p>
+        <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6;">Er is een nieuwe aanvraag binnengekomen. De gebruiker wacht op jouw goedkeuring voordat ze kunnen inloggen.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:24px;">
+          <tr><td style="padding:16px 20px;">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;width:130px;font-weight:600;">Naam</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$newUser->name}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;font-weight:600;">E-mail</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$newUser->email}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;font-weight:600;">Bedrijf</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$company}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;font-weight:600;">Telefoon</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$phone}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+          <a href="{$url}" style="display:inline-block;background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;">Open gebruikersbeheer →</a>
+        </td></tr></table>
+      </td></tr>
+      <tr><td style="background:#f9fafb;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;color:#9ca3af;font-size:12px;">© {$fromName} Invoicing — automatische notificatie</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>
+HTML;
+    }
+
+    private function buildAccountApprovedHtml(\App\Models\User $user, string $loginUrl): string
+    {
+        $fromName = $this->settings->from_name;
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="nl">
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);border-radius:12px 12px 0 0;padding:40px 40px 32px;text-align:center;">
+        <div style="display:inline-block;width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:12px;margin-bottom:16px;line-height:56px;text-align:center;font-size:28px;">✅</div>
+        <h1 style="margin:0;color:white;font-size:24px;font-weight:700;">Account goedgekeurd!</h1>
+      </td></tr>
+      <tr><td style="background:white;padding:40px;">
+        <p style="margin:0 0 16px;color:#111827;">Welkom bij {$fromName} Invoicing, {$user->name}!</p>
+        <p style="margin:0 0 24px;color:#4b5563;font-size:15px;line-height:1.6;">Je account is goedgekeurd. Je kunt nu inloggen met het wachtwoord dat je bij registratie hebt ingesteld.</p>
+        <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+          <a href="{$loginUrl}" style="display:inline-block;background:linear-gradient(135deg,#059669,#10b981);color:white;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;">Inloggen →</a>
+        </td></tr></table>
+      </td></tr>
+      <tr><td style="background:#f9fafb;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;color:#9ca3af;font-size:12px;">© {$fromName} Invoicing</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>
+HTML;
+    }
+
+    private function buildAccountRejectedHtml(\App\Models\User $user, ?string $reason): string
+    {
+        $fromName    = $this->settings->from_name;
+        $reasonBlock = $reason
+            ? '<p style="margin:16px 0 0;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#7f1d1d;font-size:14px;"><strong>Reden:</strong> ' . htmlspecialchars($reason) . '</p>'
+            : '';
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="nl">
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="background:#6b7280;border-radius:12px 12px 0 0;padding:40px 40px 32px;text-align:center;">
+        <h1 style="margin:0;color:white;font-size:22px;font-weight:700;">Aanvraag niet goedgekeurd</h1>
+      </td></tr>
+      <tr><td style="background:white;padding:40px;">
+        <p style="margin:0 0 16px;color:#111827;">Hoi {$user->name},</p>
+        <p style="margin:0 0 16px;color:#4b5563;font-size:15px;line-height:1.6;">Bedankt voor je aanvraag voor {$fromName} Invoicing. We hebben helaas besloten om je account nu niet goed te keuren.</p>
+        {$reasonBlock}
+        <p style="margin:20px 0 0;color:#6b7280;font-size:14px;">Denk je dat dit een vergissing is? Neem contact met ons op.</p>
+      </td></tr>
+      <tr><td style="background:#f9fafb;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;color:#9ca3af;font-size:12px;">© {$fromName} Invoicing</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>
+HTML;
+    }
+
     private function buildInviteHtml(string $name, string $companyName, string $inviteUrl): string
     {
         $fromName = $this->settings->from_name;

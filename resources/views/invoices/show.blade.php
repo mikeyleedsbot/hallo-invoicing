@@ -1,9 +1,62 @@
 <x-app-layout>
+    @php
+        $company     = \App\Models\CompanySetting::first();
+        $customer    = $invoice->customer;
+        $senderName  = auth()->user()->company_name ?: ($company->company_name ?? auth()->user()->name);
+        $customerSal = $customer->contact_person ?: $customer->name;
+        $amountFmt   = number_format($invoice->total_including_vat ?? $invoice->total ?? 0, 2, ',', '.');
+        $dueDateFmt  = $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('d-m-Y') : '';
+
+        $mailSubject = 'Factuur ' . $invoice->invoice_number . ' van ' . $senderName;
+
+        $mailBodyLines = [
+            'Beste ' . $customerSal . ',',
+            '',
+            'Bijgaand de factuur ' . $invoice->invoice_number . ' voor een bedrag van EUR ' . $amountFmt . '.',
+        ];
+        if ($dueDateFmt) {
+            $mailBodyLines[] = 'We verzoeken u het bedrag over te maken vóór ' . $dueDateFmt . '.';
+        }
+        $mailBodyLines = array_merge($mailBodyLines, [
+            '',
+            'Let op: vergeet niet de zojuist gedownloade PDF-factuur als bijlage toe te voegen voordat u verzendt.',
+            '',
+            'Met vriendelijke groet,',
+            $senderName,
+        ]);
+        $mailBody = implode("\n", $mailBodyLines);
+
+        $mailtoHref = 'mailto:' . rawurlencode($customer->email ?? '')
+            . '?subject=' . rawurlencode($mailSubject)
+            . '&body=' . rawurlencode($mailBody);
+
+        $hasCustomerEmail = !empty($customer->email);
+    @endphp
+
     <div class="space-y-6" x-data="{
         showSentModal: false,
         showPaidModal: false,
+        showEmailModal: false,
         sentDate: '{{ now()->format('Y-m-d') }}',
-        paidDate: '{{ now()->format('Y-m-d') }}'
+        paidDate: '{{ now()->format('Y-m-d') }}',
+        mailtoHref: @js($mailtoHref),
+        pdfUrl: @js(route('invoices.pdf', $invoice)),
+        hasCustomerEmail: @js($hasCustomerEmail),
+        customerEmail: @js($customer->email ?? ''),
+        startEmailFlow() {
+            if (!this.hasCustomerEmail) {
+                alert('Deze klant heeft nog geen e-mailadres. Voeg er een toe op de klantkaart.');
+                return;
+            }
+            this.showEmailModal = true;
+        },
+        executeMailtoFlow() {
+            // 1) Open PDF in nieuw tabblad zodat deze automatisch gedownload/bewaard wordt
+            window.open(this.pdfUrl, '_blank');
+            // 2) Geef de browser kort de tijd en open daarna de mailto
+            setTimeout(() => { window.location.href = this.mailtoHref; }, 400);
+            this.showEmailModal = false;
+        }
     }">
         
             {{-- Header --}}
@@ -32,8 +85,9 @@
                     </div>
 
                     <div class="flex gap-2">
-                        {{-- Email (placeholder) --}}
-                        <button class="text-white bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2.5 inline-flex items-center gap-2">
+                        {{-- Email versturen --}}
+                        <button type="button" @click="startEmailFlow()"
+                                class="text-white bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2.5 inline-flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
@@ -347,6 +401,51 @@
                 </form>
             </div>
         </div>
+
+        {{-- Email Modal --}}
+        <div x-show="showEmailModal" x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+            <div class="fixed inset-0 bg-black bg-opacity-50" @click="showEmailModal = false"></div>
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div @click.stop class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
+                    <div class="flex items-start justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Factuur per e-mail versturen</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400" x-text="'Naar: ' + customerEmail"></p>
+                        </div>
+                        <button type="button" @click="showEmailModal = false"
+                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p class="text-sm text-blue-900 dark:text-blue-200 font-medium mb-2">Hoe werkt dit?</p>
+                            <ol class="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
+                                <li>We downloaden de factuur als PDF naar je computer.</li>
+                                <li>We openen je standaard e-mailprogramma met een vooringevulde mail naar je klant.</li>
+                                <li>Voeg de zojuist gedownloade PDF toe als bijlage en klik op verzenden.</li>
+                            </ol>
+                        </div>
+                        <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                            <p class="text-xs text-amber-800 dark:text-amber-300">
+                                💡 <strong>Tip:</strong> Stel eenmalig een Google Workspace of Microsoft 365 account in bij je e-mailverbindingen om facturen voortaan met één klik vanuit Hallo Invoicing te versturen — zonder bijlage toe te voegen.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                        <button type="button" @click="showEmailModal = false"
+                                class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                            Annuleren
+                        </button>
+                        <button type="button" @click="executeMailtoFlow()"
+                                class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg inline-flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            PDF downloaden + E-mail openen
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>
