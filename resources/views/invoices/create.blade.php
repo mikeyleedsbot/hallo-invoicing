@@ -59,6 +59,7 @@
                             Klant <span class="text-red-500">*</span>
                         </label>
                         <select name="customer_id" required x-tom-select="{placeholder: 'Zoek klant...', maxOptions: null}"
+                            x-model="customerId"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">Selecteer klant...</option>
                             @foreach($customers as $customer)
@@ -204,10 +205,12 @@
                                                     </td>
                                                     <td class="pr-3 w-24">
                                                         <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
-                                                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                            :disabled="vatReverseCharged"
+                                                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed">
                                                             @foreach($vatRates as $vat)
                                                                 <option value="{{ (int)$vat->rate }}">{{ number_format($vat->rate, 0) }}%</option>
                                                             @endforeach
+                                                            <option value="0" x-show="vatReverseCharged">0%</option>
                                                         </select>
                                                     </td>
                                                     <td class="w-12 text-center">
@@ -232,6 +235,33 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {{-- BTW verlegd --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" name="vat_reverse_charged" value="1" x-model="vatReverseCharged"
+                        @change="toggleReverseCharge($event)"
+                        class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                    <div class="flex-1">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">BTW verlegd</span>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Alle regels worden automatisch op 0% gezet en er wordt een opmerking toegevoegd met het BTW-nummer van de klant.
+                        </p>
+                        <div x-show="vatReverseCharged && customerVatNumber()" x-cloak
+                            class="mt-3 p-3 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
+                            <p class="text-xs text-amber-900 dark:text-amber-100">
+                                BTW wordt verlegd naar BTW-nummer: <strong x-text="customerVatNumber()"></strong>
+                            </p>
+                        </div>
+                        <div x-show="vatReverseCharged && !customerVatNumber()" x-cloak
+                            class="mt-3 p-3 rounded-md bg-red-50 border border-red-200 dark:bg-red-900/30 dark:border-red-800">
+                            <p class="text-xs text-red-900 dark:text-red-100">
+                                <strong>Let op:</strong> deze klant heeft geen BTW-nummer. Vul eerst een BTW-nummer in op de klantkaart voordat je BTW kunt verleggen.
+                            </p>
+                        </div>
+                    </div>
+                </label>
             </div>
 
             {{-- Notes --}}
@@ -260,12 +290,32 @@
             return {
                 showProductModal: false,
                 productSearch: '',
+                customerId: '',
+                vatReverseCharged: false,
+                customers: @json($customers->pluck('vat_number', 'id')),
                 lines: [{
                     description: '',
                     quantity: 1,
                     unit_price: 0,
                     vat_rate: {{ $defaultVat }}
                 }],
+
+                customerVatNumber() {
+                    if (!this.customerId) return '';
+                    const v = this.customers[this.customerId];
+                    return v ? String(v).trim() : '';
+                },
+
+                toggleReverseCharge(event) {
+                    if (this.vatReverseCharged) {
+                        if (!this.customerVatNumber()) {
+                            alert('Deze klant heeft geen BTW-nummer. Vul eerst een BTW-nummer in op de klantkaart.');
+                            this.vatReverseCharged = false;
+                            return;
+                        }
+                        this.lines.forEach(l => l.vat_rate = 0);
+                    }
+                },
 
                 get subtotal() {
                     return this.lines.reduce((sum, line) => {
@@ -297,7 +347,7 @@
                         description: '',
                         quantity: 1,
                         unit_price: 0,
-                        vat_rate: {{ $defaultVat }}
+                        vat_rate: this.vatReverseCharged ? 0 : {{ $defaultVat }}
                     });
                 },
 
@@ -306,7 +356,7 @@
                         description: product.description,
                         quantity: product.quantity,
                         unit_price: product.unit_price,
-                        vat_rate: {{ $defaultVat }}
+                        vat_rate: this.vatReverseCharged ? 0 : {{ $defaultVat }}
                     });
                     this.showProductModal = false;
                     this.productSearch = '';

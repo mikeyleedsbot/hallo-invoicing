@@ -280,6 +280,11 @@
                                 <span class="text-gray-700 dark:text-gray-300">BTW</span>
                                 <span class="font-medium text-gray-900 dark:text-white">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</span>
                             </div>
+                            @if($invoice->vat_reverse_charged)
+                            <div class="text-xs px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-100">
+                                <strong>BTW verlegd</strong> naar BTW-nummer afnemer{{ $invoice->customer->vat_number ? ': ' . $invoice->customer->vat_number : '' }}.
+                            </div>
+                            @endif
                             <div class="border-t-2 border-blue-300 dark:border-gray-600 pt-3">
                                 <div class="flex justify-between">
                                     <span class="text-lg font-bold text-gray-900 dark:text-white">Totaal (incl. BTW)</span>

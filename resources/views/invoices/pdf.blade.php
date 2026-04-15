@@ -384,6 +384,11 @@
                     <td>€ {{ number_format($invoice->total, 2, ',', '.') }}</td>
                 </tr>
             </table>
+            @if($invoice->vat_reverse_charged)
+            <div style="margin-top: 12px; padding: 10px 12px; border: 1px solid #f59e0b; background: #fffbeb; font-size: 11px; color: #78350f;">
+                <strong>BTW verlegd</strong> naar BTW-nummer afnemer{{ $invoice->customer->vat_number ? ': ' . $invoice->customer->vat_number : '' }}.
+            </div>
+            @endif
         </div>
         
         <!-- Footer -->

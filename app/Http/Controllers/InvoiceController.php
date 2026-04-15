@@ -9,6 +9,7 @@ use App\Models\InvoiceTemplate;
 use App\Models\VatRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
@@ -82,6 +83,7 @@ class InvoiceController extends Controller
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',
             'notes' => 'nullable|string',
+            'vat_reverse_charged' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric|min:0.01',
@@ -89,7 +91,30 @@ class InvoiceController extends Controller
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $reverseCharged = (bool) ($validated['vat_reverse_charged'] ?? false);
+
+        if ($reverseCharged) {
+            $customer = Customer::find($validated['customer_id']);
+            if (! $customer || trim((string) $customer->vat_number) === '') {
+                throw ValidationException::withMessages([
+                    'vat_reverse_charged' => 'BTW kan niet verlegd worden: deze klant heeft geen BTW-nummer.',
+                ]);
+            }
+
+            // Forceer alle regels naar 0%
+            foreach ($validated['lines'] as $i => $line) {
+                $validated['lines'][$i]['vat_rate'] = 0;
+            }
+
+            // Voeg opmerking toe als die er nog niet staat
+            $reverseNote = 'BTW verlegd. BTW-nummer afnemer: ' . trim($customer->vat_number);
+            $existing = trim((string) ($validated['notes'] ?? ''));
+            if (stripos($existing, 'BTW verlegd') === false) {
+                $validated['notes'] = $existing === '' ? $reverseNote : $existing . "\n\n" . $reverseNote;
+            }
+        }
+
+        DB::transaction(function () use ($validated, $reverseCharged) {
             // Calculate totals
             $subtotal = 0;
             $totalVat = 0;
@@ -116,6 +141,7 @@ class InvoiceController extends Controller
                 'total' => $total,
                 'status' => 'draft',
                 'notes' => $validated['notes'],
+                'vat_reverse_charged' => $reverseCharged,
             ]);
             
             // Create invoice lines
@@ -164,6 +190,7 @@ class InvoiceController extends Controller
             'payment_terms' => 'nullable|integer',
             'notes' => 'nullable|string',
             'status' => 'required|in:draft,sent,paid,overdue,cancelled',
+            'vat_reverse_charged' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric|min:0.01',
@@ -171,7 +198,28 @@ class InvoiceController extends Controller
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        DB::transaction(function () use ($validated, $invoice) {
+        $reverseCharged = (bool) ($validated['vat_reverse_charged'] ?? false);
+
+        if ($reverseCharged) {
+            $customer = Customer::find($validated['customer_id']);
+            if (! $customer || trim((string) $customer->vat_number) === '') {
+                throw ValidationException::withMessages([
+                    'vat_reverse_charged' => 'BTW kan niet verlegd worden: deze klant heeft geen BTW-nummer.',
+                ]);
+            }
+
+            foreach ($validated['lines'] as $i => $line) {
+                $validated['lines'][$i]['vat_rate'] = 0;
+            }
+
+            $reverseNote = 'BTW verlegd. BTW-nummer afnemer: ' . trim($customer->vat_number);
+            $existing = trim((string) ($validated['notes'] ?? ''));
+            if (stripos($existing, 'BTW verlegd') === false) {
+                $validated['notes'] = $existing === '' ? $reverseNote : $existing . "\n\n" . $reverseNote;
+            }
+        }
+
+        DB::transaction(function () use ($validated, $invoice, $reverseCharged) {
             // Calculate totals
             $subtotal = 0;
             $totalVat = 0;
@@ -197,6 +245,7 @@ class InvoiceController extends Controller
                 'total' => $total,
                 'status' => $validated['status'],
                 'notes' => $validated['notes'],
+                'vat_reverse_charged' => $reverseCharged,
             ]);
             
             // Delete old lines and create new ones
