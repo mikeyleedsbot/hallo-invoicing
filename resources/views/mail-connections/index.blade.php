@@ -155,9 +155,9 @@
 
                         {{-- Redirect URI --}}
                         <div class="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
-                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Redirect URI (kopieer deze)</label>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase mb-1">Redirect URI (kopieer deze)</label>
                             <div class="flex items-center gap-2">
-                                <code class="flex-1 p-2 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono break-all">{{ $googleRedirectUri }}</code>
+                                <code class="flex-1 p-2 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono break-all">{{ $googleRedirectUri }}</code>
                                 <button type="button" @click="copy('{{ $googleRedirectUri }}', 'google-uri')"
                                         class="px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded">
                                     <span x-show="copied !== 'google-uri'">Kopieer</span>
@@ -265,9 +265,9 @@
                     <div x-show="showMicrosoftSetup" x-cloak x-transition.opacity class="space-y-4">
 
                         <div class="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
-                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Redirect URI (kopieer deze)</label>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase mb-1">Redirect URI (kopieer deze)</label>
                             <div class="flex items-center gap-2">
-                                <code class="flex-1 p-2 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono break-all">{{ $microsoftRedirectUri }}</code>
+                                <code class="flex-1 p-2 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono break-all">{{ $microsoftRedirectUri }}</code>
                                 <button type="button" @click="copy('{{ $microsoftRedirectUri }}', 'ms-uri')"
                                         class="px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded">
                                     <span x-show="copied !== 'ms-uri'">Kopieer</span>
@@ -287,7 +287,7 @@
                                 <li>Kopieer de <strong>Application (client) ID</strong> van de overzichtspagina.</li>
                                 <li>Optioneel: kopieer ook de <strong>Directory (tenant) ID</strong> als je single-tenant wilt; anders gebruik je &quot;common&quot;.</li>
                                 <li>Ga naar <em>Certificates &amp; secrets → New client secret</em>. Kopieer de <strong>Value</strong> (let op: niet de Secret ID, en hij is maar één keer zichtbaar).</li>
-                                <li>Ga naar <em>API permissions → Add permission → Microsoft Graph → Delegated</em> en voeg toe: <code>Mail.Send</code>, <code>User.Read</code>, <code>offline_access</code>.</li>
+                                <li>Ga naar <em>API permissions → Add permission → Microsoft Graph → Delegated</em> en voeg toe: <code class="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 font-mono text-xs">Mail.Send</code>, <code class="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 font-mono text-xs">User.Read</code>, <code class="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 font-mono text-xs">offline_access</code>.</li>
                                 <li>Plak Client ID + Secret hieronder en klik <em>Opslaan</em>.</li>
                             </ol>
                         </div>
@@ -302,7 +302,7 @@
                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
-                                <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Client Secret <span class="text-gray-500 font-normal">(de &quot;Value&quot; uit Azure)</span></label>
+                                <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Client Secret <span class="text-gray-500 dark:text-gray-400 font-normal">(de &quot;Value&quot; uit Azure)</span></label>
                                 <div class="relative">
                                     <input :type="showMicrosoftSecret ? 'text' : 'password'" name="client_secret" required
                                            value="{{ old('client_secret', $user->microsoft_client_secret) }}"
@@ -316,7 +316,7 @@
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wordt encrypted opgeslagen.</p>
                             </div>
                             <div>
-                                <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Tenant ID <span class="text-gray-500 font-normal">(optioneel — laat 'common' staan voor multi-tenant)</span></label>
+                                <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Tenant ID <span class="text-gray-500 dark:text-gray-400 font-normal">(optioneel — laat 'common' staan voor multi-tenant)</span></label>
                                 <input type="text" name="tenant_id"
                                        value="{{ old('tenant_id', $user->microsoft_tenant_id ?: 'common') }}"
                                        placeholder="common"
