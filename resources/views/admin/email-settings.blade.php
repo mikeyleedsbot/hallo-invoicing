@@ -3,8 +3,37 @@
 
         <!-- Header -->
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">E-mailinstellingen</h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">Configureer de Azure Mailer API voor het versturen van uitnodigingen en notificaties</p>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Systeem e-mailinstellingen</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Centrale Azure Mailer API voor systeemberichten (registraties, goedkeuringen, uitnodigingen)</p>
+        </div>
+
+        <!-- Waarvoor is dit -->
+        <div class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl p-5">
+            <div class="flex gap-3">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+                    </div>
+                </div>
+                <div class="flex-1 text-sm">
+                    <p class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Waarvoor wordt deze mailer gebruikt?</p>
+                    <p class="text-blue-800 dark:text-blue-300 mb-3">
+                        Deze centrale Azure Mailer verstuurt uitsluitend <strong>systeemberichten</strong> van Hallo Invoicing zelf:
+                    </p>
+                    <ul class="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-300 mb-3 ml-1">
+                        <li>Uitnodigingsmails voor nieuwe gebruikers</li>
+                        <li>Notificatie naar admin bij een nieuwe registratie-aanvraag</li>
+                        <li>Bevestiging "account goedgekeurd" of "account afgewezen" aan de aanvrager</li>
+                    </ul>
+                    <div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-900">
+                        <p class="text-blue-900 dark:text-blue-200 font-semibold mb-1">Niet voor facturen en offertes</p>
+                        <p class="text-blue-800 dark:text-blue-300">
+                            Factuur- en offertemails worden verstuurd vanaf het eigen Gmail- of Outlook-account van de gebruiker. Gebruikers koppelen dat zelf via
+                            <a href="{{ route('mail-connections.index') }}" class="underline font-medium hover:text-blue-900 dark:hover:text-blue-100">E-mailverbindingen</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         @if(session('success'))
@@ -35,16 +64,16 @@
                     <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <div>
-                    <p class="font-semibold text-gray-900 dark:text-white">E-mail geconfigureerd</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Uitnodigingsmails kunnen worden verstuurd</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">Systeem-mailer geconfigureerd</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Registratie- en goedkeuringsmails kunnen worden verstuurd</p>
                 </div>
                 @else
                 <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/></svg>
                 </div>
                 <div>
-                    <p class="font-semibold text-gray-900 dark:text-white">E-mail niet geconfigureerd</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Vul de API-gegevens in om uitnodigingen te kunnen versturen</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">Systeem-mailer niet geconfigureerd</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Zonder configuratie kunnen registratie-, goedkeurings- en uitnodigingsmails niet worden verzonden</p>
                 </div>
                 @endif
             </div>
