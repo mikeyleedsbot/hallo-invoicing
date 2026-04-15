@@ -75,6 +75,35 @@
                             </thead>
                             <tbody>
                                 @foreach($invoices as $invoice)
+                                @php
+                                    $_cust       = $invoice->customer;
+                                    $_sender     = auth()->user()->company_name ?: auth()->user()->name;
+                                    $_custSal    = $_cust->contact_person ?: $_cust->name;
+                                    $_amountFmt  = number_format($invoice->total_including_vat ?? $invoice->total ?? 0, 2, ',', '.');
+                                    $_dueDateFmt = $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('d-m-Y') : '';
+                                    $_mailSubject = 'Factuur ' . $invoice->invoice_number . ' van ' . $_sender;
+                                    $_mailBodyLines = [
+                                        'Beste ' . $_custSal . ',',
+                                        '',
+                                        'Bijgaand de factuur ' . $invoice->invoice_number . ' voor een bedrag van EUR ' . $_amountFmt . '.',
+                                    ];
+                                    if ($_dueDateFmt) {
+                                        $_mailBodyLines[] = 'We verzoeken u het bedrag over te maken vóór ' . $_dueDateFmt . '.';
+                                    }
+                                    $_mailBodyLines = array_merge($_mailBodyLines, [
+                                        '',
+                                        'Let op: vergeet niet de zojuist gedownloade PDF-factuur als bijlage toe te voegen voordat u verzendt.',
+                                        '',
+                                        'Met vriendelijke groet,',
+                                        $_sender,
+                                    ]);
+                                    $_mailBody = implode("\n", $_mailBodyLines);
+                                    $_mailtoHref = 'mailto:' . rawurlencode($_cust->email ?? '')
+                                        . '?subject=' . rawurlencode($_mailSubject)
+                                        . '&body=' . rawurlencode($_mailBody);
+                                    $_pdfUrl = route('invoices.pdf', $invoice);
+                                    $_hasEmail = !empty($_cust->email);
+                                @endphp
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                         {{ $invoice->invoice_number }}
@@ -132,6 +161,26 @@
                                                 </svg>
                                             </a>
                                             
+                                            {{-- Email versturen --}}
+                                            @if($_hasEmail)
+                                            <button type="button"
+                                                x-data="{ pdfUrl: @js($_pdfUrl), mailtoHref: @js($_mailtoHref) }"
+                                                @click="window.open(pdfUrl, '_blank'); setTimeout(() => { window.location.href = mailtoHref; }, 400);"
+                                                class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400"
+                                                title="E-mail versturen naar {{ $_cust->email }}">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </button>
+                                            @else
+                                            <span class="text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                                title="Klant heeft geen e-mailadres">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </span>
+                                            @endif
+
                                             {{-- View --}}
                                             <a href="{{ route('invoices.show', $invoice) }}"
                                                 class="text-blue-600 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400"
