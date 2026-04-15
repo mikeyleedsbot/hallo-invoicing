@@ -14,13 +14,43 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuoteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $quotes = Quote::with('customer')
-            ->orderBy('quote_date', 'desc')
-            ->paginate(20);
-        
-        return view('quotes.index', compact('quotes'));
+        $filters = [
+            'search'    => trim((string) $request->query('search', '')),
+            'status'    => (string) $request->query('status', ''),
+            'date_from' => (string) $request->query('date_from', ''),
+            'date_to'   => (string) $request->query('date_to', ''),
+        ];
+
+        $query = Quote::with('customer')->orderBy('quote_date', 'desc');
+
+        if ($filters['search'] !== '') {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('quote_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($c) use ($search) {
+                      $c->where('name', 'like', "%{$search}%")
+                        ->orWhere('company_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        }
+
+        if ($filters['date_from'] !== '') {
+            $query->whereDate('quote_date', '>=', $filters['date_from']);
+        }
+
+        if ($filters['date_to'] !== '') {
+            $query->whereDate('quote_date', '<=', $filters['date_to']);
+        }
+
+        $quotes = $query->paginate(20)->withQueryString();
+
+        return view('quotes.index', compact('quotes', 'filters'));
     }
 
     public function create()

@@ -48,27 +48,41 @@
 
             {{-- Filters --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-                <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <form method="GET" action="{{ route('invoices.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                        <input type="text" placeholder="Zoek factuur..."
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Zoek factuur..."
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     </div>
                     <div>
-                        <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option selected>Alle statussen</option>
-                            <option>Concept</option>
-                            <option>Verzonden</option>
-                            <option>Betaald</option>
-                            <option>Verlopen</option>
+                        <select name="status"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Alle statussen</option>
+                            <option value="draft"     @selected(($filters['status'] ?? '') === 'draft')>Concept</option>
+                            <option value="sent"      @selected(($filters['status'] ?? '') === 'sent')>Verzonden</option>
+                            <option value="paid"      @selected(($filters['status'] ?? '') === 'paid')>Betaald</option>
+                            <option value="overdue"   @selected(($filters['status'] ?? '') === 'overdue')>Verlopen</option>
+                            <option value="cancelled" @selected(($filters['status'] ?? '') === 'cancelled')>Geannuleerd</option>
                         </select>
                     </div>
                     <div>
-                        <input type="date" placeholder="Van datum"
+                        <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" placeholder="Van datum"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                     <div>
-                        <input type="date" placeholder="Tot datum"
+                        <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" placeholder="Tot datum"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div class="md:col-span-4 flex justify-end gap-2">
+                        @if(($filters['search'] ?? '') !== '' || ($filters['status'] ?? '') !== '' || ($filters['date_from'] ?? '') !== '' || ($filters['date_to'] ?? '') !== '')
+                            <a href="{{ route('invoices.index') }}"
+                               class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                                Wissen
+                            </a>
+                        @endif
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                            Filteren
+                        </button>
                     </div>
                 </form>
             </div>

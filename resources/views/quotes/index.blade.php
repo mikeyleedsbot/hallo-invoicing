@@ -48,27 +48,41 @@
 
             {{-- Filters --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-                <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <form method="GET" action="{{ route('quotes.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                        <input type="text" placeholder="Zoek offerte..."
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Zoek offerte..."
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     </div>
                     <div>
-                        <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option selected>Alle statussen</option>
-                            <option>Concept</option>
-                            <option>Verzonden</option>
-                            <option>Betaald</option>
-                            <option>Verlopen</option>
+                        <select name="status"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Alle statussen</option>
+                            <option value="draft"    @selected(($filters['status'] ?? '') === 'draft')>Concept</option>
+                            <option value="sent"     @selected(($filters['status'] ?? '') === 'sent')>Verzonden</option>
+                            <option value="accepted" @selected(($filters['status'] ?? '') === 'accepted')>Geaccepteerd</option>
+                            <option value="rejected" @selected(($filters['status'] ?? '') === 'rejected')>Afgewezen</option>
+                            <option value="expired"  @selected(($filters['status'] ?? '') === 'expired')>Verlopen</option>
                         </select>
                     </div>
                     <div>
-                        <input type="date" placeholder="Van datum"
+                        <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" placeholder="Van datum"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                     <div>
-                        <input type="date" placeholder="Tot datum"
+                        <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" placeholder="Tot datum"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div class="md:col-span-4 flex justify-end gap-2">
+                        @if(($filters['search'] ?? '') !== '' || ($filters['status'] ?? '') !== '' || ($filters['date_from'] ?? '') !== '' || ($filters['date_to'] ?? '') !== '')
+                            <a href="{{ route('quotes.index') }}"
+                               class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                                Wissen
+                            </a>
+                        @endif
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                            Filteren
+                        </button>
                     </div>
                 </form>
             </div>
@@ -244,7 +258,7 @@
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">Geen facturen</h3>
+                        <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">Geen offertes</h3>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kom op gang door je eerste offerte aan te maken.</p>
                         <div class="mt-6">
                             <a href="{{ route('quotes.create') }}"

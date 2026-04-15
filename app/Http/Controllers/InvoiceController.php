@@ -13,13 +13,43 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::with('customer')
-            ->orderBy('invoice_date', 'desc')
-            ->paginate(20);
-        
-        return view('invoices.index', compact('invoices'));
+        $filters = [
+            'search'    => trim((string) $request->query('search', '')),
+            'status'    => (string) $request->query('status', ''),
+            'date_from' => (string) $request->query('date_from', ''),
+            'date_to'   => (string) $request->query('date_to', ''),
+        ];
+
+        $query = Invoice::with('customer')->orderBy('invoice_date', 'desc');
+
+        if ($filters['search'] !== '') {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($c) use ($search) {
+                      $c->where('name', 'like', "%{$search}%")
+                        ->orWhere('company_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        }
+
+        if ($filters['date_from'] !== '') {
+            $query->whereDate('invoice_date', '>=', $filters['date_from']);
+        }
+
+        if ($filters['date_to'] !== '') {
+            $query->whereDate('invoice_date', '<=', $filters['date_to']);
+        }
+
+        $invoices = $query->paginate(20)->withQueryString();
+
+        return view('invoices.index', compact('invoices', 'filters'));
     }
 
     public function create()
