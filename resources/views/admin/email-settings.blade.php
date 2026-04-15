@@ -8,28 +8,28 @@
         </div>
 
         <!-- Waarvoor is dit -->
-        <div class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl p-5">
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
             <div class="flex gap-3">
                 <div class="flex-shrink-0">
-                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center">
                         <svg class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
                     </div>
                 </div>
                 <div class="flex-1 text-sm">
-                    <p class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Waarvoor wordt deze mailer gebruikt?</p>
-                    <p class="text-blue-800 dark:text-blue-300 mb-3">
+                    <p class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Waarvoor wordt deze mailer gebruikt?</p>
+                    <p class="text-blue-900 dark:text-blue-100 mb-3">
                         Deze centrale Azure Mailer verstuurt uitsluitend <strong>systeemberichten</strong> van Hallo Invoicing zelf:
                     </p>
-                    <ul class="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-300 mb-3 ml-1">
+                    <ul class="list-disc list-inside space-y-1 text-blue-900 dark:text-blue-100 mb-3 ml-1">
                         <li>Uitnodigingsmails voor nieuwe gebruikers</li>
                         <li>Notificatie naar admin bij een nieuwe registratie-aanvraag</li>
                         <li>Bevestiging "account goedgekeurd" of "account afgewezen" aan de aanvrager</li>
                     </ul>
-                    <div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-900">
-                        <p class="text-blue-900 dark:text-blue-200 font-semibold mb-1">Niet voor facturen en offertes</p>
-                        <p class="text-blue-800 dark:text-blue-300">
+                    <div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                        <p class="text-blue-900 dark:text-blue-100 font-semibold mb-1">Niet voor facturen en offertes</p>
+                        <p class="text-blue-900 dark:text-blue-100">
                             Factuur- en offertemails worden verstuurd vanaf het eigen Gmail- of Outlook-account van de gebruiker. Gebruikers koppelen dat zelf via
-                            <a href="{{ route('mail-connections.index') }}" class="underline font-medium hover:text-blue-900 dark:hover:text-blue-100">E-mailverbindingen</a>.
+                            <a href="{{ route('mail-connections.index') }}" class="underline font-medium hover:text-blue-700 dark:hover:text-white">E-mailverbindingen</a>.
                         </p>
                     </div>
                 </div>
