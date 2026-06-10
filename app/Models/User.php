@@ -114,6 +114,25 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Verstuur de wachtwoord-reset mail via onze eigen MailService
+     * (in Hallo Invoicing stijl i.p.v. de standaard Laravel-mail).
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ], false));
+
+        $mailService = app(\App\Services\MailService::class);
+        $mailService->sendPasswordReset(
+            $this->email,
+            $this->name,
+            $resetUrl,
+        );
+    }
+
     // OAuth helpers — handig in views/controllers om te checken of credentials klaar staan
     public function hasGoogleOAuth(): bool
     {

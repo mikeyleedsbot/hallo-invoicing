@@ -297,6 +297,107 @@ HTML;
 HTML;
     }
 
+    /**
+     * Verstuur wachtwoord-reset mail in Hallo Invoicing stijl.
+     */
+    public function sendPasswordReset(string $to, string $name, string $resetUrl): bool
+    {
+        $subject = 'Wachtwoord herstellen — ' . $this->settings->from_name . ' Invoicing';
+        $html    = $this->buildPasswordResetHtml($name, $resetUrl);
+
+        return $this->send($to, $subject, $html);
+    }
+
+    private function buildPasswordResetHtml(string $name, string $resetUrl): string
+    {
+        $fromName = $this->settings->from_name;
+        $logo = '<svg width="28" height="28" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M15.6,75c6.1-9.7,10.8-20.6,14.2-32.8,3.4-12.2,5.2-24.6,5.3-37.2h29.3c0,8.2-1,16.8-3,25.6-2,8.8-5,17.1-8.8,25-3.8,7.9-8.2,14.3-13.1,19.4H15.6Z" fill="white" stroke-width="0"/></svg>';
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wachtwoord herstellen {$fromName} Invoicing</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 20px;">
+  <tr>
+    <td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);border-radius:12px 12px 0 0;padding:40px 40px 32px;text-align:center;">
+            <div style="display:inline-block;width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:12px;margin-bottom:12px;line-height:52px;text-align:center;">
+              {$logo}
+            </div>
+            <h1 style="margin:0;color:white;font-size:22px;font-weight:700;letter-spacing:-0.3px;">{$fromName} Invoicing</h1>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">Wachtwoord herstellen</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:white;padding:40px;">
+            <h2 style="margin:0 0 8px;color:#111827;font-size:20px;font-weight:700;">Hoi {$name},</h2>
+            <p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.6;">
+              Je ontvangt deze e-mail omdat we een verzoek hebben ontvangen om het wachtwoord van je account te herstellen.
+            </p>
+
+            <!-- CTA button -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td align="center">
+                  <a href="{$resetUrl}"
+                     style="display:inline-block;background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;letter-spacing:0.2px;">
+                    Wachtwoord herstellen →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Expiry notice -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;margin-bottom:24px;">
+              <tr>
+                <td style="padding:12px 16px;">
+                  <p style="margin:0;color:#92400e;font-size:13px;">
+                    ⏱️ <strong>Let op:</strong> Deze link is 60 minuten geldig.
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 20px;color:#6b7280;font-size:14px;line-height:1.6;">
+              Als je geen wachtwoord-reset hebt aangevraagd, hoef je niks te doen. Je account is veilig.
+            </p>
+
+            <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
+              Werkt de knop niet? Kopieer deze link:<br>
+              <a href="{$resetUrl}" style="color:#3b82f6;word-break:break-all;">{$resetUrl}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;color:#9ca3af;font-size:12px;">
+              © {$fromName} Invoicing — Dit is een automatisch gegenereerde e-mail
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
+HTML;
+    }
+
     private function buildInviteHtml(string $name, string $companyName, string $inviteUrl): string
     {
         $fromName = $this->settings->from_name;
