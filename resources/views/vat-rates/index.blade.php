@@ -71,7 +71,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button @click="openEdit(@json($vat))"
+                                <button type="button" @click='openEdit(@json($vat))'
                                         class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-3">Bewerken</button>
                                 @if(!$vat->is_default)
                                 <form method="POST" action="{{ route('vat-rates.destroy', $vat) }}" class="inline"
@@ -133,11 +133,9 @@
                     </div>
 
                     <!-- Form -->
-                    <form :action="editMode ? '/btw-tarieven/' + current.id : '{{ route('vat-rates.store') }}'" method="POST">
+                    <form :action="editMode && current ? `{{ url('/btw-tarieven') }}/${current.id}` : '{{ route('vat-rates.store') }}'" method="POST">
                         @csrf
-                        <template x-if="editMode">
-                            <input type="hidden" name="_method" value="PUT">
-                        </template>
+                        <input type="hidden" name="_method" :value="editMode ? 'PUT' : 'POST'">
 
                         <div class="p-6 space-y-5">
                             <div>
