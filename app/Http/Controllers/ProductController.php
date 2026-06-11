@@ -7,10 +7,16 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::orderBy('name')->paginate(20);
-        return view('products.index', compact('products'));
+        // Sorteerbare kolommen
+        $allowedSorts = ['name', 'description', 'price'];
+        $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'name';
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+
+        $products = Product::orderBy($sort, $direction)->paginate(20)->withQueryString();
+
+        return view('products.index', compact('products', 'sort', 'direction'));
     }
 
     public function store(Request $request)

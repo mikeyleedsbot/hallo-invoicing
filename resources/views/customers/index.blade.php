@@ -44,11 +44,11 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-4">Naam</th>
-                            <th scope="col" class="px-6 py-4">Bedrijf</th>
-                            <th scope="col" class="px-6 py-4">Email</th>
-                            <th scope="col" class="px-6 py-4">Telefoon</th>
-                            <th scope="col" class="px-6 py-4">Plaats</th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="name" label="Naam" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="company_name" label="Bedrijf" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="email" label="Email" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="phone" label="Telefoon" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="city" label="Plaats" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4">
                                 <span class="sr-only">Acties</span>
                             </th>

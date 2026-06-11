@@ -94,12 +94,12 @@
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">Factuurnummer</th>
-                                    <th scope="col" class="px-6 py-3">Klant</th>
-                                    <th scope="col" class="px-6 py-3">Datum</th>
-                                    <th scope="col" class="px-6 py-3">Vervaldatum</th>
-                                    <th scope="col" class="px-6 py-3">Bedrag</th>
-                                    <th scope="col" class="px-6 py-3">Status</th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="invoice_number" label="Factuurnummer" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="customer_name" label="Klant" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="invoice_date" label="Datum" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="due_date" label="Vervaldatum" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="total" label="Bedrag" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="status" label="Status" :sort="$sort" :direction="$direction" /></th>
                                     <th scope="col" class="px-6 py-3 text-right">Acties</th>
                                 </tr>
                             </thead>

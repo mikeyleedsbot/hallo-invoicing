@@ -7,10 +7,16 @@ use Illuminate\Http\Request;
 
 class VatRateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $vatRates = VatRate::ordered()->get();
-        return view('vat-rates.index', compact('vatRates'));
+        // Sorteerbare kolommen
+        $allowedSorts = ['name', 'rate', 'is_default'];
+        $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'sort_order';
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+
+        $vatRates = VatRate::orderBy($sort, $direction)->get();
+
+        return view('vat-rates.index', compact('vatRates', 'sort', 'direction'));
     }
 
     public function store(Request $request)

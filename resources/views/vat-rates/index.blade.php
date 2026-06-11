@@ -38,9 +38,9 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-4">Naam</th>
-                            <th scope="col" class="px-6 py-4">Percentage</th>
-                            <th scope="col" class="px-6 py-4">Standaard</th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="name" label="Naam" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="rate" label="Percentage" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="is_default" label="Standaard" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><span class="sr-only">Acties</span></th>
                         </tr>
                     </thead>

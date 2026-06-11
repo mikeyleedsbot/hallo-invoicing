@@ -94,12 +94,12 @@
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">Offertenummer</th>
-                                    <th scope="col" class="px-6 py-3">Klant</th>
-                                    <th scope="col" class="px-6 py-3">Datum</th>
-                                    <th scope="col" class="px-6 py-3">Geldig tot</th>
-                                    <th scope="col" class="px-6 py-3">Bedrag</th>
-                                    <th scope="col" class="px-6 py-3">Status</th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="quote_number" label="Offertenummer" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="customer_name" label="Klant" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="quote_date" label="Datum" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="valid_until" label="Geldig tot" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="total" label="Bedrag" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="status" label="Status" :sort="$sort" :direction="$direction" /></th>
                                     <th scope="col" class="px-6 py-3 text-right">Acties</th>
                                 </tr>
                             </thead>

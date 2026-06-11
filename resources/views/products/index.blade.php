@@ -41,9 +41,9 @@
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">Naam</th>
-                                    <th scope="col" class="px-6 py-3">Beschrijving</th>
-                                    <th scope="col" class="px-6 py-3">Prijs</th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="name" label="Naam" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="description" label="Beschrijving" :sort="$sort" :direction="$direction" /></th>
+                                    <th scope="col" class="px-6 py-3"><x-sort-header column="price" label="Prijs" :sort="$sort" :direction="$direction" /></th>
                                     <th scope="col" class="px-6 py-3 text-right">Acties</th>
                                 </tr>
                             </thead>

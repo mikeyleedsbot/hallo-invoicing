@@ -25,12 +25,26 @@ class QuoteController extends Controller
             'date_to'   => (string) $request->query('date_to', ''),
         ];
 
-        $query = Quote::with('customer')->orderBy('quote_date', 'desc');
+        // Sorteerbare kolommen
+        $allowedSorts = ['quote_number', 'customer_name', 'quote_date', 'valid_until', 'total', 'status'];
+        $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'quote_date';
+        $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
+
+        $query = Quote::with('customer');
+
+        // Sorteren op klantnaam vereist een join
+        if ($sort === 'customer_name') {
+            $query->join('customers', 'quotes.customer_id', '=', 'customers.id')
+                  ->orderBy('customers.name', $direction)
+                  ->select('quotes.*');
+        } else {
+            $query->orderBy($sort, $direction);
+        }
 
         if ($filters['search'] !== '') {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('quote_number', 'like', "%{$search}%")
+                $q->where('quotes.quote_number', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($c) use ($search) {
                       $c->where('name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%");
@@ -39,20 +53,20 @@ class QuoteController extends Controller
         }
 
         if ($filters['status'] !== '') {
-            $query->where('status', $filters['status']);
+            $query->where('quotes.status', $filters['status']);
         }
 
         if ($filters['date_from'] !== '') {
-            $query->whereDate('quote_date', '>=', $filters['date_from']);
+            $query->whereDate('quotes.quote_date', '>=', $filters['date_from']);
         }
 
         if ($filters['date_to'] !== '') {
-            $query->whereDate('quote_date', '<=', $filters['date_to']);
+            $query->whereDate('quotes.quote_date', '<=', $filters['date_to']);
         }
 
         $quotes = $query->paginate(20)->withQueryString();
 
-        return view('quotes.index', compact('quotes', 'filters'));
+        return view('quotes.index', compact('quotes', 'filters', 'sort', 'direction'));
     }
 
     public function create()

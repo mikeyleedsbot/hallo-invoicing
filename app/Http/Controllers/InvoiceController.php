@@ -25,12 +25,26 @@ class InvoiceController extends Controller
             'date_to'   => (string) $request->query('date_to', ''),
         ];
 
-        $query = Invoice::with('customer')->orderBy('invoice_date', 'desc');
+        // Sorteerbare kolommen
+        $allowedSorts = ['invoice_number', 'customer_name', 'invoice_date', 'due_date', 'total', 'status'];
+        $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'invoice_date';
+        $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
+
+        $query = Invoice::with('customer');
+
+        // Sorteren op klantnaam vereist een join
+        if ($sort === 'customer_name') {
+            $query->join('customers', 'invoices.customer_id', '=', 'customers.id')
+                  ->orderBy('customers.name', $direction)
+                  ->select('invoices.*');
+        } else {
+            $query->orderBy($sort, $direction);
+        }
 
         if ($filters['search'] !== '') {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
+                $q->where('invoices.invoice_number', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($c) use ($search) {
                       $c->where('name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%");
@@ -39,20 +53,20 @@ class InvoiceController extends Controller
         }
 
         if ($filters['status'] !== '') {
-            $query->where('status', $filters['status']);
+            $query->where('invoices.status', $filters['status']);
         }
 
         if ($filters['date_from'] !== '') {
-            $query->whereDate('invoice_date', '>=', $filters['date_from']);
+            $query->whereDate('invoices.invoice_date', '>=', $filters['date_from']);
         }
 
         if ($filters['date_to'] !== '') {
-            $query->whereDate('invoice_date', '<=', $filters['date_to']);
+            $query->whereDate('invoices.invoice_date', '<=', $filters['date_to']);
         }
 
         $invoices = $query->paginate(20)->withQueryString();
 
-        return view('invoices.index', compact('invoices', 'filters'));
+        return view('invoices.index', compact('invoices', 'filters', 'sort', 'direction'));
     }
 
     public function create()
