@@ -44,6 +44,13 @@ return new class extends Migration
                     DB::table($table)->whereNull('user_id')->update(['user_id' => $firstUserId]);
                 }
             }
+        } else {
+            // Geen users beschikbaar (verse installatie) — verwijder orphan rows
+            foreach ($this->tables as $table) {
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->whereNull('user_id')->delete();
+                }
+            }
         }
 
         // Stap 3: maak user_id NOT NULL (data-integriteit)
