@@ -10,6 +10,7 @@ use App\Models\InvoiceTemplate;
 use App\Models\VatRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuoteController extends Controller
@@ -78,7 +79,7 @@ class QuoteController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'template_id' => 'nullable|exists:invoice_templates,id',
-            'quote_number' => 'required|unique:quotes',
+            'quote_number' => ['required', Rule::unique('quotes')->where('user_id', auth()->id())],
             'quote_date' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:quote_date',
             'valid_days' => 'nullable|integer',
@@ -160,7 +161,7 @@ class QuoteController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'template_id' => 'nullable|exists:invoice_templates,id',
-            'quote_number' => 'required|unique:quotes,quote_number,' . $quote->id,
+            'quote_number' => ['required', Rule::unique('quotes')->where('user_id', auth()->id())->ignore($quote->id)],
             'quote_date' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:quote_date',
             'valid_days' => 'nullable|integer',

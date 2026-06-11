@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToUser;
 
 class AppSetting extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
+        'user_id',
         'default_vat_rate',
         'default_payment_terms',
         'quote_valid_days',
@@ -27,9 +31,15 @@ class AppSetting extends Model
         'quote_number_start' => 'integer',
     ];
 
-    // Singleton pattern
+    // Per-user singleton: elke gebruiker heeft eigen app-instellingen
     public static function get()
     {
-        return static::firstOrCreate(['id' => 1]);
+        $userId = auth()->id();
+
+        if (!$userId) {
+            return static::withoutGlobalScope('belongs_to_user')->firstOrCreate(['id' => 1]);
+        }
+
+        return static::firstOrCreate(['user_id' => $userId]);
     }
 }

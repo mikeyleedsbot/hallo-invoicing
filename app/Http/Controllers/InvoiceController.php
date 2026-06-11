@@ -9,6 +9,7 @@ use App\Models\InvoiceTemplate;
 use App\Models\VatRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -78,7 +79,7 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'template_id' => 'nullable|exists:invoice_templates,id',
-            'invoice_number' => 'required|unique:invoices',
+            'invoice_number' => ['required', Rule::unique('invoices')->where('user_id', auth()->id())],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',

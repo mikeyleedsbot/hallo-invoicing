@@ -17,14 +17,17 @@ class RequireMfa
 
         $user = Auth::user();
 
-        // MFA niet ingeschakeld → gewoon doorlaten (MFA is optioneel)
+        // MFA nog niet ingesteld → VERPLICHT instellen voordat je verder kunt
         if (!$user->mfa_enabled) {
+            if (!$request->routeIs('mfa.*') && !$request->routeIs('logout')) {
+                return redirect()->route('mfa.setup');
+            }
             return $next($request);
         }
 
         // MFA ingesteld maar sessie nog niet geverifieerd → stuur naar verify
         if (!$request->session()->get('mfa_verified')) {
-            if (!$request->routeIs('mfa.*')) {
+            if (!$request->routeIs('mfa.*') && !$request->routeIs('logout')) {
                 return redirect()->route('mfa.verify');
             }
         }

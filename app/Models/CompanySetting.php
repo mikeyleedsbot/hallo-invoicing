@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToUser;
 
 class CompanySetting extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = [
+        'user_id',
         'company_name',
         'address',
         'postal_code',
@@ -24,24 +28,24 @@ class CompanySetting extends Model
         'logo_path',
     ];
 
-    // Singleton pattern - altijd maar 1 record
+    // Per-user singleton: elke gebruiker heeft eigen bedrijfsgegevens
     public static function get()
     {
+        $userId = auth()->id();
+
+        if (!$userId) {
+            // CLI / seeder context: pak het eerste record
+            return static::withoutGlobalScope('belongs_to_user')->firstOrCreate(
+                ['id' => 1],
+                ['company_name' => 'Mijn Bedrijf']
+            );
+        }
+
         return static::firstOrCreate(
-            ['id' => 1],
+            ['user_id' => $userId],
             [
-                'company_name' => 'Hallo ICT',
-                'address' => 'Reactorweg 301',
-                'postal_code' => '3542 AD',
-                'city' => 'Utrecht',
+                'company_name' => auth()->user()->company_name ?? 'Mijn Bedrijf',
                 'country' => 'Nederland',
-                'email' => 'info@hallo.nl',
-                'phone' => '+31 (0)30 123 4567',
-                'website' => 'https://hallo.nl',
-                'kvk_number' => '12345678',
-                'vat_number' => 'NL123456789B01',
-                'iban' => 'NL12 INGB 0001 2345 67',
-                'bank_name' => 'ING Bank',
             ]
         );
     }
