@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\Quote;
 use App\Models\Customer;
 use App\Models\Product;
@@ -61,13 +62,17 @@ class QuoteController extends Controller
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
         
-        // Generate next quote number
+        // Generate next quote number met prefix uit instellingen
+        $appSettings = AppSetting::get();
+        $prefix = $appSettings->quote_prefix ?? 'OFF';
         $lastQuote = Quote::orderBy('id', 'desc')->first();
-        $nextNumber = $lastQuote 
-            ? (int)substr($lastQuote->quote_number, 3) + 1 
-            : 1;
-        $quoteNumber = 'OFF' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-        
+        if ($lastQuote && preg_match('/(\d+)\s*$/', $lastQuote->quote_number, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        } else {
+            $nextNumber = $appSettings->quote_number_start ?? 1;
+        }
+        $quoteNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
         $vatRates   = VatRate::ordered()->get();
         $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
 
@@ -273,12 +278,16 @@ class QuoteController extends Controller
     public function convertToInvoice(Quote $quote)
     {
         $invoice = DB::transaction(function () use ($quote) {
-            // Generate invoice number
+            // Generate invoice number met prefix uit instellingen
+            $appSettings = AppSetting::get();
+            $invoicePrefix = $appSettings->invoice_prefix ?? 'INV';
             $lastInvoice = Invoice::orderBy('id', 'desc')->first();
-            $nextNumber = $lastInvoice 
-                ? (int)substr($lastInvoice->invoice_number, 3) + 1 
-                : 1;
-            $invoiceNumber = 'INV' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            if ($lastInvoice && preg_match('/(\d+)\s*$/', $lastInvoice->invoice_number, $matches)) {
+                $nextNumber = (int)$matches[1] + 1;
+            } else {
+                $nextNumber = $appSettings->invoice_number_start ?? 1;
+            }
+            $invoiceNumber = $invoicePrefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
             // Create invoice from quote
             $invoice = Invoice::create([

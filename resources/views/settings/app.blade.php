@@ -106,7 +106,7 @@
                             <input type="text" name="invoice_prefix" value="{{ old('invoice_prefix', $settings->invoice_prefix) }}" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="INV">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: INV00001</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->invoice_prefix ?? 'INV' }}00001</p>
                         </div>
 
                         <div>
@@ -116,7 +116,7 @@
                             <input type="text" name="quote_prefix" value="{{ old('quote_prefix', $settings->quote_prefix) }}" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="OFF">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: OFF00001</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->quote_prefix ?? 'OFF' }}00001</p>
                         </div>
                     </div>
                 </div>

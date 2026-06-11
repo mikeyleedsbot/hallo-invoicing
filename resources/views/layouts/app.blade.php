@@ -106,7 +106,7 @@
         </nav>
 
         <!-- Sidebar -->
-        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" 
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
                class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" style="transition: transform 0.3s ease;">
             <div class="h-full px-3 pb-4 overflow-y-auto">
                 <ul class="space-y-2 font-medium">
@@ -269,7 +269,7 @@
         </aside>
 
         <!-- Main Content -->
-        <div :class="sidebarOpen ? 'lg:ml-64' : ''" 
+        <div :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-0'"
              class="p-6 mt-14" style="transition: margin 0.3s ease;">
             {{ $slot }}
         </div>
