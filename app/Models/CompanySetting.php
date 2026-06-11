@@ -33,20 +33,32 @@ class CompanySetting extends Model
     {
         $userId = auth()->id();
 
+        $defaults = [
+            'company_name' => 'Mijn Bedrijf',
+            'address' => '',
+            'postal_code' => '',
+            'city' => '',
+            'country' => 'Nederland',
+            'email' => '',
+            'vat_number' => '',
+            'iban' => '',
+        ];
+
         if (!$userId) {
             // CLI / seeder context: pak het eerste record
             return static::withoutGlobalScope('belongs_to_user')->firstOrCreate(
                 ['id' => 1],
-                ['company_name' => 'Mijn Bedrijf']
+                $defaults
             );
         }
 
+        // Per-user singleton: vul defaults met bekende userdata
+        $defaults['company_name'] = auth()->user()->company_name ?? 'Mijn Bedrijf';
+        $defaults['email'] = auth()->user()->email ?? '';
+
         return static::firstOrCreate(
             ['user_id' => $userId],
-            [
-                'company_name' => auth()->user()->company_name ?? 'Mijn Bedrijf',
-                'country' => 'Nederland',
-            ]
+            $defaults
         );
     }
 }

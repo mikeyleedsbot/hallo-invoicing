@@ -1,6 +1,6 @@
 <x-app-layout>
     @php
-        $company     = \App\Models\CompanySetting::first();
+        $company     = \App\Models\CompanySetting::get();
         $customer    = $invoice->customer;
         $senderName  = auth()->user()->company_name ?: ($company->company_name ?? auth()->user()->name);
         $customerSal = $customer->contact_person ?: $customer->name;

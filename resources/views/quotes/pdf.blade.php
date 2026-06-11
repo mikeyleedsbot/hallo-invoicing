@@ -270,19 +270,20 @@
     </style>
 </head>
 <body>
+    @php $company = \App\Models\CompanySetting::get(); @endphp
     <div class="container">
         <!-- Header -->
         <div class="header clearfix">
             <div class="company-info">
-                <div class="company-name">Hallo ICT</div>
+                <div class="company-name">{{ $company->company_name }}</div>
                 <div class="company-details">
-                    Reactorweg 301<br>
-                    3542 AD Utrecht<br>
-                    Nederland<br><br>
-                    KvK: 12345678<br>
-                    BTW: NL123456789B01<br>
-                    info@hallo.nl<br>
-                    +31 (0)30 123 4567
+                    {{ $company->address }}<br>
+                    {{ $company->postal_code }} {{ $company->city }}<br>
+                    {{ $company->country }}<br><br>
+                    @if($company->kvk_number)KvK: {{ $company->kvk_number }}<br>@endif
+                    @if($company->vat_number)BTW: {{ $company->vat_number }}<br>@endif
+                    @if($company->email){{ $company->email }}<br>@endif
+                    @if($company->phone){{ $company->phone }}@endif
                 </div>
             </div>
             
@@ -389,19 +390,25 @@
         <!-- Footer -->
         <div class="footer">
             <div class="payment-info">
-                <h3>💳 Betalingsinformatie</h3>
+                <h3>Betalingsinformatie</h3>
                 <div class="payment-details">
-                    <div><span class="payment-label">Rekeningnummer:</span> NL12 INGB 0001 2345 67</div>
-                    <div><span class="payment-label">Ten name van:</span> Hallo ICT B.V.</div>
+                    @if($company->iban)<div><span class="payment-label">Rekeningnummer:</span> {{ $company->iban }}</div>@endif
+                    <div><span class="payment-label">Ten name van:</span> {{ $company->company_name }}</div>
                     <div><span class="payment-label">Onder vermelding van:</span> {{ $quote->quote_number }}</div>
                     <div><span class="payment-label">Geldig tot:</span> {{ $quote->valid_until->format('d-m-Y') }}</div>
                 </div>
             </div>
-            
+
+            @if($company->invoice_footer)
             <div class="footer-note">
-                Bedankt voor uw vertrouwen in Hallo ICT!<br>
-                Voor vragen over deze factuur kunt u contact met ons opnemen via info@hallo.nl
+                {!! nl2br(e($company->invoice_footer)) !!}
             </div>
+            @else
+            <div class="footer-note">
+                Bedankt voor uw vertrouwen!<br>
+                @if($company->email)Voor vragen over deze offerte kunt u contact met ons opnemen via {{ $company->email }}@endif
+            </div>
+            @endif
         </div>
     </div>
 </body>
