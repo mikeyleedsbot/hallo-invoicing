@@ -1,5 +1,41 @@
 <x-app-layout>
     <div x-data="templateEditor()" x-init="init()">
+
+        {{-- Mobiele waarschuwing --}}
+        <div x-data="{ showMobileWarning: window.innerWidth < 1024 }"
+             x-show="showMobileWarning"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 p-4"
+             style="display: none;">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 text-center"
+                 @click.away="showMobileWarning = false">
+                <div class="text-5xl mb-4">💻</div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                    Niet optimaal op mobiel
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                    De template editor werkt het beste op een laptop of desktop.
+                    Op een klein scherm kun je velden niet goed slepen en positioneren.
+                    We raden aan om templates te bewerken op een groter scherm.
+                </p>
+                <div class="flex flex-col gap-2">
+                    <a href="{{ route('templates.index') }}"
+                       class="inline-flex justify-center items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        ← Terug naar templates
+                    </a>
+                    <button @click="showMobileWarning = false"
+                            class="inline-flex justify-center items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
+                        Toch doorgaan
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <x-slot name="header">
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
