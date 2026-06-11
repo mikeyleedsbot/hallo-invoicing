@@ -513,6 +513,11 @@
                     } else {
                         // Load default layout if template is empty
                         this.loadDefaultLayout();
+                        // Auto-save default posities naar DB zodat PDF generator
+                        // ze ook ziet zonder handmatig opslaan
+                        this.$nextTick(() => {
+                            this.autoSaveDefaultPositions();
+                        });
                     }
                     
                     // Set default logo position if logo exists but no position set
@@ -831,6 +836,31 @@
                         this.logoPosition = null;
                         console.log('Logo removed from canvas');
                     }
+                },
+
+                /**
+                 * Auto-save default posities naar de database (zonder alert).
+                 * Wordt aangeroepen wanneer loadDefaultLayout() een lege template vult.
+                 */
+                autoSaveDefaultPositions() {
+                    const allPositions = { ...this.placedFields };
+                    if (this.logoPosition) {
+                        allPositions.logo = this.logoPosition;
+                    }
+
+                    fetch(`/templates/${this.template.id}/positions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ field_positions: allPositions })
+                    })
+                    .then(r => {
+                        if (r.ok) console.log('Default posities automatisch opgeslagen');
+                        else console.warn('Auto-save mislukt:', r.status);
+                    })
+                    .catch(e => console.warn('Auto-save fout:', e));
                 },
 
                 clearAll() {

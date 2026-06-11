@@ -26,8 +26,38 @@ class InvoicePdfGenerator
 
     public function generateFromTemplate(InvoiceTemplate $template, array $data)
     {
-        $html = $this->build($template->field_positions ?? [], $data, $template);
+        $positions = $template->field_positions ?? [];
+        if (empty($positions)) {
+            $positions = self::getDefaultPositions();
+        }
+        $html = $this->build($positions, $data, $template);
         return Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+    }
+
+    /**
+     * Standaard veldposities — identiek aan loadDefaultLayout() in de editor JS.
+     * Wordt gebruikt als field_positions null/leeg is zodat de PDF ook zonder
+     * handmatig opslaan een nette lay-out heeft.
+     */
+    public static function getDefaultPositions(): array
+    {
+        return [
+            'company_name'    => ['x' => 50,  'y' => 50,  'width' => 300, 'height' => 40,  'fontSize' => 18, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_address' => ['x' => 50,  'y' => 100, 'width' => 300, 'height' => 60,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_email'   => ['x' => 50,  'y' => 170, 'width' => 300, 'height' => 20,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_phone'   => ['x' => 50,  'y' => 195, 'width' => 300, 'height' => 20,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'invoice_number'  => ['x' => 550, 'y' => 150, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'invoice_date'    => ['x' => 550, 'y' => 180, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'due_date'        => ['x' => 550, 'y' => 210, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_name'     => ['x' => 50,  'y' => 250, 'width' => 300, 'height' => 30,  'fontSize' => 14, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_address'  => ['x' => 50,  'y' => 290, 'width' => 300, 'height' => 60,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_email'    => ['x' => 50,  'y' => 360, 'width' => 300, 'height' => 20,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'items_table'     => ['x' => 50,  'y' => 420, 'width' => 700, 'height' => 300, 'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'subtotal'        => ['x' => 550, 'y' => 750, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'tax'             => ['x' => 550, 'y' => 780, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'total'           => ['x' => 550, 'y' => 810, 'width' => 200, 'height' => 30,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'payment_terms'   => ['x' => 50,  'y' => 900, 'width' => 700, 'height' => 80,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+        ];
     }
 
     private function build(array $pos, array $data, InvoiceTemplate $template): string

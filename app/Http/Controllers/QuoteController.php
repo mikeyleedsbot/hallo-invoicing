@@ -337,7 +337,7 @@ class QuoteController extends Controller
             'valid_until' => $quote->valid_until->format('d-m-Y'),
             'due_date' => $quote->valid_until->format('d-m-Y'), // Alias
             
-            // Customer data
+            // Customer data (customer_* + client_* aliassen voor template-compatibiliteit)
             'customer_name' => $quote->customer->name,
             'customer_company' => $quote->customer->company_name ?? '',
             'customer_address' => $quote->customer->address ?? '',
@@ -345,6 +345,12 @@ class QuoteController extends Controller
             'customer_postal_code' => $quote->customer->postal_code ?? '',
             'customer_email' => $quote->customer->email ?? '',
             'customer_phone' => $quote->customer->phone ?? '',
+            'client_name' => $quote->customer->name,
+            'client_address' => trim(implode("\n", array_filter([
+                $quote->customer->address ?? '',
+                trim(($quote->customer->postal_code ?? '') . ' ' . ($quote->customer->city ?? '')),
+            ]))),
+            'client_email' => $quote->customer->email ?? '',
             
             // Company data
             'company_name' => $company->company_name ?? '',
@@ -361,13 +367,16 @@ class QuoteController extends Controller
             'company_bic' => $company->bic ?? '',
             'company_bank' => $company->bank_name ?? '',
             
-            // Amounts
+            // Amounts (+ tax alias voor template-compatibiliteit)
             'subtotal' => '€ ' . number_format($quote->subtotal, 2, ',', '.'),
             'vat_amount' => '€ ' . number_format($quote->vat_amount, 2, ',', '.'),
+            'tax' => '€ ' . number_format($quote->vat_amount, 2, ',', '.'),
             'total' => '€ ' . number_format($quote->total, 2, ',', '.'),
-            
+
             // Notes & items
             'notes' => $quote->notes ?? '',
+            'payment_terms' => $company->invoice_footer ?? '',
+            'thank_you' => '',
             'invoice_footer' => $company->invoice_footer ?? '',
             'items_table' => $quote->lines->map(function($line) {
                 return [

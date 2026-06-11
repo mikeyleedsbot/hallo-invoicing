@@ -316,7 +316,7 @@ class InvoiceController extends Controller
             'invoice_date' => $invoice->invoice_date->format('d-m-Y'),
             'due_date' => $invoice->due_date->format('d-m-Y'),
             
-            // Customer data
+            // Customer data (customer_* + client_* aliassen voor template-compatibiliteit)
             'customer_name' => $invoice->customer->name,
             'customer_company' => $invoice->customer->company_name ?? '',
             'customer_address' => $invoice->customer->address ?? '',
@@ -324,6 +324,12 @@ class InvoiceController extends Controller
             'customer_postal_code' => $invoice->customer->postal_code ?? '',
             'customer_email' => $invoice->customer->email ?? '',
             'customer_phone' => $invoice->customer->phone ?? '',
+            'client_name' => $invoice->customer->name,
+            'client_address' => trim(implode("\n", array_filter([
+                $invoice->customer->address ?? '',
+                trim(($invoice->customer->postal_code ?? '') . ' ' . ($invoice->customer->city ?? '')),
+            ]))),
+            'client_email' => $invoice->customer->email ?? '',
             
             // Company data
             'company_name' => $company->company_name ?? '',
@@ -340,13 +346,16 @@ class InvoiceController extends Controller
             'company_bic' => $company->bic ?? '',
             'company_bank' => $company->bank_name ?? '',
             
-            // Amounts
+            // Amounts (+ tax alias voor template-compatibiliteit)
             'subtotal' => '€ ' . number_format($invoice->subtotal, 2, ',', '.'),
             'vat_amount' => '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
+            'tax' => '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
             'total' => '€ ' . number_format($invoice->total, 2, ',', '.'),
-            
+
             // Notes & items
             'notes' => $invoice->notes ?? '',
+            'payment_terms' => $company->invoice_footer ?? '',
+            'thank_you' => '',
             'invoice_footer' => $company->invoice_footer ?? '',
             'items_table' => $invoice->lines->map(function($line) {
                 return [
