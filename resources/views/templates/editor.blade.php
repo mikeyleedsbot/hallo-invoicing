@@ -42,15 +42,15 @@
                     {{ __('Template Editor') }}: {{ $template->name }}
                 </h2>
                 <div class="flex gap-2">
-                    <button @click="clearAll" 
+                    <button @click="clearAll"
                             class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                         🗑️ Alles Wissen
                     </button>
-                    <button @click="resetToDefault" 
+                    <button @click="resetToDefault"
                             class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                         🔄 Standaard Indeling
                     </button>
-                    <a href="{{ route('templates.index') }}" 
+                    <a href="{{ route('templates.index') }}"
                        class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                         ← Terug
                     </a>
@@ -60,12 +60,12 @@
 
         <div class="py-6">
             <div class="max-w-full mx-auto px-4">
-                
+
                 <div class="grid grid-cols-12 gap-6">
-                    
+
                     {{-- LEFT SIDEBAR: Instructions + Available Fields --}}
                     <div class="col-span-3 space-y-6">
-                        
+
                         {{-- Instructions Box --}}
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h3 class="font-bold text-blue-900 mb-3">💡 Instructies</h3>
@@ -116,7 +116,7 @@
                         {{-- Available Fields --}}
                         <div class="bg-white border border-gray-300 rounded-lg p-4">
                             <h3 class="font-bold text-gray-900 mb-4">📋 Beschikbare Velden</h3>
-                            
+
                             {{-- Company Info Fields --}}
                             <div class="mb-4">
                                 <h4 class="text-xs font-semibold text-gray-600 uppercase mb-2">Bedrijfsgegevens</h4>
@@ -203,23 +203,23 @@
                     <div class="col-span-9">
                         <div class="bg-gray-50 border border-gray-300 rounded-lg p-8">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">📄 A4 Canvas (100% schaal)</h3>
-                            
+
                             {{-- Canvas Container - Centered --}}
                             <div class="flex justify-center">
-                                <div id="canvas" 
+                                <div id="canvas"
                                      class="relative bg-white border-2 border-gray-400 shadow-2xl"
                                      :style="canvasBackgroundStyle()">
-                                    
+
                                     {{-- Logo Preview (draggable + resizable) --}}
                                     <template x-if="logoUrl && logoPosition">
                                         <div class="absolute logo-draggable border-2 border-dashed border-orange-500 bg-orange-50 bg-opacity-30 cursor-move hover:bg-orange-100 transition group"
                                              data-field-key="logo"
                                              :style="`left: ${logoPosition.x}px; top: ${logoPosition.y}px; width: ${logoPosition.width}px; height: ${logoPosition.height}px;`">
-                                            <img :src="logoUrl" 
-                                                 alt="Logo" 
+                                            <img :src="logoUrl"
+                                                 alt="Logo"
                                                  class="w-full h-full object-contain pointer-events-none">
                                             <div class="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition">
-                                                <button @click="removeLogo" 
+                                                <button @click="removeLogo"
                                                         class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
                                                         title="Logo verwijderen">
                                                     ✕
@@ -318,7 +318,7 @@
                                     </template>
                                 </div>
                             </div>
-                            
+
                             {{-- Action Buttons --}}
                             <div class="mt-6 flex justify-center gap-4">
                                 {{-- PDF Test dropdown --}}
@@ -367,16 +367,16 @@
                 </div>
             </div>
         </div>
-        
+
         {{-- Field Editor Modal --}}
-        <div x-show="editingField" 
+        <div x-show="editingField"
              x-cloak
              @click.self="closeFieldEditor()"
              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
              style="display: none;">
             <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
                 <h3 class="text-xl font-bold mb-4">✎ Veld Bewerken</h3>
-                
+
                 <template x-if="editingField && placedFields[editingField]">
                     <div class="space-y-4">
                         <div>
@@ -395,7 +395,7 @@
                                    placeholder="Typ hier je tekst..."
                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
                         </div>
-                        
+
                         {{-- Lettertype --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
@@ -458,7 +458,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         {{-- Pagina zichtbaarheid --}}
                         <div x-show="editingField !== 'items_table'">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
@@ -509,7 +509,7 @@
                 logoUploadError: null,
                 logoUrl: '{{ $template->logo_path ? route("templates.serve-file", [$template, "logo"]) : null }}',
                 backgroundUrl: '{{ $template->background_path ? route("templates.serve-file", [$template, "background"]) : null }}',
-                
+
                 // Field definitions
                 companyFields: [
                     { id: 'company_name', align: 'left', label: 'Bedrijfsnaam' },
@@ -573,12 +573,12 @@
                             this.autoSaveDefaultPositions();
                         });
                     }
-                    
+
                     // Set default logo position if logo exists but no position set
                     if (this.logoUrl && !this.logoPosition) {
                         this.logoPosition = { x: 600, y: 50, width: 150, height: 80 };
                     }
-                    
+
                     console.log('Initialized placedFields:', this.placedFields);
                     console.log('Logo position:', this.logoPosition);
                 },
@@ -590,14 +590,14 @@
                         'company_address': { x: 50, y: 100, width: 300, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfsadres' },
                         'company_postal_code': { x: 50, y: 128, width: 80, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Postcode' },
                         'company_city': { x: 135, y: 128, width: 215, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Plaats' },
+                        'company_postal_code': { x: 50, y: 128, width: 80, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Postcode' },
+                        'company_city': { x: 135, y: 128, width: 215, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Plaats' },
                         'company_email': { x: 50, y: 158, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs E-mail' },
                         'company_phone': { x: 50, y: 183, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Telefoon' },
-
-                        // Labels (dikgedrukt) voor factuurgegevens
+// Labels (dikgedrukt) voor factuurgegevens
                         'static_text_lbl_invoice_number': { x: 430, y: 150, width: 115, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Factuurnummer:', label: 'Factuurnummer:' },
                         'static_text_lbl_invoice_date': { x: 430, y: 180, width: 115, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Factuurdatum:', label: 'Factuurdatum:' },
                         'static_text_lbl_due_date': { x: 430, y: 210, width: 115, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Vervaldatum:', label: 'Vervaldatum:' },
-
                         'invoice_number': { x: 550, y: 150, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Factuurnummer' },
                         'invoice_date': { x: 550, y: 180, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Factuurdatum' },
                         'due_date': { x: 550, y: 210, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Vervaldatum' },
@@ -609,12 +609,10 @@
                         'client_email': { x: 50, y: 348, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Klant E-mail' },
 
                         'items_table': { x: 50, y: 420, width: 700, height: 300, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Artikelen Tabel' },
-
-                        // Labels (dikgedrukt) voor bedragen
+// Labels (dikgedrukt) voor bedragen
                         'static_text_lbl_subtotal': { x: 380, y: 750, width: 165, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Totaal excl. BTW:', label: 'Totaal excl. BTW:' },
                         'static_text_lbl_tax': { x: 380, y: 780, width: 165, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'BTW:', label: 'BTW:' },
                         'static_text_lbl_total': { x: 380, y: 810, width: 165, height: 30, fontSize: 16, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Totaal incl. BTW:', label: 'Totaal incl. BTW:' },
-
                         'subtotal': { x: 550, y: 750, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Subtotaal' },
                         'tax': { x: 550, y: 780, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'BTW' },
                         'total': { x: 550, y: 810, width: 200, height: 30, fontSize: 16, fontFamily: 'inherit', align: 'left', label: 'Totaal' },
@@ -799,9 +797,9 @@
 
                     // Force reactivity
                     this.placedFields = { ...this.placedFields };
-                    
+
                     console.log(`Added ${fieldLabel} at (${x}, ${y})`);
-                    
+
                     // Re-init draggable after DOM update
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
@@ -955,12 +953,12 @@
                         const allPositions = {
                             ...this.placedFields
                         };
-                        
+
                         // Add logo position if exists
                         if (this.logoPosition) {
                             allPositions.logo = this.logoPosition;
                         }
-                        
+
                         // Preserve background if exists
                         if (this.fields && this.fields.background) {
                             allPositions.background = this.fields.background;
