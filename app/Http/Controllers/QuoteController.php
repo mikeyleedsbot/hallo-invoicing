@@ -370,10 +370,9 @@ class QuoteController extends Controller
             'customer_email' => $quote->customer->email ?? '',
             'customer_phone' => $quote->customer->phone ?? '',
             'client_name' => $quote->customer->name,
-            'client_address' => trim(implode("\n", array_filter([
-                $quote->customer->address ?? '',
-                trim(($quote->customer->postal_code ?? '') . ' ' . ($quote->customer->city ?? '')),
-            ]))),
+            'client_address' => $quote->customer->address ?? '',
+            'client_postal_code' => $quote->customer->postal_code ?? '',
+            'client_city' => $quote->customer->city ?? '',
             'client_email' => $quote->customer->email ?? '',
             
             // Company data

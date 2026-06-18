@@ -21,6 +21,7 @@ class ProfileUpdateRequest extends FormRequest
             'company_name' => ['nullable', 'string', 'max:255'],
             'phone'        => ['nullable', 'string', 'max:50'],
             'address'      => ['nullable', 'string', 'max:255'],
+            'postal_code'  => ['nullable', 'string', 'max:20'],
             'city'         => ['nullable', 'string', 'max:100'],
         ];
     }

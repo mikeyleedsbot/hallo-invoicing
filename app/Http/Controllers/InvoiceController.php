@@ -345,10 +345,9 @@ class InvoiceController extends Controller
             'customer_email' => $invoice->customer->email ?? '',
             'customer_phone' => $invoice->customer->phone ?? '',
             'client_name' => $invoice->customer->name,
-            'client_address' => trim(implode("\n", array_filter([
-                $invoice->customer->address ?? '',
-                trim(($invoice->customer->postal_code ?? '') . ' ' . ($invoice->customer->city ?? '')),
-            ]))),
+            'client_address' => $invoice->customer->address ?? '',
+            'client_postal_code' => $invoice->customer->postal_code ?? '',
+            'client_city' => $invoice->customer->city ?? '',
             'client_email' => $invoice->customer->email ?? '',
             
             // Company data

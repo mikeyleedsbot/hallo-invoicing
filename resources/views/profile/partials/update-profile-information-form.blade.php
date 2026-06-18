@@ -44,13 +44,21 @@
             </div>
         </div>
 
-        <!-- Adres & Plaats -->
+        <!-- Adres -->
+        <div>
+            <x-input-label for="address" value="Adres" />
+            <x-text-input id="address" name="address" type="text" class="mt-1 block w-full"
+                :value="old('address', $user->address)" autocomplete="street-address" />
+            <x-input-error class="mt-2" :messages="$errors->get('address')" />
+        </div>
+
+        <!-- Postcode & Plaats -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <x-input-label for="address" value="Adres" />
-                <x-text-input id="address" name="address" type="text" class="mt-1 block w-full"
-                    :value="old('address', $user->address)" autocomplete="street-address" />
-                <x-input-error class="mt-2" :messages="$errors->get('address')" />
+                <x-input-label for="postal_code" value="Postcode" />
+                <x-text-input id="postal_code" name="postal_code" type="text" class="mt-1 block w-full"
+                    :value="old('postal_code', $user->postal_code)" autocomplete="postal-code" />
+                <x-input-error class="mt-2" :messages="$errors->get('postal_code')" />
             </div>
             <div>
                 <x-input-label for="city" value="Plaats" />

@@ -504,12 +504,20 @@
                 companyFields: [
                     { id: 'company_name', align: 'left', label: 'Bedrijfsnaam' },
                     { id: 'company_address', align: 'left', label: 'Bedrijfsadres' },
+                    { id: 'company_postal_code', align: 'left', label: 'Bedrijfs Postcode' },
+                    { id: 'company_city', align: 'left', label: 'Bedrijfs Plaats' },
                     { id: 'company_email', align: 'left', label: 'Bedrijfs E-mail' },
                     { id: 'company_phone', align: 'left', label: 'Bedrijfs Telefoon' },
+                    { id: 'company_website', align: 'left', label: 'Bedrijfs Website' },
+                    { id: 'company_kvk', align: 'left', label: 'KvK Nummer' },
+                    { id: 'company_vat', align: 'left', label: 'BTW Nummer' },
+                    { id: 'company_iban', align: 'left', label: 'IBAN' },
                 ],
                 clientFields: [
                     { id: 'client_name', align: 'left', label: 'Klantnaam' },
                     { id: 'client_address', align: 'left', label: 'Klantadres' },
+                    { id: 'client_postal_code', align: 'left', label: 'Klant Postcode' },
+                    { id: 'client_city', align: 'left', label: 'Klant Plaats' },
                     { id: 'client_email', align: 'left', label: 'Klant E-mail' },
                 ],
                 invoiceFields: [
@@ -569,24 +577,28 @@
                     // Standard professional invoice layout (matching PDF templates)
                     this.placedFields = {
                         'company_name': { x: 50, y: 50, width: 300, height: 40, fontSize: 18, fontFamily: 'inherit', align: 'left', label: 'Bedrijfsnaam' },
-                        'company_address': { x: 50, y: 100, width: 300, height: 60, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfsadres' },
-                        'company_email': { x: 50, y: 170, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs E-mail' },
-                        'company_phone': { x: 50, y: 195, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Telefoon' },
-                        
+                        'company_address': { x: 50, y: 100, width: 300, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfsadres' },
+                        'company_postal_code': { x: 50, y: 128, width: 80, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Postcode' },
+                        'company_city': { x: 135, y: 128, width: 215, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Plaats' },
+                        'company_email': { x: 50, y: 158, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs E-mail' },
+                        'company_phone': { x: 50, y: 183, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Telefoon' },
+
                         'invoice_number': { x: 550, y: 150, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Factuurnummer' },
                         'invoice_date': { x: 550, y: 180, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Factuurdatum' },
                         'due_date': { x: 550, y: 210, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Vervaldatum' },
-                        
+
                         'client_name': { x: 50, y: 250, width: 300, height: 30, fontSize: 14, fontFamily: 'inherit', align: 'left', label: 'Klantnaam' },
-                        'client_address': { x: 50, y: 290, width: 300, height: 60, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klantadres' },
-                        'client_email': { x: 50, y: 360, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Klant E-mail' },
-                        
+                        'client_address': { x: 50, y: 290, width: 300, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klantadres' },
+                        'client_postal_code': { x: 50, y: 318, width: 80, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klant Postcode' },
+                        'client_city': { x: 135, y: 318, width: 215, height: 25, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klant Plaats' },
+                        'client_email': { x: 50, y: 348, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Klant E-mail' },
+
                         'items_table': { x: 50, y: 420, width: 700, height: 300, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Artikelen Tabel' },
-                        
+
                         'subtotal': { x: 550, y: 750, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Subtotaal' },
                         'tax': { x: 550, y: 780, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'BTW' },
                         'total': { x: 550, y: 810, width: 200, height: 30, fontSize: 16, fontFamily: 'inherit', align: 'left', label: 'Totaal' },
-                        
+
                         'payment_terms': { x: 50, y: 900, width: 700, height: 80, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Betalingsvoorwaarden' },
                     };
                 },

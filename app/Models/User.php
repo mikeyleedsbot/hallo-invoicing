@@ -64,6 +64,7 @@ class User extends Authenticatable
         'company_name',
         'phone',
         'address',
+        'postal_code',
         'city',
         'mfa_secret',
         'mfa_enabled',
