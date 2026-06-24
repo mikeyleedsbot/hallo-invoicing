@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -12,6 +13,10 @@ class RequireMfa
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
+            return $next($request);
+        }
+
+        if (App::environment('local')) {
             return $next($request);
         }
 
