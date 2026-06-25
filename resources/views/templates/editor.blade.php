@@ -497,8 +497,8 @@
                 newTextLabel: '',
                 logoUploading: false,
                 logoUploadError: null,
-                logoUrl: '{{ $template->logo_path ? asset("storage/" . $template->logo_path) : null }}',
-                backgroundUrl: '{{ $template->background_path ? asset("storage/" . $template->background_path) : null }}',
+                logoUrl: '{{ $template->logo_path ? route("templates.serve-file", [$template, "logo"]) : null }}',
+                backgroundUrl: '{{ $template->background_path ? route("templates.serve-file", [$template, "background"]) : null }}',
                 
                 // Field definitions
                 companyFields: [

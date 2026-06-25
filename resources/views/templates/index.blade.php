@@ -44,11 +44,11 @@
                 <!-- Preview Area -->
                 <div class="relative h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center p-4">
                     @if($template->background_path)
-                        <img src="{{ Storage::url($template->background_path) }}" alt="Background" class="w-full h-full object-cover absolute inset-0">
+                        <img src="{{ route('templates.serve-file', [$template, 'background']) }}" alt="Background" class="w-full h-full object-cover absolute inset-0">
                     @endif
-                    
+
                     @if($template->logo_path)
-                        <img src="{{ Storage::url($template->logo_path) }}" alt="Logo" class="relative z-10 max-h-32 max-w-full object-contain">
+                        <img src="{{ route('templates.serve-file', [$template, 'logo']) }}" alt="Logo" class="relative z-10 max-h-32 max-w-full object-contain">
                     @else
                         <div class="text-gray-400 dark:text-gray-500">
                             <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">

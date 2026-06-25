@@ -102,6 +102,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::post('/templates/{template}/positions',    [App\Http\Controllers\TemplateController::class, 'savePositions'])->name('templates.save-positions');
     Route::get('/templates/{template}/test-pdf',      [App\Http\Controllers\TemplateController::class, 'testPdf'])->name('templates.test-pdf');
     Route::post('/templates/{template}/upload-logo',  [App\Http\Controllers\TemplateController::class, 'uploadLogo'])->name('templates.upload-logo');
+    Route::get('/template-bestanden/{template}/{type}', [App\Http\Controllers\TemplateController::class, 'serveFile'])->name('templates.serve-file')->where('type', 'logo|background');
 });
 
 // Uitnodiging accepteren (publiek, geen auth)

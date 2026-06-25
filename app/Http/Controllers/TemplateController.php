@@ -42,16 +42,16 @@ class TemplateController extends Controller
             'page_size' => 'nullable|string|in:A4,Letter',
         ]);
 
-        // Handle logo upload
+        // Handle logo upload (private storage)
         $logoPath = null;
         if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('logos', 'public');
+            $logoPath = $request->file('logo')->store('template-files/logos');
         }
 
-        // Handle background upload
+        // Handle background upload (private storage)
         $backgroundPath = null;
         if ($request->hasFile('background')) {
-            $backgroundPath = $request->file('background')->store('backgrounds', 'public');
+            $backgroundPath = $request->file('background')->store('template-files/backgrounds');
         }
 
         $template = InvoiceTemplate::create([
@@ -99,32 +99,32 @@ class TemplateController extends Controller
 
         // Handle logo removal
         if ($request->boolean('remove_logo') && $template->logo_path) {
-            Storage::disk('public')->delete($template->logo_path);
+            Storage::delete($template->logo_path);
             $template->logo_path = null;
         }
 
-        // Handle logo upload
+        // Handle logo upload (private storage)
         if ($request->hasFile('logo')) {
             // Delete old logo
             if ($template->logo_path) {
-                Storage::disk('public')->delete($template->logo_path);
+                Storage::delete($template->logo_path);
             }
-            $template->logo_path = $request->file('logo')->store('logos', 'public');
+            $template->logo_path = $request->file('logo')->store('template-files/logos');
         }
 
         // Handle background removal
         if ($request->boolean('remove_background') && $template->background_path) {
-            Storage::disk('public')->delete($template->background_path);
+            Storage::delete($template->background_path);
             $template->background_path = null;
         }
 
-        // Handle background upload
+        // Handle background upload (private storage)
         if ($request->hasFile('background')) {
             // Delete old background
             if ($template->background_path) {
-                Storage::disk('public')->delete($template->background_path);
+                Storage::delete($template->background_path);
             }
-            $template->background_path = $request->file('background')->store('backgrounds', 'public');
+            $template->background_path = $request->file('background')->store('template-files/backgrounds');
         }
 
         // Update basic fields
@@ -180,12 +180,12 @@ class TemplateController extends Controller
             return back()->with('error', 'Kan de enige template niet verwijderen!');
         }
 
-        // Delete associated files
+        // Delete associated files (private storage)
         if ($template->logo_path) {
-            Storage::disk('public')->delete($template->logo_path);
+            Storage::delete($template->logo_path);
         }
         if ($template->background_path) {
-            Storage::disk('public')->delete($template->background_path);
+            Storage::delete($template->background_path);
         }
 
         $template->delete();
@@ -222,18 +222,18 @@ class TemplateController extends Controller
             'logo' => 'required|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
-        // Verwijder oud logo
+        // Verwijder oud logo (private storage)
         if ($template->logo_path) {
-            Storage::disk('public')->delete($template->logo_path);
+            Storage::delete($template->logo_path);
         }
 
-        $path = $request->file('logo')->store('logos', 'public');
+        $path = $request->file('logo')->store('template-files/logos');
         $template->logo_path = $path;
         $template->save();
 
         return response()->json([
             'success' => true,
-            'url'     => asset('storage/' . $path),
+            'url'     => route('templates.serve-file', [$template, 'logo']),
         ]);
     }
 
@@ -274,13 +274,21 @@ class TemplateController extends Controller
         $total    = $subtotal + $tax;
 
         $mockData = [
-            'company_name'    => 'Hallo ICT B.V.',
-            'company_address' => "Teststraat 123\n1234 AB Amsterdam",
-            'company_email'   => 'info@hallo.test',
-            'company_phone'   => '+31 20 123 4567',
-            'client_name'     => 'Test Klant B.V.',
-            'client_address'  => "Klantenweg 456\n5678 CD Rotterdam",
-            'client_email'    => 'contact@testklant.nl',
+            'company_name'        => 'Hallo ICT B.V.',
+            'company_address'     => 'Teststraat 123',
+            'company_postal_code' => '1234 AB',
+            'company_city'        => 'Amsterdam',
+            'company_email'       => 'info@hallo.test',
+            'company_phone'       => '+31 20 123 4567',
+            'company_website'     => 'www.hallo.test',
+            'company_kvk'         => '12345678',
+            'company_vat'         => 'NL123456789B01',
+            'company_iban'        => 'NL12 BANK 0123 4567 89',
+            'client_name'         => 'Test Klant B.V.',
+            'client_address'      => 'Klantenweg 456',
+            'client_postal_code'  => '5678 CD',
+            'client_city'         => 'Rotterdam',
+            'client_email'        => 'contact@testklant.nl',
             'invoice_number'  => $rows === 'long' ? 'INV-2026-002' : 'INV-2026-001',
             'invoice_date'    => now()->format('d-m-Y'),
             'due_date'        => now()->addDays(30)->format('d-m-Y'),
@@ -297,5 +305,24 @@ class TemplateController extends Controller
         $pdf = $pdfGenerator->generateFromTemplate($template, $mockData);
 
         return $pdf->stream('test-invoice.pdf');
+    }
+
+    /**
+     * Serve private template files (logo/background) via authenticated route.
+     * BelongsToUser scope zorgt ervoor dat alleen eigen templates toegankelijk zijn.
+     */
+    public function serveFile(InvoiceTemplate $template, string $type)
+    {
+        $path = match ($type) {
+            'logo'       => $template->logo_path,
+            'background' => $template->background_path,
+            default      => null,
+        };
+
+        if (! $path || ! Storage::exists($path)) {
+            abort(404);
+        }
+
+        return Storage::response($path);
     }
 }

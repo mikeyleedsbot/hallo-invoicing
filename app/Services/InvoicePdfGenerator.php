@@ -119,7 +119,7 @@ class InvoicePdfGenerator
         // CSS
         $bgCss = '';
         if ($template->background_path) {
-            $p = public_path('storage/' . $template->background_path);
+            $p = storage_path('app/' . $template->background_path);
             if (file_exists($p)) $bgCss = "background-image:url('$p');background-size:cover;background-repeat:no-repeat;";
         }
 
@@ -159,7 +159,7 @@ body { font-family:Arial,sans-serif; }
 
             // Logo (op elke pagina)
             if ($template->logo_path && isset($pos['logo'])) {
-                $lp = public_path('storage/' . $template->logo_path);
+                $lp = storage_path('app/' . $template->logo_path);
                 if (file_exists($lp)) {
                     $l = $pos['logo'];
                     $html .= sprintf(

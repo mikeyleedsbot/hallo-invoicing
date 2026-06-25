@@ -68,7 +68,7 @@
                     <!-- Existing Background -->
                     <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                         <div class="flex items-center gap-4">
-                            <img src="{{ Storage::url($template->background_path) }}" alt="Current background" class="w-24 h-32 object-cover border border-gray-300 dark:border-gray-600 rounded-lg">
+                            <img src="{{ route('templates.serve-file', [$template, 'background']) }}" alt="Current background" class="w-24 h-32 object-cover border border-gray-300 dark:border-gray-600 rounded-lg">
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900 dark:text-white">Huidige Achtergrond</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ basename($template->background_path) }}</p>
