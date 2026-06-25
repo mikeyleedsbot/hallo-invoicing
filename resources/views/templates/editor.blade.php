@@ -238,10 +238,10 @@
                                                 'justify-end': field.align === 'right'
                                              }"
                                              :data-field-key="key"
-                                             :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'};`">
+                                             :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'}; font-weight: ${field.fontWeight || 'normal'};`">
                                             {{-- Artikelen tabel: toon voorbeeldtabel --}}
                                             <template x-if="key === 'items_table'">
-                                                <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px; font-family: ${field.fontFamily || 'inherit'};`">
+                                                <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px; font-family: ${field.fontFamily || 'inherit'}; font-weight: ${field.fontWeight || 'normal'};`">
                                                     <table style="width:100%;border-collapse:collapse;">
                                                         <thead>
                                                             <tr style="background:#e5e7eb;">
@@ -427,6 +427,16 @@
                             </div>
                         </div>
 
+                        {{-- Dikgedrukt toggle --}}
+                        <div x-show="editingField !== 'items_table'">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekststijl</label>
+                            <button @click="placedFields[editingField].fontWeight = (placedFields[editingField]?.fontWeight === 'bold') ? 'normal' : 'bold'"
+                                    :class="placedFields[editingField]?.fontWeight === 'bold' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                    class="py-2 px-4 rounded font-bold hover:bg-blue-500 hover:text-white transition">
+                                B Dikgedrukt
+                            </button>
+                        </div>
+
                         {{-- Uitlijning: verbergen voor artikelen tabel --}}
                         <div x-show="editingField !== 'items_table'">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Uitlijning</label>
@@ -583,6 +593,11 @@
                         'company_email': { x: 50, y: 158, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs E-mail' },
                         'company_phone': { x: 50, y: 183, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Telefoon' },
 
+                        // Labels (dikgedrukt) voor factuurgegevens
+                        'static_text_lbl_invoice_number': { x: 430, y: 150, width: 115, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Factuurnummer:', label: 'Factuurnummer:' },
+                        'static_text_lbl_invoice_date': { x: 430, y: 180, width: 115, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Factuurdatum:', label: 'Factuurdatum:' },
+                        'static_text_lbl_due_date': { x: 430, y: 210, width: 115, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Vervaldatum:', label: 'Vervaldatum:' },
+
                         'invoice_number': { x: 550, y: 150, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Factuurnummer' },
                         'invoice_date': { x: 550, y: 180, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Factuurdatum' },
                         'due_date': { x: 550, y: 210, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Vervaldatum' },
@@ -594,6 +609,11 @@
                         'client_email': { x: 50, y: 348, width: 300, height: 20, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Klant E-mail' },
 
                         'items_table': { x: 50, y: 420, width: 700, height: 300, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Artikelen Tabel' },
+
+                        // Labels (dikgedrukt) voor bedragen
+                        'static_text_lbl_subtotal': { x: 380, y: 750, width: 165, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Totaal excl. BTW:', label: 'Totaal excl. BTW:' },
+                        'static_text_lbl_tax': { x: 380, y: 780, width: 165, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'BTW:', label: 'BTW:' },
+                        'static_text_lbl_total': { x: 380, y: 810, width: 165, height: 30, fontSize: 16, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Totaal incl. BTW:', label: 'Totaal incl. BTW:' },
 
                         'subtotal': { x: 550, y: 750, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'Subtotaal' },
                         'tax': { x: 550, y: 780, width: 200, height: 25, fontSize: 12, fontFamily: 'inherit', align: 'left', label: 'BTW' },

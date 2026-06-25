@@ -48,6 +48,11 @@ class InvoicePdfGenerator
             'company_city'        => ['x' => 135, 'y' => 128, 'width' => 215, 'height' => 25,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
             'company_email'       => ['x' => 50,  'y' => 158, 'width' => 300, 'height' => 20,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
             'company_phone'       => ['x' => 50,  'y' => 183, 'width' => 300, 'height' => 20,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            // Labels (dikgedrukt) voor factuurggegevens
+            'static_text_lbl_invoice_number' => ['x' => 430, 'y' => 150, 'width' => 115, 'height' => 25, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurnummer:', 'label' => 'Factuurnummer:'],
+            'static_text_lbl_invoice_date'   => ['x' => 430, 'y' => 180, 'width' => 115, 'height' => 25, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurdatum:', 'label' => 'Factuurdatum:'],
+            'static_text_lbl_due_date'       => ['x' => 430, 'y' => 210, 'width' => 115, 'height' => 25, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Vervaldatum:', 'label' => 'Vervaldatum:'],
+
             'invoice_number'      => ['x' => 550, 'y' => 150, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
             'invoice_date'        => ['x' => 550, 'y' => 180, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
             'due_date'            => ['x' => 550, 'y' => 210, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
@@ -57,6 +62,11 @@ class InvoicePdfGenerator
             'client_city'         => ['x' => 135, 'y' => 318, 'width' => 215, 'height' => 25,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
             'client_email'        => ['x' => 50,  'y' => 348, 'width' => 300, 'height' => 20,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
             'items_table'         => ['x' => 50,  'y' => 420, 'width' => 700, 'height' => 300, 'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            // Labels (dikgedrukt) voor bedragen
+            'static_text_lbl_subtotal' => ['x' => 380, 'y' => 750, 'width' => 165, 'height' => 25, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal excl. BTW:', 'label' => 'Totaal excl. BTW:'],
+            'static_text_lbl_tax'      => ['x' => 380, 'y' => 780, 'width' => 165, 'height' => 25, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'BTW:', 'label' => 'BTW:'],
+            'static_text_lbl_total'    => ['x' => 380, 'y' => 810, 'width' => 165, 'height' => 30, 'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal incl. BTW:', 'label' => 'Totaal incl. BTW:'],
+
             'subtotal'            => ['x' => 550, 'y' => 750, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
             'tax'                 => ['x' => 550, 'y' => 780, 'width' => 200, 'height' => 25,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
             'total'               => ['x' => 550, 'y' => 810, 'width' => 200, 'height' => 30,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
@@ -233,8 +243,9 @@ body { font-family:Arial,sans-serif; }
 
     private function renderAbs(array $p, mixed $value): string
     {
+        $fontWeight = ($p['fontWeight'] ?? 'normal') === 'bold' ? 'font-weight:bold;' : '';
         return sprintf(
-            '<div class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;">%s</div>',
+            '<div class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;%s">%s</div>',
             $this->x($p['x']      ?? 0),
             $this->y($p['y']      ?? 0),
             $this->x($p['width']  ?? 200),
@@ -242,6 +253,7 @@ body { font-family:Arial,sans-serif; }
             $this->pt($p['fontSize'] ?? 12),
             $p['fontFamily'] ?? 'Arial',
             $p['align']      ?? 'left',
+            $fontWeight,
             nl2br(htmlspecialchars((string)$value))
         );
     }
