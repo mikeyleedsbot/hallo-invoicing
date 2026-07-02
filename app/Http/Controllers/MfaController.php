@@ -19,6 +19,15 @@ class MfaController extends Controller
     {
         $user = Auth::user();
 
+        // Security: als MFA al actief is mag het secret/QR nooit opnieuw getoond
+        // worden aan een sessie die (nog) niet MFA-geverifieerd is. Anders kan
+        // iemand met alleen een gestolen wachtwoord via deze pagina het secret
+        // aflezen en MFA omzeilen. Opnieuw instellen kan alleen via disable
+        // (met wachtwoord + geverifieerde sessie) of een admin-reset.
+        if ($user->mfa_enabled) {
+            return redirect()->route('mfa.verify');
+        }
+
         // Genereer nieuw secret als nog niet aanwezig
         if (!$user->mfa_secret) {
             $secret = Google2FA::generateSecretKey();
@@ -55,8 +64,14 @@ class MfaController extends Controller
             'code' => ['required', 'digits:6'],
         ]);
 
-        $user   = Auth::user();
-        $valid  = Google2FA::verifyKey($user->mfa_secret, $request->code);
+        $user = Auth::user();
+
+        // Security: confirm is alleen bedoeld voor de eerste setup.
+        if ($user->mfa_enabled) {
+            return redirect()->route('mfa.verify');
+        }
+
+        $valid = Google2FA::verifyKey($user->mfa_secret, $request->code);
 
         if (!$valid) {
             return back()->withErrors(['code' => 'Ongeldige code. Probeer opnieuw.']);
@@ -120,6 +135,15 @@ class MfaController extends Controller
         ]);
 
         $user = Auth::user();
+
+        // Security: MFA uitzetten mag alleen vanuit een sessie die zelf al
+        // MFA-geverifieerd is (anders is wachtwoord + deze route een bypass).
+        // In local wordt MFA niet afgedwongen, dus daar niet blokkeren.
+        if ($user->mfa_enabled
+            && !app()->environment('local')
+            && !$request->session()->get('mfa_verified')) {
+            abort(403, 'Verifieer eerst je MFA-code voordat je MFA uitschakelt.');
+        }
         $user->mfa_enabled      = false;
         $user->mfa_secret       = null;
         $user->mfa_confirmed_at = null;

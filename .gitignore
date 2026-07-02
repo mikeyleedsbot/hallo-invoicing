@@ -26,3 +26,7 @@ Thumbs.db
 .claude/
 *.command
 *.tableplusconnection
+
+# Database dumps horen niet in git (bevatten klantdata/hashes)
+*.sql
+*.sql.gz

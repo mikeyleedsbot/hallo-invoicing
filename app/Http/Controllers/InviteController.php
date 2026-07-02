@@ -34,6 +34,11 @@ class InviteController extends Controller
             return redirect()->route('login')->withErrors(['email' => 'Ongeldige of verlopen uitnodigingslink.']);
         }
 
+        // Afgewezen accounts kunnen niet via een (oude) uitnodiging alsnog activeren.
+        if ($user->isRejected()) {
+            return redirect()->route('login')->withErrors(['email' => 'Dit account is niet actief. Neem contact op met de beheerder.']);
+        }
+
         $request->validate([
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
@@ -44,6 +49,9 @@ class InviteController extends Controller
         $user->save();
 
         Auth::login($user);
+
+        // Voorkom session fixation na login
+        $request->session()->regenerate();
 
         // Stuur door naar MFA setup
         return redirect()->route('mfa.setup')->with('success', 'Wachtwoord ingesteld! Stel nu tweestapsverificatie in.');

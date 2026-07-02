@@ -22,10 +22,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 // MFA routes (auth vereist, maar nog geen mfa check)
 Route::middleware('auth')->group(function () {
     Route::get('/mfa/setup',    [MfaController::class, 'setup'])->name('mfa.setup');
-    Route::post('/mfa/confirm', [MfaController::class, 'confirm'])->name('mfa.confirm');
+    Route::post('/mfa/confirm', [MfaController::class, 'confirm'])->middleware('throttle:6,1')->name('mfa.confirm');
     Route::get('/mfa/verify',   [MfaController::class, 'verify'])->name('mfa.verify');
-    Route::post('/mfa/check',   [MfaController::class, 'check'])->name('mfa.check');
-    Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
+    Route::post('/mfa/check',   [MfaController::class, 'check'])->middleware('throttle:6,1')->name('mfa.check');
+    Route::post('/mfa/disable', [MfaController::class, 'disable'])->middleware('throttle:6,1')->name('mfa.disable');
 });
 
 Route::middleware(['auth', 'mfa'])->group(function () {
@@ -54,20 +54,22 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::delete('/btw-tarieven/{vatRate}',        [VatRateController::class, 'destroy'])->name('vat-rates.destroy');
     Route::post('/btw-tarieven/{vatRate}/default',  [VatRateController::class, 'setDefault'])->name('vat-rates.set-default');
 
-    // Gebruikersbeheer (admin only)
-    Route::get('/gebruikers',                              [UserManagementController::class, 'index'])->name('users.index');
-    Route::post('/gebruikers',                             [UserManagementController::class, 'store'])->name('users.store');
-    Route::put('/gebruikers/{user}',                       [UserManagementController::class, 'update'])->name('users.update');
-    Route::delete('/gebruikers/{user}',                    [UserManagementController::class, 'destroy'])->name('users.destroy');
-    Route::post('/gebruikers/{user}/reset-mfa',            [UserManagementController::class, 'resetMfa'])->name('users.reset-mfa');
-    Route::post('/gebruikers/{user}/resend-invite',        [UserManagementController::class, 'resendInvite'])->name('users.resend-invite');
-    Route::post('/gebruikers/{user}/approve',              [UserManagementController::class, 'approve'])->name('users.approve');
-    Route::post('/gebruikers/{user}/reject',               [UserManagementController::class, 'reject'])->name('users.reject');
+    // Gebruikersbeheer (admin only — 'admin' middleware + inline checks in controller)
+    Route::middleware('admin')->group(function () {
+        Route::get('/gebruikers',                              [UserManagementController::class, 'index'])->name('users.index');
+        Route::post('/gebruikers',                             [UserManagementController::class, 'store'])->name('users.store');
+        Route::put('/gebruikers/{user}',                       [UserManagementController::class, 'update'])->name('users.update');
+        Route::delete('/gebruikers/{user}',                    [UserManagementController::class, 'destroy'])->name('users.destroy');
+        Route::post('/gebruikers/{user}/reset-mfa',            [UserManagementController::class, 'resetMfa'])->name('users.reset-mfa');
+        Route::post('/gebruikers/{user}/resend-invite',        [UserManagementController::class, 'resendInvite'])->name('users.resend-invite');
+        Route::post('/gebruikers/{user}/approve',              [UserManagementController::class, 'approve'])->name('users.approve');
+        Route::post('/gebruikers/{user}/reject',               [UserManagementController::class, 'reject'])->name('users.reject');
 
-    // E-mailinstellingen (admin only)
-    Route::get('/email-instellingen',                      [EmailSettingController::class, 'edit'])->name('email-settings.edit');
-    Route::put('/email-instellingen',                      [EmailSettingController::class, 'update'])->name('email-settings.update');
-    Route::post('/email-instellingen/test',                [EmailSettingController::class, 'test'])->name('email-settings.test');
+        // E-mailinstellingen (admin only)
+        Route::get('/email-instellingen',                      [EmailSettingController::class, 'edit'])->name('email-settings.edit');
+        Route::put('/email-instellingen',                      [EmailSettingController::class, 'update'])->name('email-settings.update');
+        Route::post('/email-instellingen/test',                [EmailSettingController::class, 'test'])->name('email-settings.test');
+    });
 
     // Persoonlijke mailverbindingen (OAuth Google/Microsoft)
     Route::get('/mailverbindingen',                                        [App\Http\Controllers\MailConnectionController::class, 'index'])->name('mail-connections.index');
@@ -110,8 +112,8 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::get('/template-bestanden/{template}/{type}', [App\Http\Controllers\TemplateController::class, 'serveFile'])->name('templates.serve-file')->where('type', 'logo|background');
 });
 
-// Uitnodiging accepteren (publiek, geen auth)
-Route::get('/uitnodiging/{token}',   [InviteController::class, 'accept'])->name('invite.accept');
-Route::post('/uitnodiging/{token}',  [InviteController::class, 'activate'])->name('invite.activate');
+// Uitnodiging accepteren (publiek, geen auth — throttled tegen token-brute-force)
+Route::get('/uitnodiging/{token}',   [InviteController::class, 'accept'])->middleware('throttle:20,1')->name('invite.accept');
+Route::post('/uitnodiging/{token}',  [InviteController::class, 'activate'])->middleware('throttle:10,1')->name('invite.activate');
 
 require __DIR__.'/auth.php';

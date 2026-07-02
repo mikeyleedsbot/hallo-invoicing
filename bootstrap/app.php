@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'mfa'   => \App\Http\Middleware\RequireMfa::class,
             'admin' => \App\Http\Middleware\RequireAdmin::class,
         ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

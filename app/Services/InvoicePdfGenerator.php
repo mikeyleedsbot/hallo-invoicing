@@ -86,7 +86,7 @@ class InvoicePdfGenerator
         $tH = $tp ? $this->y($tp['height'] ?? 400) : 180;  // max hoogte tabel per pagina
 
         $tFontPt  = $tp ? $this->pt($tp['fontSize'] ?? 10) : 7;
-        $tFontFam = $tp ? ($tp['fontFamily'] ?? 'Arial') : 'Arial';
+        $tFontFam = $tp ? $this->safeFontFamily($tp['fontFamily'] ?? 'Arial') : 'Arial';
 
         // Schatting: rijen per pagina op basis van font + padding
         // Rij hoogte ≈ fontPt * 1.4 (line-height) + 6pt padding = in mm: pt * 0.353mm/pt
@@ -252,11 +252,30 @@ body { font-family:Arial,sans-serif; }
             $this->x($p['width']  ?? 200),
             $this->y($p['height'] ?? 30),
             $this->pt($p['fontSize'] ?? 12),
-            $p['fontFamily'] ?? 'Arial',
-            $p['align']      ?? 'left',
+            $this->safeFontFamily($p['fontFamily'] ?? 'Arial'),
+            $this->safeAlign($p['align'] ?? 'left'),
             $fontWeight,
             nl2br(htmlspecialchars((string)$value))
         );
+    }
+
+    /**
+     * Security: field_positions komt (via de editor) uit user-input en wordt
+     * in inline-CSS geplaatst. Whitelisten voorkomt HTML/attribuut-injectie
+     * in de dompdf-render (en daarmee o.a. local file inclusion via <img>).
+     */
+    private function safeFontFamily(mixed $font): string
+    {
+        $clean = preg_replace('/[^a-zA-Z0-9 ,\-]/', '', (string) $font);
+
+        return $clean !== '' ? $clean : 'Arial';
+    }
+
+    private function safeAlign(mixed $align): string
+    {
+        return in_array($align, ['left', 'right', 'center', 'justify'], true)
+            ? $align
+            : 'left';
     }
 
     private function getValue(string $id, array $pos, array $data): mixed
