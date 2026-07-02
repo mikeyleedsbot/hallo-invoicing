@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailSettingController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\MfaController;
 use App\Http\Controllers\ProfileController;
@@ -94,6 +95,10 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::post('/invoices/{invoice}/mark-sent',  [App\Http\Controllers\InvoiceController::class, 'markSent'])->name('invoices.mark-sent');
     Route::post('/invoices/{invoice}/mark-paid',  [App\Http\Controllers\InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
     Route::post('/invoices/{invoice}/duplicate',  [App\Http\Controllers\InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
+
+    // Help / Instructies
+    Route::get('/help',          [HelpController::class, 'index'])->name('help.index');
+    Route::get('/help/{topic}',  [HelpController::class, 'show'])->name('help.show');
 
     // Invoice Templates
     Route::resource('templates', App\Http\Controllers\TemplateController::class);
