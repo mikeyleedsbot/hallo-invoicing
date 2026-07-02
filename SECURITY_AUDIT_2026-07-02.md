@@ -3,6 +3,10 @@
 Scope: Laravel 12 app (facturen/offertes), lokale codebase. Review van auth/autorisatie,
 input/output, mass assignment, uploads, PDF-generatie, config/secrets en dependencies.
 
+> **Update (2e ronde) — tenant-isolatie voor gedeelde SaaS.** Zie de sectie
+> "Tenant-isolatie" onderaan. Eén cross-account lek gevonden en gedicht; met
+> geautomatiseerde tests (2 accounts) bewezen dat accounts niet bij elkaars data kunnen.
+
 ## Samenvatting
 
 De basis is degelijk: per-user data-isolatie via een global scope (`BelongsToUser`),
@@ -92,3 +96,60 @@ beschouwen. Dit raakt de historie, dus ik heb het niet zelf uitgevoerd.
 Draai lokaal `security-check.command` (nieuwe runner): `php -l` op de gewijzigde bestanden,
 `composer audit`, `route:list` en de testsuite. PHP/Composer draaien niet in mijn omgeving,
 dus dit is nog niet uitgevoerd — even lokaal draaien voor je commit.
+
+---
+
+## Tenant-isolatie (2e ronde, gedeelde SaaS)
+
+Kernvraag: kan een ingelogd account op enige manier bij data van een ander account?
+Elke route, controller en model nagelopen.
+
+### Hoe isolatie is opgebouwd (in orde bevonden)
+
+- Alle domeinmodellen (`Customer`, `Product`, `Invoice`, `Quote`, `VatRate`,
+  `InvoiceTemplate`, `AppSetting`, `CompanySetting`) gebruiken de `BelongsToUser`-trait:
+  een global scope filtert élke query op `user_id = auth()->id()` en zet `user_id`
+  automatisch bij aanmaken.
+- Route-model-binding (`{invoice}`, `{customer}`, …) draait dankzij die global scope
+  automatisch gescopet: andermans record → 404. Getest en bevestigd.
+- `InvoiceLine`/`QuoteLine` hebben geen eigen route en zijn alleen via de (gescopte)
+  parent bereikbaar.
+- `MailAccount` en `EmailSetting` staan buiten de trait maar hebben expliciete
+  `abort_unless($account->user_id === Auth::id(), 403)`-checks. Bevestigd.
+- `AppSetting`/`CompanySetting` zijn per-user singletons (`firstOrCreate(['user_id' => …])`);
+  de `withoutGlobalScope`-fallback geldt alleen voor CLI/seeder zonder auth.
+
+### Gevonden lek (gedicht)
+
+**Cross-tenant IDOR via foreign-key-validatie.** In `InvoiceController` en
+`QuoteController` (`store` + `update`) werden `customer_id` en `template_id`
+gevalideerd met `exists:customers,id` resp. `exists:invoice_templates,id`. De
+`exists`-regel negeert de Eloquent global scope en controleert de **hele** tabel.
+Daardoor kon account B een factuur/offerte aanmaken die verwees naar de klant of
+template van account A, en die gegevens (naam, adres, e-mail, BTW-nummer; template-lay-out)
+vervolgens teruglezen via de factuur/offerte, de PDF en de preview.
+
+Fix: de vier validaties scopen nu expliciet op de eigenaar:
+
+```php
+'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', auth()->id())],
+'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('user_id', auth()->id())],
+```
+
+### Bewijs via geautomatiseerde tests
+
+`tests/Feature/TenantIsolationTest.php` maakt twee accounts met elk een volledige
+dataset en verifieert vanuit account B onder meer:
+
+- overzichten (klanten, producten, facturen, offertes, btw, templates, dashboard,
+  mailverbindingen) tonen niets van account A;
+- directe toegang tot records van A (`show`/`pdf`/`preview`/`print`/`update`/`destroy`/
+  `mark-paid`/`duplicate`/`convert`) geeft 404;
+- beheer van A's mailverbinding geeft 403;
+- een factuur/offerte aanmaken met A's `customer_id` of `template_id` wordt door de
+  validatie geweigerd en er wordt niets weggeschreven.
+
+Alle 6 isolatietests slagen. (De 10 overige falende tests in de suite zijn bestaande
+Breeze-scaffoldtests die niet meer overeenkomen met de eigen, veiligere flows —
+MFA-afdwinging, account-approval en de custom `MailService` voor wachtwoord-reset.
+Dat zijn verouderde testverwachtingen, geen security-regressies. Optioneel bij te werken.)

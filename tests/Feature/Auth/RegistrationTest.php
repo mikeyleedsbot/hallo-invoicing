@@ -25,7 +25,14 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // Nieuwe aanvragen worden NIET automatisch ingelogd: ze staan op 'pending'
+        // en moeten eerst door een admin worden goedgekeurd.
+        $this->assertGuest();
+        $response->assertRedirect(route('register.pending'));
+
+        $this->assertDatabaseHas('users', [
+            'email'  => 'test@example.com',
+            'status' => \App\Models\User::STATUS_PENDING,
+        ]);
     }
 }

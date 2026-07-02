@@ -29,6 +29,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Standaard een goedgekeurd account; de DB-default is 'pending',
+            // wat login in tests zou blokkeren. Gebruik ->pending() voor dat geval.
+            'status' => \App\Models\User::STATUS_APPROVED,
+            'approved_at' => now(),
         ];
     }
 
@@ -39,6 +43,24 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /** Account dat nog op goedkeuring wacht. */
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status'      => \App\Models\User::STATUS_PENDING,
+            'approved_at' => null,
+        ]);
+    }
+
+    /** Account met MFA actief (combineer met sessie ['mfa_verified' => true]). */
+    public function mfaEnabled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'mfa_enabled'      => true,
+            'mfa_confirmed_at' => now(),
         ]);
     }
 }
