@@ -216,7 +216,7 @@
                                     ];
                                     $statusLabels = [
                                         'draft'     => 'Concept',
-                                        'sent'      => 'Verstuurd',
+                                        'sent'      => 'Verzonden',
                                         'paid'      => 'Betaald',
                                         'overdue'   => 'Verlopen',
                                         'cancelled' => 'Geannuleerd',

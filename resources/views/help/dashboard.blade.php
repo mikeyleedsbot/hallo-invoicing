@@ -10,30 +10,169 @@
                 </ol>
             </nav>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">Het dashboard is je startpagina. Klik op de genummerde markeringen in de afbeelding voor uitleg over elk onderdeel.</p>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Het dashboard is je startpagina. Klik op de genummerde markeringen in het voorbeeld voor uitleg over elk onderdeel.</p>
         </div>
 
-        <!-- Geannoteerde screenshot -->
+        <!-- ==================== VOORBEELD: Dashboard ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
-            <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
-                <img src="{{ asset('images/help/dashboard.png') }}" alt="Dashboard overzicht" class="w-full">
+            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+                {{-- Nagebouwd voorbeeld: identiek aan het echte dashboard --}}
+                <div class="flex gap-4" style="min-width: 860px;">
 
-                <!-- Marker 1: Welkomstbericht -->
-                <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 10%; left: 35%;">1</button>
+                    {{-- Sidebar (vereenvoudigd) --}}
+                    <div class="relative flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3" style="width: 11rem;">
+                        <button @click="openModal = 5" class="absolute flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-red-600/30 hover:bg-red-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; right: -16px; z-index: 10;">5</button>
+                        <div class="space-y-1 text-sm">
+                            <div class="px-2 py-1.5 rounded bg-blue-600 text-white font-medium">Dashboard</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Facturen</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Offertes</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Klanten</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Producten</div>
+                            <div class="pt-2 px-2 text-xs font-semibold text-gray-400 uppercase dark:text-gray-500">Instellingen</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Bedrijfsgegevens</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Templates</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">BTW Tarieven</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Instellingen</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">E-mailverbindingen</div>
+                            <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Help & Instructies</div>
+                        </div>
+                    </div>
 
-                <!-- Marker 2: Statistiekkaarten -->
-                <button @click="openModal = 2" class="absolute flex items-center justify-center w-8 h-8 bg-green-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-green-600/30 hover:bg-green-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 26%; left: 55%;">2</button>
+                    {{-- Hoofdinhoud --}}
+                    <div class="flex-1 space-y-4">
+                        {{-- Welkom --}}
+                        <div class="relative">
+                            <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -8px; right: -8px; z-index: 10;">1</button>
+                            <span class="text-2xl font-bold text-gray-900 dark:text-white">Welkom terug, Piet! 👋</span>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Hier is een overzicht van je facturatie activiteiten.</p>
+                        </div>
 
-                <!-- Marker 3: Snelle Acties -->
-                <button @click="openModal = 3" class="absolute flex items-center justify-center w-8 h-8 bg-purple-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-purple-600/30 hover:bg-purple-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 50%; left: 55%;">3</button>
+                        {{-- Statistiekkaarten --}}
+                        <div class="relative grid grid-cols-4 gap-3">
+                            <button @click="openModal = 2" class="absolute flex items-center justify-center w-8 h-8 bg-green-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-green-600/30 hover:bg-green-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; left: 50%; margin-left: -16px; z-index: 10;">2</button>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-4">
+                                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 mb-3">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Openstaand</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900 dark:text-white">€ 3.850,00</p>
+                                <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">3 facturen • onbetaald</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-4">
+                                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-green-600 mb-3">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                </div>
+                                <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Deze Maand</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900 dark:text-white">€ 5.200,00</p>
+                                <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">4 facturen • juli</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">+2 nieuw</span>
+                                </div>
+                                <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Klanten</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900 dark:text-white">12</p>
+                                <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Actieve relaties</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">1 verstuurd</span>
+                                </div>
+                                <p class="text-xs font-medium text-gray-600 dark:text-gray-400">Offertes</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900 dark:text-white">3</p>
+                                <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">2 concepten • 1 wacht op goedkeuring</p>
+                            </div>
+                        </div>
 
-                <!-- Marker 4: Recente Facturen -->
-                <button @click="openModal = 4" class="absolute flex items-center justify-center w-8 h-8 bg-amber-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-amber-600/30 hover:bg-amber-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 70%; left: 55%;">4</button>
+                        {{-- Snelle Acties --}}
+                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-4">
+                            <button @click="openModal = 3" class="absolute flex items-center justify-center w-8 h-8 bg-purple-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-purple-600/30 hover:bg-purple-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; left: 50%; margin-left: -16px; z-index: 10;">3</button>
+                            <span class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+                                Snelle Acties
+                            </span>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-sm">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold block text-sm">Nieuwe Factuur</span>
+                                        <span class="text-xs text-blue-100">Maak een factuur aan</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold block text-sm">Nieuwe Offerte</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">Stuur een offerte</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm">
+                                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold block text-sm">Klanten</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">12 klanten beheren</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Marker 5: Sidebar navigatie -->
-                <button @click="openModal = 5" class="absolute flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-red-600/30 hover:bg-red-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 33%; left: 7%;">5</button>
+                        {{-- Recente Facturen --}}
+                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+                            <button @click="openModal = 4" class="absolute flex items-center justify-center w-8 h-8 bg-amber-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-amber-600/30 hover:bg-amber-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; left: 50%; margin-left: -16px; z-index: 10;">4</button>
+                            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                                <span class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Recente Facturen
+                                </span>
+                                <span class="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">Bekijk alle <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span>
+                            </div>
+                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th class="px-4 py-2">Factuurnummer</th>
+                                        <th class="px-4 py-2">Klant</th>
+                                        <th class="px-4 py-2">Bedrag</th>
+                                        <th class="px-4 py-2">Datum</th>
+                                        <th class="px-4 py-2">Status</th>
+                                        <th class="px-4 py-2"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">2026001</td>
+                                        <td class="px-4 py-3">Bakkerij De Gouden Korst</td>
+                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">€ 1.250,00</td>
+                                        <td class="px-4 py-3">01-07-2026</td>
+                                        <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Verzonden</span></td>
+                                        <td class="px-4 py-3 text-right"><span class="text-blue-600 dark:text-blue-400 font-medium text-xs">Bekijken →</span></td>
+                                    </tr>
+                                    <tr class="bg-white dark:bg-gray-800">
+                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">2026002</td>
+                                        <td class="px-4 py-3">Jansen &amp; Zonen B.V.</td>
+                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">€ 3.450,00</td>
+                                        <td class="px-4 py-3">25-06-2026</td>
+                                        <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Betaald</span></td>
+                                        <td class="px-4 py-3 text-right"><span class="text-blue-600 dark:text-blue-400 font-medium text-xs">Bekijken →</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-center">Klik op een nummer voor uitleg over dat onderdeel</p>
+            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-center">Nagebouwd voorbeeld van de echte pagina &mdash; klik op een nummer voor uitleg over dat onderdeel</p>
         </div>
 
         <!-- ==================== MODALS ==================== -->
@@ -104,7 +243,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-sm text-blue-900 dark:text-blue-100">Openstaand</h4>
-                                    <p class="text-xs text-blue-800 dark:text-blue-200">Totaalbedrag van onbetaalde facturen en hoeveel dat er zijn.</p>
+                                    <p class="text-xs text-blue-800 dark:text-blue-200">Totaalbedrag van onbetaalde facturen (verzonden + verlopen) en hoeveel dat er zijn.</p>
                                 </div>
                             </div>
 
@@ -234,7 +373,7 @@
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
                                     <tr class="bg-white dark:bg-gray-800">
                                         <td class="px-3 py-2 font-medium text-gray-900 dark:text-white w-1/3">Factuurnummer</td>
-                                        <td class="px-3 py-2 text-gray-600 dark:text-gray-400">Het unieke nummer, bijv. <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">2025001</code></td>
+                                        <td class="px-3 py-2 text-gray-600 dark:text-gray-400">Het unieke nummer, bijv. <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">2026001</code></td>
                                     </tr>
                                     <tr class="bg-gray-50 dark:bg-gray-700/50">
                                         <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">Klant</td>
@@ -253,11 +392,16 @@
                                         <td class="px-3 py-2 text-gray-600 dark:text-gray-400">
                                             <div class="flex flex-wrap gap-1.5 mt-1">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300">Concept</span>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Verstuurd</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Verzonden</span>
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Betaald</span>
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Verlopen</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Geannuleerd</span>
                                             </div>
                                         </td>
+                                    </tr>
+                                    <tr class="bg-gray-50 dark:bg-gray-700/50">
+                                        <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">Bekijken &rarr;</td>
+                                        <td class="px-3 py-2 text-gray-600 dark:text-gray-400">Link naar de detailpagina van de factuur</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -317,7 +461,8 @@
                                     <p class="text-gray-700 dark:text-gray-300"><strong>Templates</strong> &mdash; Factuur-ontwerp</p>
                                     <p class="text-gray-700 dark:text-gray-300"><strong>BTW Tarieven</strong> &mdash; BTW-percentages</p>
                                     <p class="text-gray-700 dark:text-gray-300"><strong>Instellingen</strong> &mdash; App-voorkeuren</p>
-                                    <p class="text-gray-700 dark:text-gray-300"><strong>E-mail</strong> &mdash; Google/Microsoft</p>
+                                    <p class="text-gray-700 dark:text-gray-300"><strong>E-mailverbindingen</strong> &mdash; Google/Microsoft</p>
+                                    <p class="text-gray-700 dark:text-gray-300"><strong>Help & Instructies</strong> &mdash; Deze hulppagina's</p>
                                 </div>
                             </div>
                         </div>
@@ -351,7 +496,7 @@
             <div class="space-y-4">
                 <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
                     <h4 class="font-medium text-gray-900 dark:text-white">Hoe maak ik mijn eerste factuur aan?</h4>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Klik op de blauwe knop <strong>Nieuwe Factuur</strong> bij de Snelle Acties, of ga via het menu naar <strong>Facturen</strong> en klik daar op <strong>Nieuwe factuur</strong>.</p>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Klik op de blauwe knop <strong>Nieuwe Factuur</strong> bij de Snelle Acties, of ga via het menu naar <strong>Facturen</strong> en klik daar op <strong>+ Nieuwe Factuur</strong>.</p>
                 </div>
                 <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
                     <h4 class="font-medium text-gray-900 dark:text-white">Wat betekent de status "Verlopen"?</h4>
@@ -359,7 +504,7 @@
                 </div>
                 <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
                     <h4 class="font-medium text-gray-900 dark:text-white">Kan ik een offerte omzetten naar een factuur?</h4>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Ja! Open de offerte en klik op <strong>Omzetten naar factuur</strong>. Alle gegevens worden automatisch overgenomen.</p>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Ja! Open de offerte via het oog-icoon (Bekijken) en klik in het Acties-blok op <strong>Dupliceer naar Factuur</strong>. Alle gegevens worden automatisch overgenomen.</p>
                 </div>
                 <div>
                     <h4 class="font-medium text-gray-900 dark:text-white">Hoe wijzig ik mijn bedrijfsgegevens op de factuur?</h4>

@@ -13,43 +13,155 @@
             <p class="mt-2 text-gray-600 dark:text-gray-400">Beheer je klantenbestand: voeg klanten toe, bewerk gegevens en houd alles up-to-date. Klik op de markeringen voor uitleg.</p>
         </div>
 
-        <!-- ==================== SCREENSHOT 1: Klantenlijst ==================== -->
+        <!-- ==================== VOORBEELD 1: Klantenlijst ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Klantenlijst</h2>
-            <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
-                <img src="{{ asset('images/help/klanten-index.png') }}" alt="Klantenlijst" class="w-full">
+            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+                {{-- Nagebouwd voorbeeld: identiek aan de echte Klanten-pagina --}}
+                <div class="space-y-4" style="min-width: 720px;">
 
-                <!-- Marker 1: Nieuwe Klant knop -->
-                <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 8%; left: 90%;">1</button>
+                    {{-- Paginakop --}}
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-3xl font-bold text-gray-900 dark:text-white">Klanten</span>
+                            <p class="mt-2 text-gray-600 dark:text-gray-400">Beheer je klantrelaties</p>
+                        </div>
+                        <div class="relative">
+                            <span class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Nieuwe Klant
+                            </span>
+                            <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; left: -16px; z-index: 10;">1</button>
+                        </div>
+                    </div>
 
-                <!-- Marker 2: Tabelkolommen -->
-                <button @click="openModal = 2" class="absolute flex items-center justify-center w-8 h-8 bg-green-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-green-600/30 hover:bg-green-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 15%; left: 50%;">2</button>
-
-                <!-- Marker 3: Bewerken en Verwijderen -->
-                <button @click="openModal = 3" class="absolute flex items-center justify-center w-8 h-8 bg-purple-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-purple-600/30 hover:bg-purple-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 25%; left: 90%;">3</button>
+                    {{-- Tabel --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                <tr>
+                                    <th class="relative px-6 py-4">
+                                        <span class="inline-flex items-center gap-1">Naam <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/></svg></span>
+                                        <button @click="openModal = 2" class="absolute flex items-center justify-center w-8 h-8 bg-green-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-green-600/30 hover:bg-green-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; right: -12px; z-index: 10;">2</button>
+                                    </th>
+                                    <th class="px-6 py-4">Bedrijf</th>
+                                    <th class="px-6 py-4">Email</th>
+                                    <th class="px-6 py-4">Telefoon</th>
+                                    <th class="px-6 py-4">Plaats</th>
+                                    <th class="px-6 py-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">Jan de Vries</td>
+                                    <td class="px-6 py-4">Bakkerij De Gouden Korst</td>
+                                    <td class="px-6 py-4">jan@goudenkorst.nl</td>
+                                    <td class="px-6 py-4">050-1234567</td>
+                                    <td class="px-6 py-4">Groningen</td>
+                                    <td class="relative px-6 py-4 text-right">
+                                        <span class="font-medium text-blue-600 dark:text-blue-500 mr-3">Bewerken</span><span class="font-medium text-red-600 dark:text-red-500">Verwijderen</span>
+                                        <button @click="openModal = 3" class="absolute flex items-center justify-center w-8 h-8 bg-purple-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-purple-600/30 hover:bg-purple-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; right: 6px; z-index: 10;">3</button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">Petra Jansen</td>
+                                    <td class="px-6 py-4">Jansen &amp; Zonen B.V.</td>
+                                    <td class="px-6 py-4">petra@jansenzonen.nl</td>
+                                    <td class="px-6 py-4">-</td>
+                                    <td class="px-6 py-4">Assen</td>
+                                    <td class="px-6 py-4 text-right"><span class="font-medium text-blue-600 dark:text-blue-500 mr-3">Bewerken</span><span class="font-medium text-red-600 dark:text-red-500">Verwijderen</span></td>
+                                </tr>
+                                <tr class="bg-white dark:bg-gray-800">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">Mo el Amrani</td>
+                                    <td class="px-6 py-4">-</td>
+                                    <td class="px-6 py-4">mo@example.nl</td>
+                                    <td class="px-6 py-4">06-12345678</td>
+                                    <td class="px-6 py-4">Zwolle</td>
+                                    <td class="px-6 py-4 text-right"><span class="font-medium text-blue-600 dark:text-blue-500 mr-3">Bewerken</span><span class="font-medium text-red-600 dark:text-red-500">Verwijderen</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-center">Klik op een nummer voor uitleg over dat onderdeel</p>
+            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-center">Nagebouwd voorbeeld van de echte pagina &mdash; klik op een nummer voor uitleg over dat onderdeel</p>
         </div>
 
-        <!-- ==================== SCREENSHOT 2: Klant aanmaken modal ==================== -->
+        <!-- ==================== VOORBEELD 2: Klant aanmaken/bewerken pop-up ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Nieuwe klant aanmaken</h2>
-            <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
-                <img src="{{ asset('images/help/klant-aanmaken-modal.png') }}" alt="Nieuwe klant aanmaken" class="w-full">
-
-                <!-- Marker 4: Naamveld -->
-                <button @click="openModal = 4" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 26%; left: 65%;">4</button>
-
-                <!-- Marker 5: Bedrijfsgegevens -->
-                <button @click="openModal = 5" class="absolute flex items-center justify-center w-8 h-8 bg-green-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-green-600/30 hover:bg-green-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 45%; left: 65%;">5</button>
-
-                <!-- Marker 6: Adresgegevens -->
-                <button @click="openModal = 6" class="absolute flex items-center justify-center w-8 h-8 bg-amber-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-amber-600/30 hover:bg-amber-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 62%; left: 65%;">6</button>
-
-                <!-- Marker 7: Aanmaken knop -->
-                <button @click="openModal = 7" class="absolute flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-red-600/30 hover:bg-red-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 84%; left: 60%;">7</button>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Klant aanmaken of bewerken (pop-up)</h2>
+            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+                <div class="mx-auto max-w-2xl" style="min-width: 560px;">
+                    {{-- Nagebouwde pop-up: identiek aan de echte modal --}}
+                    <div class="relative w-full bg-white rounded-xl shadow-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                            <span class="text-xl font-semibold text-gray-900 dark:text-white">Nieuwe Klant</span>
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div class="relative">
+                                <button @click="openModal = 4" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -10px; right: -10px; z-index: 10;">4</button>
+                                <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Naam *</span>
+                                <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">Jan de Vries</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">jan@goudenkorst.nl</div>
+                                </div>
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefoon</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">050-1234567</div>
+                                </div>
+                            </div>
+                            <div class="relative grid grid-cols-2 gap-4">
+                                <button @click="openModal = 5" class="absolute flex items-center justify-center w-8 h-8 bg-green-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-green-600/30 hover:bg-green-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -10px; right: -10px; z-index: 10;">5</button>
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Bedrijfsnaam</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">Bakkerij De Gouden Korst</div>
+                                </div>
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">BTW Nummer</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">NL123456789B01</div>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <button @click="openModal = 6" class="absolute flex items-center justify-center w-8 h-8 bg-amber-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-amber-600/30 hover:bg-amber-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -10px; right: -10px; z-index: 10;">6</button>
+                                <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Adres</span>
+                                <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">Brinkstraat 12</div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Postcode</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">9712 AB</div>
+                                </div>
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Plaats</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">Groningen</div>
+                                </div>
+                                <div>
+                                    <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Land</span>
+                                    <div class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">Nederland</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                            <span class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600">Annuleren</span>
+                            <span class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg">Aanmaken</span>
+                            <button @click="openModal = 7" class="absolute flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-red-600/30 hover:bg-red-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; right: -10px; z-index: 10;">7</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-center">Klik op een nummer voor uitleg over dat onderdeel</p>
+            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-center">Nagebouwd voorbeeld van de echte pop-up &mdash; klik op een nummer voor uitleg over dat onderdeel</p>
+        </div>
+
+        <!-- ==================== SECTIE: Klant bewerken ==================== -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Klant bewerken</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Klik in de klantenlijst op de blauwe tekstlink <strong class="text-blue-600 dark:text-blue-400">Bewerken</strong> rechts van de klant. Dezelfde pop-up opent, nu met de titel <strong class="text-gray-900 dark:text-white">Klant Bewerken</strong> en alle huidige gegevens vooringevuld. Pas de velden aan en klik op <strong class="text-gray-900 dark:text-white">Bijwerken</strong> om op te slaan, of op <strong class="text-gray-900 dark:text-white">Annuleren</strong> om de pop-up zonder wijzigingen te sluiten. De aangepaste gegevens (zoals adres of BTW-nummer) worden gebruikt bij nieuwe facturen en offertes voor deze klant.
+            </p>
         </div>
 
         <!-- ==================== MODALS ==================== -->
@@ -84,7 +196,7 @@
                             </button>
                         </div>
                         <p class="text-gray-600 dark:text-gray-400">
-                            Klik op <strong class="text-gray-900 dark:text-white">+ Nieuwe Klant</strong> om een pop-up te openen waarmee je snel een nieuwe klant toevoegt. Je kunt ook klanten aanmaken vanuit het factuur- of offerteformulier.
+                            Klik op <strong class="text-gray-900 dark:text-white">+ Nieuwe Klant</strong> om een pop-up te openen waarmee je snel een nieuwe klant toevoegt. Na het aanmaken kun je de klant direct selecteren bij het opstellen van facturen en offertes.
                         </p>
                         <div class="mt-4 flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700">
                             <span class="text-xs text-gray-400">1 van 7</span>
@@ -141,7 +253,7 @@
 
                         <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                             <p class="text-xs text-blue-800 dark:text-blue-200">
-                                <strong>Tip:</strong> Klik op een kolomtitel om de lijst te sorteren op die kolom.
+                                <strong>Tip:</strong> Klik op een kolomtitel om de lijst te sorteren op die kolom. Ontbrekende gegevens worden weergegeven met een streepje (-).
                             </p>
                         </div>
 
@@ -173,22 +285,22 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">Rechts van elke klant staan twee acties:</p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Rechts van elke klant staan twee tekstlinks (geen icoontjes):</p>
 
                         <div class="space-y-3">
                             <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                <span class="text-blue-600 dark:text-blue-400 font-medium text-sm">Bewerken</span>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">Open het bewerkformulier om klantgegevens aan te passen.</p>
+                                <span class="text-blue-600 dark:text-blue-500 font-medium text-sm">Bewerken</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Opent de pop-up "Klant Bewerken" met alle gegevens vooringevuld. Sla op met <strong>Bijwerken</strong>.</p>
                             </div>
                             <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                <span class="text-red-600 dark:text-red-400 font-medium text-sm">Verwijderen</span>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">Verwijder de klant. Er wordt een bevestiging gevraagd.</p>
+                                <span class="text-red-600 dark:text-red-500 font-medium text-sm">Verwijderen</span>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Verwijdert de klant. Er wordt eerst om bevestiging gevraagd.</p>
                             </div>
                         </div>
 
                         <div class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
                             <p class="text-xs text-amber-800 dark:text-amber-200">
-                                <strong>Let op:</strong> Je kunt een klant niet verwijderen als er nog facturen of offertes aan gekoppeld zijn.
+                                <strong>Let op:</strong> Een verwijderde klant kan niet worden teruggehaald. Verwijder een klant alleen als je zeker weet dat je deze niet meer nodig hebt.
                             </p>
                         </div>
 
@@ -206,7 +318,7 @@
                     </div>
                 </div>
 
-                <!-- Modal 4: Naamveld -->
+                <!-- Modal 4: Naam & contactgegevens -->
                 <div x-show="openModal === 4"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 scale-95"
@@ -232,7 +344,7 @@
                             <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                 <div>
                                     <span class="font-semibold text-sm text-gray-900 dark:text-white">Email</span>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Nodig voor het versturen van facturen en offertes per e-mail.</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Nodig voor het versturen van facturen en offertes per e-mail. Zonder e-mailadres is het e-mail-icoon in de overzichten uitgeschakeld (grijs).</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -281,7 +393,7 @@
                             <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                 <div>
                                     <span class="font-semibold text-sm text-gray-900 dark:text-white">BTW Nummer</span>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Het BTW-identificatienummer van de klant, bijv. <code class="text-xs bg-gray-100 dark:bg-gray-600 px-1 py-0.5 rounded">NL123456789B01</code>. Wordt op de factuur vermeld.</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Het BTW-identificatienummer van de klant, bijv. <code class="text-xs bg-gray-100 dark:bg-gray-600 px-1 py-0.5 rounded">NL123456789B01</code>. Wordt op de factuur vermeld en is vereist om BTW te kunnen verleggen.</p>
                                 </div>
                             </div>
                         </div>
@@ -351,7 +463,7 @@
                     </div>
                 </div>
 
-                <!-- Modal 7: Aanmaken knop -->
+                <!-- Modal 7: Opslaan -->
                 <div x-show="openModal === 7"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 scale-95"
@@ -372,7 +484,7 @@
                             </div>
                             <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                 <span class="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded">Aanmaken</span>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">Slaat de klant op en voegt deze toe aan je klantenlijst.</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Slaat de klant op en voegt deze toe aan je klantenlijst. Bij het bewerken van een bestaande klant heet deze knop <strong>Bijwerken</strong>.</p>
                             </div>
                         </div>
                         <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
@@ -401,8 +513,8 @@
 
             <div class="space-y-4">
                 <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
-                    <h4 class="font-medium text-gray-900 dark:text-white">Kan ik een klant toevoegen vanuit een factuur?</h4>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Ja, bij het aanmaken van een factuur of offerte kun je in het klantveld een nieuwe klant toevoegen als deze nog niet bestaat.</p>
+                    <h4 class="font-medium text-gray-900 dark:text-white">Kan ik een klant toevoegen vanuit een factuur of offerte?</h4>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Nee, in het klantveld van het factuur- of offerteformulier kun je alleen bestaande klanten zoeken en selecteren. Maak een nieuwe klant eerst aan via <strong>Klanten &rarr; + Nieuwe Klant</strong> en kies deze daarna in het formulier.</p>
                 </div>
                 <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
                     <h4 class="font-medium text-gray-900 dark:text-white">Worden klantgegevens automatisch op facturen gezet?</h4>
@@ -410,7 +522,7 @@
                 </div>
                 <div>
                     <h4 class="font-medium text-gray-900 dark:text-white">Wat als ik een klant per ongeluk heb verwijderd?</h4>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Een verwijderde klant kan niet worden teruggehaald. Facturen en offertes die al voor deze klant zijn aangemaakt blijven bewaard, maar je moet de klant opnieuw aanmaken voor nieuwe documenten.</p>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Een verwijderde klant kan niet worden teruggehaald. Je moet de klant opnieuw aanmaken voor nieuwe documenten.</p>
                 </div>
             </div>
         </div>
