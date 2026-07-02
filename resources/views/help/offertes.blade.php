@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="space-y-8 max-w-5xl" x-data="{ openModal: null }">
+    <div class="space-y-8" x-data="{ openModal: null }">
         <!-- Breadcrumb + titel -->
         <div>
             <nav class="flex mb-4" aria-label="Breadcrumb">
@@ -16,7 +16,7 @@
         <!-- ==================== VOORBEELD 1: Offerteoverzicht ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Offerteoverzicht</h2>
-            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+            <div class="overflow-x-auto pt-4">
                 {{-- Nagebouwd voorbeeld: identiek aan de echte Offertes-pagina --}}
                 <div class="space-y-4" style="min-width: 780px;">
 

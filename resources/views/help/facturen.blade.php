@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="space-y-8 max-w-5xl" x-data="{ openModal: null }">
+    <div class="space-y-8" x-data="{ openModal: null }">
         <!-- Breadcrumb + titel -->
         <div>
             <nav class="flex mb-4" aria-label="Breadcrumb">
@@ -16,7 +16,7 @@
         <!-- ==================== VOORBEELD 1: Facturenoverzicht ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Facturenoverzicht</h2>
-            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+            <div class="overflow-x-auto pt-4">
                 {{-- Nagebouwd voorbeeld: identiek aan de echte Facturen-pagina --}}
                 <div class="space-y-4" style="min-width: 780px;">
 
@@ -59,7 +59,7 @@
                                 <tr>
                                     <th class="relative px-6 py-3">
                                         <span class="inline-flex items-center gap-1">Factuurnummer <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/></svg></span>
-                                        <button @click="openModal = 3" class="absolute flex items-center justify-center w-8 h-8 bg-purple-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-purple-600/30 hover:bg-purple-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; right: -12px; z-index: 10;">3</button>
+                                        <button @click="openModal = 3" class="absolute flex items-center justify-center w-8 h-8 bg-purple-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-purple-600/30 hover:bg-purple-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 50%; margin-top: -16px; right: -12px; z-index: 10;">3</button>
                                     </th>
                                     <th class="px-6 py-3">Klant</th>
                                     <th class="px-6 py-3">Datum</th>
@@ -139,7 +139,7 @@
         <!-- ==================== VOORBEELD 2: Factuur aanmaken ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Factuur aanmaken</h2>
-            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+            <div class="overflow-x-auto pt-4">
                 <div class="space-y-4" style="min-width: 700px;">
 
                     {{-- Paginakop --}}

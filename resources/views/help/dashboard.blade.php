@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="space-y-8 max-w-5xl" x-data="{ openModal: null }">
+    <div class="space-y-8" x-data="{ openModal: null }">
         <!-- Breadcrumb + titel -->
         <div>
             <nav class="flex mb-4" aria-label="Breadcrumb">
@@ -15,7 +15,7 @@
 
         <!-- ==================== VOORBEELD: Dashboard ==================== -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
-            <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-4 overflow-x-auto">
+            <div class="overflow-x-auto pt-4">
                 {{-- Nagebouwd voorbeeld: identiek aan het echte dashboard --}}
                 <div class="flex gap-4" style="min-width: 860px;">
 
@@ -130,7 +130,7 @@
 
                         {{-- Recente Facturen --}}
                         <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-                            <button @click="openModal = 4" class="absolute flex items-center justify-center w-8 h-8 bg-amber-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-amber-600/30 hover:bg-amber-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; left: 50%; margin-left: -16px; z-index: 10;">4</button>
+                            <button @click="openModal = 4" class="absolute flex items-center justify-center w-8 h-8 bg-amber-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-amber-600/30 hover:bg-amber-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: 8px; left: 50%; margin-left: -16px; z-index: 10;">4</button>
                             <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                                 <span class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                     <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
