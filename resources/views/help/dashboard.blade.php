@@ -17,7 +17,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <div class="overflow-x-auto pt-4">
                 {{-- Nagebouwd voorbeeld: identiek aan het echte dashboard --}}
-                <div class="flex gap-4" style="min-width: 860px;">
+                <div class="flex gap-4" style="min-width: 760px;">
 
                     {{-- Sidebar (vereenvoudigd) --}}
                     <div class="relative flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3" style="width: 11rem;">
@@ -39,7 +39,7 @@
                     </div>
 
                     {{-- Hoofdinhoud --}}
-                    <div class="flex-1 space-y-4">
+                    <div class="flex-1 space-y-4" style="min-width: 0;">
                         {{-- Welkom --}}
                         <div class="relative">
                             <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -8px; right: -8px; z-index: 10;">1</button>
