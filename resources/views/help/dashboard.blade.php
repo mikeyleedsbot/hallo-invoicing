@@ -17,12 +17,12 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <div class="overflow-x-auto pt-4">
                 {{-- Nagebouwd voorbeeld: identiek aan het echte dashboard --}}
-                <div class="flex gap-4" style="min-width: 760px;">
+                <div class="flex gap-4">
 
                     {{-- Sidebar (vereenvoudigd) --}}
-                    <div class="relative flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3" style="width: 11rem;">
+                    <div class="relative flex-shrink-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3" style="width: 9.5rem;">
                         <button @click="openModal = 5" class="absolute flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-red-600/30 hover:bg-red-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -16px; right: -16px; z-index: 10;">5</button>
-                        <div class="space-y-1 text-sm">
+                        <div class="space-y-1 text-xs">
                             <div class="px-2 py-1.5 rounded bg-blue-600 text-white font-medium">Dashboard</div>
                             <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Facturen</div>
                             <div class="px-2 py-1.5 rounded text-gray-700 dark:text-gray-300">Offertes</div>
@@ -42,7 +42,7 @@
                     <div class="flex-1 space-y-4" style="min-width: 0;">
                         {{-- Welkom --}}
                         <div class="relative">
-                            <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -8px; right: -8px; z-index: 10;">1</button>
+                            <button @click="openModal = 1" class="absolute flex items-center justify-center w-8 h-8 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg ring-4 ring-blue-600/30 hover:bg-blue-700 hover:scale-110 transition-all cursor-pointer animate-pulse hover:animate-none" style="top: -8px; right: 8px; z-index: 10;">1</button>
                             <span class="text-2xl font-bold text-gray-900 dark:text-white">Welkom terug, Piet! 👋</span>
                             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Hier is een overzicht van je facturatie activiteiten.</p>
                         </div>
@@ -138,33 +138,33 @@
                                 </span>
                                 <span class="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">Bekijk alle <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span>
                             </div>
-                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <table class="w-full text-xs text-left text-gray-500 dark:text-gray-400">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                     <tr>
-                                        <th class="px-4 py-2">Factuurnummer</th>
-                                        <th class="px-4 py-2">Klant</th>
-                                        <th class="px-4 py-2">Bedrag</th>
-                                        <th class="px-4 py-2">Datum</th>
-                                        <th class="px-4 py-2">Status</th>
-                                        <th class="px-4 py-2"></th>
+                                        <th class="px-2 py-2">Factuurnummer</th>
+                                        <th class="px-2 py-2">Klant</th>
+                                        <th class="px-2 py-2">Bedrag</th>
+                                        <th class="px-2 py-2">Datum</th>
+                                        <th class="px-2 py-2">Status</th>
+                                        <th class="px-2 py-2"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">2026001</td>
-                                        <td class="px-4 py-3">Bakkerij De Gouden Korst</td>
-                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">€ 1.250,00</td>
-                                        <td class="px-4 py-3">01-07-2026</td>
-                                        <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Verzonden</span></td>
-                                        <td class="px-4 py-3 text-right"><span class="text-blue-600 dark:text-blue-400 font-medium text-xs">Bekijken →</span></td>
+                                        <td class="px-2 py-2 font-medium text-gray-900 dark:text-white">2026001</td>
+                                        <td class="px-2 py-2">Bakkerij De Gouden Korst</td>
+                                        <td class="px-2 py-2 font-medium text-gray-900 dark:text-white">€ 1.250,00</td>
+                                        <td class="px-2 py-2">01-07-2026</td>
+                                        <td class="px-2 py-2"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Verzonden</span></td>
+                                        <td class="px-2 py-2 text-right"><span class="text-blue-600 dark:text-blue-400 font-medium text-xs">Bekijken →</span></td>
                                     </tr>
                                     <tr class="bg-white dark:bg-gray-800">
-                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">2026002</td>
-                                        <td class="px-4 py-3">Jansen &amp; Zonen B.V.</td>
-                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">€ 3.450,00</td>
-                                        <td class="px-4 py-3">25-06-2026</td>
-                                        <td class="px-4 py-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Betaald</span></td>
-                                        <td class="px-4 py-3 text-right"><span class="text-blue-600 dark:text-blue-400 font-medium text-xs">Bekijken →</span></td>
+                                        <td class="px-2 py-2 font-medium text-gray-900 dark:text-white">2026002</td>
+                                        <td class="px-2 py-2">Jansen &amp; Zonen B.V.</td>
+                                        <td class="px-2 py-2 font-medium text-gray-900 dark:text-white">€ 3.450,00</td>
+                                        <td class="px-2 py-2">25-06-2026</td>
+                                        <td class="px-2 py-2"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Betaald</span></td>
+                                        <td class="px-2 py-2 text-right"><span class="text-blue-600 dark:text-blue-400 font-medium text-xs">Bekijken →</span></td>
                                     </tr>
                                 </tbody>
                             </table>
