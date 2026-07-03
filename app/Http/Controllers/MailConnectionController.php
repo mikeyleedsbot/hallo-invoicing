@@ -42,9 +42,15 @@ class MailConnectionController extends Controller
     {
         abort_unless(in_array($provider, ['google', 'microsoft']), 404);
 
+        $user = Auth::user();
+
+        // De opgeslagen secret wordt nooit teruggestuurd naar de browser;
+        // leeg laten betekent daarom: bestaande secret behouden.
+        $hasExisting = $provider === 'google' ? $user->hasGoogleOAuth() : $user->hasMicrosoftOAuth();
+
         $rules = [
             'client_id'     => ['required', 'string', 'max:255'],
-            'client_secret' => ['required', 'string', 'max:500'],
+            'client_secret' => [$hasExisting ? 'nullable' : 'required', 'string', 'max:500'],
         ];
         if ($provider === 'microsoft') {
             $rules['tenant_id'] = ['nullable', 'string', 'max:255'];
@@ -52,14 +58,17 @@ class MailConnectionController extends Controller
 
         $data = $request->validate($rules);
 
-        $user = Auth::user();
         if ($provider === 'google') {
-            $user->google_client_id     = $data['client_id'];
-            $user->google_client_secret = $data['client_secret'];
+            $user->google_client_id = $data['client_id'];
+            if (!empty($data['client_secret'])) {
+                $user->google_client_secret = $data['client_secret'];
+            }
         } else {
-            $user->microsoft_client_id     = $data['client_id'];
-            $user->microsoft_client_secret = $data['client_secret'];
-            $user->microsoft_tenant_id     = $data['tenant_id'] ?: 'common';
+            $user->microsoft_client_id = $data['client_id'];
+            if (!empty($data['client_secret'])) {
+                $user->microsoft_client_secret = $data['client_secret'];
+            }
+            $user->microsoft_tenant_id = ($data['tenant_id'] ?? null) ?: 'common';
         }
         $user->save();
 

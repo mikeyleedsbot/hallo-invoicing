@@ -105,6 +105,14 @@ class AppSettingController extends Controller
             'quote_email_body'      => 'nullable|string|max:20000',
         ]);
 
+        // E-mailteksten opschonen: alleen veilige opmaak-tags toestaan en
+        // event-handlers/javascript-URI's strippen.
+        foreach (['invoice_email_body', 'quote_email_body'] as $field) {
+            if (isset($validated[$field])) {
+                $validated[$field] = $this->sanitizeEmailHtml($validated[$field]);
+            }
+        }
+
         // Lege e-mailteksten (alleen opmaak zonder inhoud) opslaan als NULL,
         // zodat de standaardtekst automatisch blijft gelden.
         foreach (['invoice_email_body', 'quote_email_body'] as $field) {
@@ -124,5 +132,25 @@ class AppSettingController extends Controller
         return redirect()
             ->route('settings.edit')
             ->with('success', 'Instellingen succesvol bijgewerkt!');
+    }
+
+    /**
+     * Sta alleen eenvoudige opmaak toe in de e-mailteksten en verwijder
+     * alles wat script kan uitvoeren (event-handlers, javascript:-URI's).
+     */
+    private function sanitizeEmailHtml(string $html): string
+    {
+        $html = strip_tags($html, '<p><div><br><b><strong><i><em><u><s><ul><ol><li><a><span>');
+
+        // Event-handler attributen (onclick, onerror, ...) verwijderen
+        $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
+
+        // javascript:/data:-URI's in href/src neutraliseren
+        $html = preg_replace('/\s(href|src)\s*=\s*("|\')?\s*(javascript|data|vbscript):[^"\'>\s]*("|\')?/i', '', $html);
+
+        // Inline styles strippen (niet nodig voor de toegestane opmaak)
+        $html = preg_replace('/\sstyle\s*=\s*("[^"]*"|\'[^\']*\')/i', '', $html);
+
+        return $html;
     }
 }

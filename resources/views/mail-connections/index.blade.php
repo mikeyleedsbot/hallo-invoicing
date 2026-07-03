@@ -195,16 +195,16 @@
                             <div>
                                 <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Client Secret</label>
                                 <div class="relative">
-                                    <input :type="showGoogleSecret ? 'text' : 'password'" name="client_secret" required
-                                           value="{{ old('client_secret', $user->google_client_secret) }}"
-                                           placeholder="GOCSPX-xxxxxxxxxxxxxxxxxxxx"
+                                    <input :type="showGoogleSecret ? 'text' : 'password'" name="client_secret" @if(!$googleConfigured) required @endif
+                                           value="{{ old('client_secret') }}"
+                                           placeholder="{{ $googleConfigured ? 'Opgeslagen — laat leeg om te behouden' : 'GOCSPX-xxxxxxxxxxxxxxxxxxxx' }}"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <button type="button" @click="showGoogleSecret = !showGoogleSecret"
                                             class="absolute inset-y-0 right-0 px-3 text-xs text-gray-600 dark:text-gray-300">
                                         <span x-text="showGoogleSecret ? 'Verberg' : 'Toon'"></span>
                                     </button>
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wordt encrypted opgeslagen.</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wordt encrypted opgeslagen en niet meer getoond. Laat leeg om de bestaande secret te behouden.</p>
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
@@ -304,16 +304,16 @@
                             <div>
                                 <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Client Secret <span class="text-gray-500 dark:text-gray-400 font-normal">(de &quot;Value&quot; uit Azure)</span></label>
                                 <div class="relative">
-                                    <input :type="showMicrosoftSecret ? 'text' : 'password'" name="client_secret" required
-                                           value="{{ old('client_secret', $user->microsoft_client_secret) }}"
-                                           placeholder="abc~XYZ.0123456789..."
+                                    <input :type="showMicrosoftSecret ? 'text' : 'password'" name="client_secret" @if(!$microsoftConfigured) required @endif
+                                           value="{{ old('client_secret') }}"
+                                           placeholder="{{ $microsoftConfigured ? 'Opgeslagen — laat leeg om te behouden' : 'abc~XYZ.0123456789...' }}"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <button type="button" @click="showMicrosoftSecret = !showMicrosoftSecret"
                                             class="absolute inset-y-0 right-0 px-3 text-xs text-gray-600 dark:text-gray-300">
                                         <span x-text="showMicrosoftSecret ? 'Verberg' : 'Toon'"></span>
                                     </button>
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wordt encrypted opgeslagen.</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Wordt encrypted opgeslagen en niet meer getoond. Laat leeg om de bestaande secret te behouden.</p>
                             </div>
                             <div>
                                 <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Tenant ID <span class="text-gray-500 dark:text-gray-400 font-normal">(optioneel — laat 'common' staan voor multi-tenant)</span></label>

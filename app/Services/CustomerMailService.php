@@ -28,6 +28,13 @@ class CustomerMailService
         ?string $attachmentContent = null,
         ?string $attachmentName = null,
     ): bool {
+        // Header-injectie voorkomen: regeleindes uit ontvanger strippen en
+        // bijlagenaam beperken tot veilige tekens.
+        $to = trim(preg_replace('/[\r\n]+/', '', $to));
+        if ($attachmentName !== null) {
+            $attachmentName = preg_replace('/[^A-Za-z0-9._-]/', '_', $attachmentName);
+        }
+
         if (!$this->ensureFreshToken($account)) {
             return false;
         }
