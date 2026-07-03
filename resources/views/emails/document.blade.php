@@ -1,10 +1,16 @@
 {{-- Nette HTML-mail voor facturen/offertes die via de eigen mailverbinding
-     van de gebruiker (Gmail / Microsoft 365) worden verstuurd. --}}
+     van de gebruiker (Gmail / Microsoft 365) worden verstuurd.
+     De inhoud ($bodyHtml) komt uit de opmaakbare e-mailtekst in de
+     instellingen (AppSetting), met ingevulde placeholders. --}}
 <!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    p { margin: 0 0 12px; color: #374151; font-size: 15px; line-height: 1.6; }
+    ul, ol { margin: 0 0 12px; padding-left: 20px; color: #374151; font-size: 15px; line-height: 1.6; }
+</style>
 </head>
 <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 16px;">
@@ -12,13 +18,8 @@
     <td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
         <tr>
-          <td style="background:white;border-radius:12px;padding:36px 40px;border:1px solid #e5e7eb;">
-            <p style="margin:0 0 16px;color:#111827;font-size:15px;">Beste {{ $salutation }},</p>
-            @foreach($lines as $line)
-            <p style="margin:0 0 12px;color:#374151;font-size:15px;line-height:1.6;">{!! $line !!}</p>
-            @endforeach
-            <p style="margin:20px 0 4px;color:#374151;font-size:15px;">Met vriendelijke groet,</p>
-            <p style="margin:0;color:#111827;font-size:15px;font-weight:600;">{{ $sender }}</p>
+          <td style="background:white;border-radius:12px;padding:36px 40px;border:1px solid #e5e7eb;color:#374151;font-size:15px;line-height:1.6;">
+            {!! $bodyHtml !!}
           </td>
         </tr>
         <tr>

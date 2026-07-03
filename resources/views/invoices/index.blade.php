@@ -93,7 +93,10 @@
                 </form>
             </div>
 
-            @php $_mailAccount = auth()->user()->activeMailAccount(); @endphp
+            @php
+                $_mailAccount = auth()->user()->activeMailAccount();
+                $_composer    = app(\App\Services\DocumentEmailComposer::class);
+            @endphp
 
             {{-- Table --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -114,29 +117,12 @@
                             <tbody>
                                 @foreach($invoices as $invoice)
                                 @php
-                                    $_cust       = $invoice->customer;
-                                    $_sender     = auth()->user()->company_name ?: auth()->user()->name;
-                                    $_custSal    = $_cust->contact_person ?: $_cust->name;
-                                    $_amountFmt  = number_format($invoice->total_including_vat ?? $invoice->total ?? 0, 2, ',', '.');
-                                    $_dueDateFmt = $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('d-m-Y') : '';
-                                    $_mailSubject = 'Factuur ' . $invoice->invoice_number . ' van ' . $_sender;
-                                    $_mailBodyLines = [
-                                        'Beste ' . $_custSal . ',',
-                                        '',
-                                        'Bijgaand de factuur ' . $invoice->invoice_number . ' voor een bedrag van EUR ' . $_amountFmt . '.',
-                                    ];
-                                    if ($_dueDateFmt) {
-                                        $_mailBodyLines[] = 'We verzoeken u het bedrag over te maken vóór ' . $_dueDateFmt . '.';
-                                    }
-                                    $_mailBodyLines = array_merge($_mailBodyLines, [
-                                        '',
-                                        'Met vriendelijke groet,',
-                                        $_sender,
-                                    ]);
-                                    $_mailBody = implode("\n", $_mailBodyLines);
+                                    $_cust     = $invoice->customer;
+                                    // Zelfde opmaakbare e-mailtekst als bij direct versturen (Instellingen)
+                                    $_composed = $_composer->forInvoice($invoice);
                                     $_mailtoHref = 'mailto:' . rawurlencode($_cust->email ?? '')
-                                        . '?subject=' . rawurlencode($_mailSubject)
-                                        . '&body=' . rawurlencode($_mailBody);
+                                        . '?subject=' . rawurlencode($_composed['subject'])
+                                        . '&body=' . rawurlencode($_composed['text']);
                                     $_pdfUrl = route('invoices.pdf', $invoice);
                                     $_hasEmail = !empty($_cust->email);
                                 @endphp

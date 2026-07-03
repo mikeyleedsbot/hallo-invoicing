@@ -93,7 +93,10 @@
                 </form>
             </div>
 
-            @php $_mailAccount = auth()->user()->activeMailAccount(); @endphp
+            @php
+                $_mailAccount = auth()->user()->activeMailAccount();
+                $_composer    = app(\App\Services\DocumentEmailComposer::class);
+            @endphp
 
             {{-- Table --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -114,29 +117,12 @@
                             <tbody>
                                 @foreach($quotes as $quote)
                                 @php
-                                    $_cust        = $quote->customer;
-                                    $_sender      = auth()->user()->company_name ?: auth()->user()->name;
-                                    $_custSal     = $_cust->contact_person ?: $_cust->name;
-                                    $_amountFmt   = number_format($quote->total_including_vat ?? $quote->total ?? 0, 2, ',', '.');
-                                    $_validFmt    = $quote->valid_until ? \Carbon\Carbon::parse($quote->valid_until)->format('d-m-Y') : '';
-                                    $_mailSubject = 'Offerte ' . $quote->quote_number . ' van ' . $_sender;
-                                    $_mailBodyLines = [
-                                        'Beste ' . $_custSal . ',',
-                                        '',
-                                        'Bijgaand de offerte ' . $quote->quote_number . ' voor een bedrag van EUR ' . $_amountFmt . '.',
-                                    ];
-                                    if ($_validFmt) {
-                                        $_mailBodyLines[] = 'Deze offerte is geldig tot en met ' . $_validFmt . '.';
-                                    }
-                                    $_mailBodyLines = array_merge($_mailBodyLines, [
-                                        '',
-                                        'Met vriendelijke groet,',
-                                        $_sender,
-                                    ]);
-                                    $_mailBody   = implode("\n", $_mailBodyLines);
+                                    $_cust     = $quote->customer;
+                                    // Zelfde opmaakbare e-mailtekst als bij direct versturen (Instellingen)
+                                    $_composed = $_composer->forQuote($quote);
                                     $_mailtoHref = 'mailto:' . rawurlencode($_cust->email ?? '')
-                                        . '?subject=' . rawurlencode($_mailSubject)
-                                        . '&body=' . rawurlencode($_mailBody);
+                                        . '?subject=' . rawurlencode($_composed['subject'])
+                                        . '&body=' . rawurlencode($_composed['text']);
                                     $_pdfUrl   = route('quotes.pdf', $quote);
                                     $_hasEmail = !empty($_cust->email);
                                 @endphp

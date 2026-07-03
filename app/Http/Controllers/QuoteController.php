@@ -308,26 +308,14 @@ class QuoteController extends Controller
             $pdf = Pdf::loadView('quotes.pdf', compact('quote'));
         }
 
-        $sender     = auth()->user()->company_name ?: auth()->user()->name;
-        $salutation = $customer->contact_person ?: $customer->name;
-        $amount     = number_format($quote->total, 2, ',', '.');
-        $validUntil = $quote->valid_until ? \Carbon\Carbon::parse($quote->valid_until)->format('d-m-Y') : null;
-
-        $subject = 'Offerte ' . $quote->quote_number . ' van ' . $sender;
-        $html    = view('emails.document', [
-            'salutation' => $salutation,
-            'lines'      => array_filter([
-                'Bijgaand ontvang je offerte <strong>' . e($quote->quote_number) . '</strong> voor een bedrag van <strong>€ ' . $amount . '</strong>.',
-                $validUntil ? 'Deze offerte is geldig tot en met <strong>' . $validUntil . '</strong>.' : null,
-            ]),
-            'sender'     => $sender,
-        ])->render();
+        // Onderwerp en tekst uit de opmaakbare e-mailtekst (Instellingen)
+        $composed = app(\App\Services\DocumentEmailComposer::class)->forQuote($quote);
 
         $sent = $mailer->send(
             $account,
             $customer->email,
-            $subject,
-            $html,
+            $composed['subject'],
+            $composed['html'],
             $pdf->output(),
             $quote->quote_number . '.pdf',
         );

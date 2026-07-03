@@ -121,6 +121,91 @@
                     </div>
                 </div>
 
+                {{-- E-mailteksten --}}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">E-mailteksten</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Deze tekst wordt gebruikt bij het e-mailen van facturen en offertes &mdash; zowel bij direct versturen via je mailverbinding als bij de vooringevulde mail in je eigen mailprogramma. De onderstaande velden zijn alvast gevuld met een standaardtekst; pas ze gerust aan.
+                    </p>
+
+                    @php
+                        $emailEditors = [
+                            [
+                                'label'        => 'Factuur-e-mail',
+                                'subjectField' => 'invoice_email_subject',
+                                'bodyField'    => 'invoice_email_body',
+                                'subject'      => old('invoice_email_subject', $settings->invoiceEmailSubject()),
+                                'body'         => old('invoice_email_body', $settings->invoiceEmailBody()),
+                                'placeholders' => ['{contactpersoon}', '{klantnaam}', '{nummer}', '{bedrag}', '{vervaldatum}', '{bedrijfsnaam}'],
+                            ],
+                            [
+                                'label'        => 'Offerte-e-mail',
+                                'subjectField' => 'quote_email_subject',
+                                'bodyField'    => 'quote_email_body',
+                                'subject'      => old('quote_email_subject', $settings->quoteEmailSubject()),
+                                'body'         => old('quote_email_body', $settings->quoteEmailBody()),
+                                'placeholders' => ['{contactpersoon}', '{klantnaam}', '{nummer}', '{bedrag}', '{geldig_tot}', '{bedrijfsnaam}'],
+                            ],
+                        ];
+                    @endphp
+
+                    <div class="space-y-8">
+                        @foreach($emailEditors as $editor)
+                        <div x-data="{
+                                value: @js($editor['body']),
+                                sync() { this.value = this.$refs.area.innerHTML; },
+                                exec(cmd) { this.$refs.area.focus(); document.execCommand(cmd, false, null); this.sync(); },
+                                insert(ph) { this.$refs.area.focus(); document.execCommand('insertText', false, ph); this.sync(); }
+                             }"
+                             x-init="$refs.area.innerHTML = value">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ $editor['label'] }}</h3>
+
+                            <div class="mb-3">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Onderwerp</label>
+                                <input type="text" name="{{ $editor['subjectField'] }}" value="{{ $editor['subject'] }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Berichttekst</label>
+                            <div class="rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                                {{-- Toolbar --}}
+                                <div class="flex items-center gap-1 px-2 py-1.5 bg-gray-50 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600">
+                                    <button type="button" @click="exec('bold')" title="Vetgedrukt"
+                                            class="w-8 h-8 rounded font-bold text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">B</button>
+                                    <button type="button" @click="exec('italic')" title="Cursief"
+                                            class="w-8 h-8 rounded italic text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">I</button>
+                                    <button type="button" @click="exec('underline')" title="Onderstreept"
+                                            class="w-8 h-8 rounded underline text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">U</button>
+                                    <span class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></span>
+                                    <button type="button" @click="exec('insertUnorderedList')" title="Opsomming"
+                                            class="w-8 h-8 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 inline-flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h.01M4 12h.01M4 18h.01M8 6h12M8 12h12M8 18h12"/></svg>
+                                    </button>
+                                    <button type="button" @click="exec('removeFormat')" title="Opmaak wissen"
+                                            class="w-8 h-8 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 inline-flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                                {{-- Editor --}}
+                                <div x-ref="area" contenteditable="true" @input="sync()" @blur="sync()"
+                                     class="bg-white dark:bg-gray-800 p-4 text-sm text-gray-900 dark:text-white focus:outline-none"
+                                     style="min-height: 10rem;"></div>
+                            </div>
+                            <textarea name="{{ $editor['bodyField'] }}" x-model="value" class="hidden"></textarea>
+
+                            {{-- Placeholders --}}
+                            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">Klik om in te voegen:</span>
+                                @foreach($editor['placeholders'] as $ph)
+                                <button type="button" @click="insert('{{ $ph }}')"
+                                        class="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs font-mono text-gray-700 dark:text-gray-200 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-gray-600">{{ $ph }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 {{-- Info Box --}}
                 <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div class="flex">

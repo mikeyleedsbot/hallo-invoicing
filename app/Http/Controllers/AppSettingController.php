@@ -99,7 +99,24 @@ class AppSettingController extends Controller
             'date_format' => 'required|string|max:20',
             'invoice_prefix' => 'required|string|max:10',
             'quote_prefix' => 'required|string|max:10',
+            'invoice_email_subject' => 'nullable|string|max:255',
+            'invoice_email_body'    => 'nullable|string|max:20000',
+            'quote_email_subject'   => 'nullable|string|max:255',
+            'quote_email_body'      => 'nullable|string|max:20000',
         ]);
+
+        // Lege e-mailteksten (alleen opmaak zonder inhoud) opslaan als NULL,
+        // zodat de standaardtekst automatisch blijft gelden.
+        foreach (['invoice_email_body', 'quote_email_body'] as $field) {
+            if (isset($validated[$field]) && trim(strip_tags($validated[$field])) === '') {
+                $validated[$field] = null;
+            }
+        }
+        foreach (['invoice_email_subject', 'quote_email_subject'] as $field) {
+            if (isset($validated[$field]) && trim($validated[$field]) === '') {
+                $validated[$field] = null;
+            }
+        }
 
         $settings = AppSetting::get();
         $settings->update($validated);

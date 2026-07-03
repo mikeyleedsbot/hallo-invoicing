@@ -349,26 +349,14 @@ class InvoiceController extends Controller
             $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
         }
 
-        $sender    = auth()->user()->company_name ?: auth()->user()->name;
-        $salutation = $customer->contact_person ?: $customer->name;
-        $amount    = number_format($invoice->total, 2, ',', '.');
-        $dueDate   = $invoice->due_date?->format('d-m-Y');
-
-        $subject = 'Factuur ' . $invoice->invoice_number . ' van ' . $sender;
-        $html    = view('emails.document', [
-            'salutation' => $salutation,
-            'lines'      => array_filter([
-                'Bijgaand ontvang je factuur <strong>' . e($invoice->invoice_number) . '</strong> voor een bedrag van <strong>€ ' . $amount . '</strong>.',
-                $dueDate ? 'We verzoeken je het bedrag over te maken vóór <strong>' . $dueDate . '</strong>.' : null,
-            ]),
-            'sender'     => $sender,
-        ])->render();
+        // Onderwerp en tekst uit de opmaakbare e-mailtekst (Instellingen)
+        $composed = app(\App\Services\DocumentEmailComposer::class)->forInvoice($invoice);
 
         $sent = $mailer->send(
             $account,
             $customer->email,
-            $subject,
-            $html,
+            $composed['subject'],
+            $composed['html'],
             $pdf->output(),
             $invoice->invoice_number . '.pdf',
         );
