@@ -35,4 +35,23 @@ return [
         ],
     ],
 
+    /*
+    | OAuth voor per-gebruiker mailverbindingen (Google Workspace / Microsoft 365).
+    | Deze waarden zijn placeholders: elke gebruiker slaat zijn EIGEN client-id
+    | en secret op (users-tabel). MailConnectionController zet deze config
+    | at runtime vlak voor elke Socialite-call.
+    */
+    'google' => [
+        'client_id'     => null,
+        'client_secret' => null,
+        'redirect'      => null,
+    ],
+
+    'microsoft' => [
+        'client_id'     => null,
+        'client_secret' => null,
+        'redirect'      => null,
+        'tenant'        => 'common',
+    ],
+
 ];

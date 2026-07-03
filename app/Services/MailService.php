@@ -2,57 +2,50 @@
 
 namespace App\Services;
 
-use App\Models\EmailSetting;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
+/**
+ * Systeemmail (registratie, goedkeuring, uitnodiging, wachtwoord-reset).
+ *
+ * Verstuurt via de standaard Laravel-mailer: de MAIL_*-instellingen in .env
+ * (MAIL_MAILER, MAIL_HOST, MAIL_FROM_ADDRESS, MAIL_FROM_NAME, enz.).
+ * Klant-mail (facturen/offertes) loopt bewust NIET hierlangs, maar via de
+ * eigen mailverbinding van de gebruiker — zie CustomerMailService.
+ */
 class MailService
 {
-    private EmailSetting $settings;
-
-    public function __construct()
+    /**
+     * Naam van de afzender, uit .env (MAIL_FROM_NAME).
+     */
+    private function fromName(): string
     {
-        $this->settings = EmailSetting::get();
+        return config('mail.from.name') ?: config('app.name', 'Hallo');
     }
 
     /**
-     * Verstuur een e-mail via de geconfigureerde Azure Mailer API.
+     * Verstuur een e-mail via de standaard Laravel-mailer (.env-instellingen).
      */
     public function send(string $to, string $subject, string $html): bool
     {
-        if (!$this->settings->isConfigured()) {
-            Log::warning('MailService: E-mailinstellingen niet geconfigureerd.');
-            return false;
-        }
-
         try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post($this->settings->api_url . '?code=' . $this->settings->api_key, [
-                'to'      => $to,
-                'subject' => $subject,
-                'html'    => $html,
-            ]);
+            Mail::html($html, function ($message) use ($to, $subject) {
+                $message->to($to)->subject($subject);
+            });
 
-            if ($response->successful()) {
-                return true;
-            }
-
+            return true;
+        } catch (\Throwable $e) {
             Log::error('MailService: Versturen mislukt', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
+                'to'    => $to,
+                'error' => $e->getMessage(),
             ]);
-            return false;
-
-        } catch (\Exception $e) {
-            Log::error('MailService: Exception bij versturen', ['error' => $e->getMessage()]);
             return false;
         }
     }
 
     public function sendTest(string $to): bool
     {
-        $fromName = $this->settings->from_name;
+        $fromName = $this->fromName();
         $subject  = 'Testmail — ' . $fromName . ' Invoicing';
         $html     = $this->buildTestHtml($fromName, $to);
 
@@ -148,7 +141,7 @@ HTML;
      */
     public function sendInvite(string $to, string $name, string $companyName, string $inviteUrl): bool
     {
-        $subject = 'Uitnodiging voor ' . $this->settings->from_name . ' Invoicing';
+        $subject = 'Uitnodiging voor ' . $this->fromName() . ' Invoicing';
         $html    = $this->buildInviteHtml($name, $companyName, $inviteUrl);
 
         return $this->send($to, $subject, $html);
@@ -171,7 +164,7 @@ HTML;
      */
     public function sendAccountApproved(\App\Models\User $user): bool
     {
-        $subject  = 'Je ' . $this->settings->from_name . ' account is goedgekeurd';
+        $subject  = 'Je ' . $this->fromName() . ' account is goedgekeurd';
         $loginUrl = url(route('login'));
         $html     = $this->buildAccountApprovedHtml($user, $loginUrl);
 
@@ -183,7 +176,7 @@ HTML;
      */
     public function sendAccountRejected(\App\Models\User $user, ?string $reason = null): bool
     {
-        $subject = 'Je aanvraag voor ' . $this->settings->from_name . ' is afgewezen';
+        $subject = 'Je aanvraag voor ' . $this->fromName() . ' is afgewezen';
         $html    = $this->buildAccountRejectedHtml($user, $reason);
 
         return $this->send($user->email, $subject, $html);
@@ -191,7 +184,7 @@ HTML;
 
     private function buildRegistrationNotificationHtml(\App\Models\User $admin, \App\Models\User $newUser, string $url): string
     {
-        $fromName = $this->settings->from_name;
+        $fromName = $this->fromName();
         $company  = $newUser->company_name ?: '-';
         $phone    = $newUser->phone ?: '-';
 
@@ -234,7 +227,7 @@ HTML;
 
     private function buildAccountApprovedHtml(\App\Models\User $user, string $loginUrl): string
     {
-        $fromName = $this->settings->from_name;
+        $fromName = $this->fromName();
 
         return <<<HTML
 <!DOCTYPE html>
@@ -266,7 +259,7 @@ HTML;
 
     private function buildAccountRejectedHtml(\App\Models\User $user, ?string $reason): string
     {
-        $fromName    = $this->settings->from_name;
+        $fromName    = $this->fromName();
         $reasonBlock = $reason
             ? '<p style="margin:16px 0 0;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#7f1d1d;font-size:14px;"><strong>Reden:</strong> ' . htmlspecialchars($reason) . '</p>'
             : '';
@@ -302,7 +295,7 @@ HTML;
      */
     public function sendPasswordReset(string $to, string $name, string $resetUrl): bool
     {
-        $subject = 'Wachtwoord herstellen — ' . $this->settings->from_name . ' Invoicing';
+        $subject = 'Wachtwoord herstellen — ' . $this->fromName() . ' Invoicing';
         $html    = $this->buildPasswordResetHtml($name, $resetUrl);
 
         return $this->send($to, $subject, $html);
@@ -310,7 +303,7 @@ HTML;
 
     private function buildPasswordResetHtml(string $name, string $resetUrl): string
     {
-        $fromName = $this->settings->from_name;
+        $fromName = $this->fromName();
         $logo = '<svg width="28" height="28" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M15.6,75c6.1-9.7,10.8-20.6,14.2-32.8,3.4-12.2,5.2-24.6,5.3-37.2h29.3c0,8.2-1,16.8-3,25.6-2,8.8-5,17.1-8.8,25-3.8,7.9-8.2,14.3-13.1,19.4H15.6Z" fill="white" stroke-width="0"/></svg>';
 
         return <<<HTML
@@ -400,7 +393,7 @@ HTML;
 
     private function buildInviteHtml(string $name, string $companyName, string $inviteUrl): string
     {
-        $fromName = $this->settings->from_name;
+        $fromName = $this->fromName();
 
         return <<<HTML
 <!DOCTYPE html>

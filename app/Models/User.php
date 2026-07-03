@@ -35,6 +35,15 @@ class User extends Authenticatable
         return $this->hasOne(\App\Models\MailAccount::class)->where('is_default', true);
     }
 
+    /**
+     * Het mailaccount waarmee verstuurd wordt: het standaard-account,
+     * of anders de eerst gekoppelde verbinding.
+     */
+    public function activeMailAccount(): ?\App\Models\MailAccount
+    {
+        return $this->defaultMailAccount ?? $this->mailAccounts()->orderBy('id')->first();
+    }
+
     public function approver()
     {
         return $this->belongsTo(\App\Models\User::class, 'approved_by');

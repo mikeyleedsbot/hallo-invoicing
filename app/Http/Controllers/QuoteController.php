@@ -282,6 +282,68 @@ class QuoteController extends Controller
         return $pdf->stream($quote->quote_number . '.pdf');
     }
 
+    /**
+     * Verstuur de offerte als PDF-bijlage via de gekoppelde mailverbinding
+     * (Google Workspace / Microsoft 365) van de ingelogde gebruiker.
+     */
+    public function sendEmail(Quote $quote, \App\Services\CustomerMailService $mailer)
+    {
+        $quote->load('customer', 'lines', 'template');
+
+        $account = auth()->user()->activeMailAccount();
+        if (!$account) {
+            return back()->with('warning', 'Geen mailverbinding gevonden. Koppel eerst een account via Instellingen → E-mailverbindingen.');
+        }
+
+        $customer = $quote->customer;
+        if (empty($customer->email)) {
+            return back()->with('warning', 'Deze klant heeft geen e-mailadres.');
+        }
+
+        // PDF genereren (zelfde logica als de download)
+        if ($quote->template) {
+            $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
+            $pdf = $pdfGenerator->generateFromTemplate($quote->template, $this->prepareQuoteData($quote));
+        } else {
+            $pdf = Pdf::loadView('quotes.pdf', compact('quote'));
+        }
+
+        $sender     = auth()->user()->company_name ?: auth()->user()->name;
+        $salutation = $customer->contact_person ?: $customer->name;
+        $amount     = number_format($quote->total, 2, ',', '.');
+        $validUntil = $quote->valid_until ? \Carbon\Carbon::parse($quote->valid_until)->format('d-m-Y') : null;
+
+        $subject = 'Offerte ' . $quote->quote_number . ' van ' . $sender;
+        $html    = view('emails.document', [
+            'salutation' => $salutation,
+            'lines'      => array_filter([
+                'Bijgaand ontvang je offerte <strong>' . e($quote->quote_number) . '</strong> voor een bedrag van <strong>€ ' . $amount . '</strong>.',
+                $validUntil ? 'Deze offerte is geldig tot en met <strong>' . $validUntil . '</strong>.' : null,
+            ]),
+            'sender'     => $sender,
+        ])->render();
+
+        $sent = $mailer->send(
+            $account,
+            $customer->email,
+            $subject,
+            $html,
+            $pdf->output(),
+            $quote->quote_number . '.pdf',
+        );
+
+        if (!$sent) {
+            return back()->with('warning', 'Versturen via ' . $account->from_email . ' is mislukt. Controleer je mailverbinding bij Instellingen → E-mailverbindingen.');
+        }
+
+        // Concept automatisch op Verzonden zetten.
+        if ($quote->status === 'draft') {
+            $quote->update(['status' => 'sent', 'sent_at' => now()]);
+        }
+
+        return back()->with('success', 'Offerte ' . $quote->quote_number . ' is per e-mail verstuurd naar ' . $customer->email . ' via ' . $account->from_email . '.');
+    }
+
     public function print(Quote $quote)
     {
         $quote->load('customer', 'lines');

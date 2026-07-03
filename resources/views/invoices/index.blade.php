@@ -46,6 +46,12 @@
             </div>
             @endif
 
+            @if(session('warning'))
+            <div class="p-4 mb-4 text-sm text-amber-800 rounded-lg bg-amber-50 dark:bg-gray-800 dark:text-amber-400">
+                {{ session('warning') }}
+            </div>
+            @endif
+
             {{-- Filters --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
                 <form method="GET" action="{{ route('invoices.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -86,6 +92,8 @@
                     </div>
                 </form>
             </div>
+
+            @php $_mailAccount = auth()->user()->activeMailAccount(); @endphp
 
             {{-- Table --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -190,7 +198,20 @@
                                             </a>
                                             
                                             {{-- Email versturen --}}
-                                            @if($_hasEmail)
+                                            @if($_hasEmail && $_mailAccount)
+                                            {{-- Direct versturen via de gekoppelde mailverbinding --}}
+                                            <form action="{{ route('invoices.send-email', $invoice) }}" method="POST" class="inline"
+                                                onsubmit="return confirm('Factuur {{ $invoice->invoice_number }} versturen naar {{ $_cust->email }} via {{ $_mailAccount->from_email }}?');">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400"
+                                                    title="Versturen naar {{ $_cust->email }} via {{ $_mailAccount->from_email }}">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                            @elseif($_hasEmail)
                                             <button type="button"
                                                 @click="startEmailFlow(@js($_pdfUrl), @js($_mailtoHref), @js($_cust->email))"
                                                 class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400"

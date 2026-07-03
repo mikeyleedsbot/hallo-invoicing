@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\MailAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
 
 class MailConnectionController extends Controller
 {
@@ -122,8 +123,6 @@ class MailConnectionController extends Controller
 
     /**
      * Start de OAuth redirect met de credentials van de ingelogde gebruiker.
-     * De daadwerkelijke Socialite-call wordt geactiveerd zodra laravel/socialite
-     * geïnstalleerd is — de controller is hier al volledig op voorbereid.
      */
     public function redirect(string $provider)
     {
@@ -136,43 +135,82 @@ class MailConnectionController extends Controller
             );
         }
 
-        // Na installatie van laravel/socialite:
-        // return \Socialite::driver($provider)->scopes([...])->redirect();
+        if ($provider === MailAccount::PROVIDER_GOOGLE) {
+            // gmail.send is voldoende om te versturen; offline + consent
+            // zorgen dat we een refresh_token krijgen.
+            return Socialite::driver('google')
+                ->scopes(['openid', 'profile', 'email', 'https://www.googleapis.com/auth/gmail.send'])
+                ->with(['access_type' => 'offline', 'prompt' => 'consent'])
+                ->redirect();
+        }
 
-        return back()->with('warning',
-            'OAuth flow staat klaar voor je credentials. Installeer laravel/socialite om de redirect te activeren.'
-        );
+        return Socialite::driver('microsoft')
+            ->scopes(['openid', 'profile', 'email', 'offline_access', 'User.Read', 'Mail.Send'])
+            ->redirect();
     }
 
     /**
-     * OAuth callback — slaat tokens op in mail_accounts.
-     * Placeholder tot socialite geïnstalleerd is.
+     * OAuth callback — slaat tokens (encrypted) op in mail_accounts.
      */
-    public function callback(string $provider)
+    public function callback(Request $request, string $provider)
     {
         abort_unless(in_array($provider, [MailAccount::PROVIDER_GOOGLE, MailAccount::PROVIDER_MICROSOFT]), 404);
+
+        // Gebruiker heeft geannuleerd of de provider gaf een fout terug.
+        if ($request->filled('error')) {
+            return redirect()->route('mail-connections.index')
+                ->with('warning', 'Koppelen geannuleerd of geweigerd: ' . $request->query('error_description', $request->query('error')));
+        }
 
         if (!$this->configureSocialiteForUser($provider)) {
             return redirect()->route('mail-connections.index')
                 ->with('warning', 'OAuth-credentials ontbreken. Vul ze opnieuw in.');
         }
 
-        // Na installatie van laravel/socialite:
-        // $oauthUser = \Socialite::driver($provider)->user();
-        //
-        // MailAccount::updateOrCreate(
-        //     ['user_id' => Auth::id(), 'from_email' => $oauthUser->getEmail()],
-        //     [
-        //         'provider'         => $provider,
-        //         'from_name'        => $oauthUser->getName(),
-        //         'access_token'     => $oauthUser->token,
-        //         'refresh_token'    => $oauthUser->refreshToken,
-        //         'token_expires_at' => now()->addSeconds($oauthUser->expiresIn ?? 3600),
-        //     ]
-        // );
+        try {
+            $oauthUser = Socialite::driver($provider)->user();
+        } catch (\Throwable $e) {
+            Log::error('MailConnection: OAuth callback mislukt', [
+                'provider' => $provider,
+                'error'    => $e->getMessage(),
+            ]);
+
+            return redirect()->route('mail-connections.index')
+                ->with('warning', 'Koppelen mislukt. Controleer je credentials en de redirect URI in je ' .
+                    ($provider === 'google' ? 'Google Cloud Console' : 'Azure Portal') . ' en probeer opnieuw.');
+        }
+
+        $email = $oauthUser->getEmail();
+        if (empty($email)) {
+            return redirect()->route('mail-connections.index')
+                ->with('warning', 'De provider gaf geen e-mailadres terug. Controleer of de juiste scopes zijn toegekend.');
+        }
+
+        $values = [
+            'provider'         => $provider,
+            'from_name'        => $oauthUser->getName(),
+            'access_token'     => $oauthUser->token,
+            'token_expires_at' => now()->addSeconds($oauthUser->expiresIn ?? 3600),
+        ];
+
+        // Google geeft alleen bij het eerste consent een refresh_token terug;
+        // een bestaande refresh_token nooit overschrijven met null.
+        if (!empty($oauthUser->refreshToken)) {
+            $values['refresh_token'] = $oauthUser->refreshToken;
+        }
+
+        $account = MailAccount::updateOrCreate(
+            ['user_id' => Auth::id(), 'from_email' => $email],
+            $values
+        );
+
+        // Eerste verbinding meteen als standaard instellen.
+        if (!Auth::user()->mailAccounts()->where('is_default', true)->exists()) {
+            $account->update(['is_default' => true]);
+        }
 
         return redirect()->route('mail-connections.index')
-            ->with('warning', 'OAuth callback nog niet geactiveerd. Installeer eerst laravel/socialite.');
+            ->with('success', $email . ' is gekoppeld. Je kunt facturen en offertes nu rechtstreeks versturen.');
     }
 
     public function setDefault(MailAccount $account)

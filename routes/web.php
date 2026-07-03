@@ -67,7 +67,6 @@ Route::middleware(['auth', 'mfa'])->group(function () {
 
         // E-mailinstellingen (admin only)
         Route::get('/email-instellingen',                      [EmailSettingController::class, 'edit'])->name('email-settings.edit');
-        Route::put('/email-instellingen',                      [EmailSettingController::class, 'update'])->name('email-settings.update');
         Route::post('/email-instellingen/test',                [EmailSettingController::class, 'test'])->name('email-settings.test');
     });
 
@@ -88,6 +87,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::get('/quotes/{quote}/print',       [App\Http\Controllers\QuoteController::class, 'print'])->name('quotes.print');
     Route::post('/quotes/{quote}/convert',    [App\Http\Controllers\QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
     Route::post('/quotes/{quote}/mark-sent',  [App\Http\Controllers\QuoteController::class, 'markSent'])->name('quotes.mark-sent');
+    Route::post('/quotes/{quote}/send-email', [App\Http\Controllers\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
 
     // Invoices
     Route::resource('invoices', App\Http\Controllers\InvoiceController::class);
@@ -97,6 +97,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::post('/invoices/{invoice}/mark-sent',  [App\Http\Controllers\InvoiceController::class, 'markSent'])->name('invoices.mark-sent');
     Route::post('/invoices/{invoice}/mark-paid',  [App\Http\Controllers\InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
     Route::post('/invoices/{invoice}/duplicate',  [App\Http\Controllers\InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
+    Route::post('/invoices/{invoice}/send-email', [App\Http\Controllers\InvoiceController::class, 'sendEmail'])->name('invoices.send-email');
 
     // Help / Instructies
     Route::get('/help',          [HelpController::class, 'index'])->name('help.index');
