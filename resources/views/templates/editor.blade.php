@@ -217,6 +217,18 @@
                                     </button>
                                 </div>
                             </div>
+
+                            {{-- Decoratie: kleurvlakken --}}
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <h4 class="text-xs font-semibold text-gray-600 uppercase mb-2">Decoratie</h4>
+                                <button @click="addColorRect()"
+                                        class="w-full bg-indigo-100 border border-indigo-300 text-indigo-800 rounded px-3 py-2 hover:bg-indigo-200 transition text-sm font-medium">
+                                    🟦 Kleurvlak toevoegen
+                                </button>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    Sleep en vergroot het vlak op het canvas; de kleur pas je aan via het potlood.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -265,31 +277,31 @@
                                                 <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px; font-family: ${field.fontFamily || 'inherit'}; font-weight: ${field.fontWeight || 'normal'};`">
                                                     <table style="width:100%;border-collapse:collapse;">
                                                         <thead>
-                                                            <tr style="background:#e5e7eb;">
-                                                                <th style="text-align:left;padding:2px 4px;border:1px solid #d1d5db;">Omschrijving</th>
-                                                                <th style="text-align:right;padding:2px 4px;border:1px solid #d1d5db;width:40px;">Aantal</th>
-                                                                <th style="text-align:right;padding:2px 4px;border:1px solid #d1d5db;width:60px;">Prijs</th>
-                                                                <th style="text-align:right;padding:2px 4px;border:1px solid #d1d5db;width:60px;">Totaal</th>
+                                                            <tr :style="`background:${field.headerBg || '#e5e7eb'};color:${field.headerColor || '#111827'};`">
+                                                                <th :style="`text-align:left;padding:2px 4px;${tablePreviewBorder(field, true)}`">Omschrijving</th>
+                                                                <th :style="`text-align:right;padding:2px 4px;width:40px;${tablePreviewBorder(field, true)}`">Aantal</th>
+                                                                <th :style="`text-align:right;padding:2px 4px;width:60px;${tablePreviewBorder(field, true)}`">Prijs</th>
+                                                                <th :style="`text-align:right;padding:2px 4px;width:60px;${tablePreviewBorder(field, true)}`">Totaal</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td style="padding:2px 4px;border:1px solid #e5e7eb;">Webhosting Premium</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">1</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 49,95</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 49,95</td>
+                                                                <td :style="`padding:2px 4px;${tablePreviewBorder(field)}`">Webhosting Premium</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">1</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">€ 49,95</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">€ 49,95</td>
                                                             </tr>
-                                                            <tr style="background:#f9fafb;">
-                                                                <td style="padding:2px 4px;border:1px solid #e5e7eb;">SSL Certificaat</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">1</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 29,95</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 29,95</td>
+                                                            <tr :style="(field.zebra ?? true) ? 'background:#f9fafb;' : ''">
+                                                                <td :style="`padding:2px 4px;${tablePreviewBorder(field)}`">SSL Certificaat</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">1</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">€ 29,95</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">€ 29,95</td>
                                                             </tr>
                                                             <tr>
-                                                                <td style="padding:2px 4px;border:1px solid #e5e7eb;">Support (5 uur)</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">5</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 75,00</td>
-                                                                <td style="text-align:right;padding:2px 4px;border:1px solid #e5e7eb;">€ 375,00</td>
+                                                                <td :style="`padding:2px 4px;${tablePreviewBorder(field)}`">Support (5 uur)</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">5</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">€ 75,00</td>
+                                                                <td :style="`text-align:right;padding:2px 4px;${tablePreviewBorder(field)}`">€ 375,00</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -409,7 +421,7 @@
                         </div>
 
                         {{-- Tekst inhoud: alleen voor vrije tekstvelden --}}
-                        <div x-show="placedFields[editingField]?.staticText !== undefined">
+                        <div x-show="placedFields[editingField]?.staticText !== undefined && !isRect(editingField)">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tekst inhoud</label>
                             <input type="text"
                                    x-model="placedFields[editingField].staticText"
@@ -417,8 +429,96 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
                         </div>
 
+                        {{-- Tekstkleur --}}
+                        <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color"
+                                       :value="placedFields[editingField]?.color || '#111827'"
+                                       @input="placedFields[editingField].color = $event.target.value"
+                                       class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
+                                <button @click="placedFields[editingField].color = ''"
+                                        class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
+                                    ↺ Standaard
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Vlak-/achtergrondkleur --}}
+                        <div x-show="editingField !== 'items_table'">
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                   x-text="isRect(editingField) ? 'Vlakkleur' : 'Achtergrondkleur'"></label>
+                            <div class="flex items-center gap-2">
+                                <input type="color"
+                                       :value="placedFields[editingField]?.backgroundColor || '#ffffff'"
+                                       @input="placedFields[editingField].backgroundColor = $event.target.value"
+                                       class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.backgroundColor || 'transparant'"></span>
+                                <button x-show="!isRect(editingField)"
+                                        @click="placedFields[editingField].backgroundColor = ''"
+                                        class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
+                                    ↺ Transparant
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Tabelstijl: alleen voor artikelen tabel --}}
+                        <template x-if="editingField === 'items_table'">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kopregel achtergrond</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color"
+                                               :value="placedFields[editingField]?.headerBg || '#f0f0f0'"
+                                               @input="placedFields[editingField].headerBg = $event.target.value"
+                                               class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                        <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.headerBg || '#f0f0f0'"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kopregel tekstkleur</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color"
+                                               :value="placedFields[editingField]?.headerColor || '#000000'"
+                                               @input="placedFields[editingField].headerColor = $event.target.value"
+                                               class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                        <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.headerColor || '#000000'"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Randen</label>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button @click="placedFields[editingField].borderStyle = 'full'"
+                                                :class="(!placedFields[editingField]?.borderStyle || placedFields[editingField]?.borderStyle === 'full') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
+                                            ▦ Volledig
+                                        </button>
+                                        <button @click="placedFields[editingField].borderStyle = 'horizontal'"
+                                                :class="placedFields[editingField]?.borderStyle === 'horizontal' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
+                                            ☰ Horizontaal
+                                        </button>
+                                        <button @click="placedFields[editingField].borderStyle = 'minimal'"
+                                                :class="placedFields[editingField]?.borderStyle === 'minimal' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
+                                            — Minimaal
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Om-en-om rijkleur</label>
+                                    <button @click="placedFields[editingField].zebra = !(placedFields[editingField]?.zebra ?? true)"
+                                            :class="(placedFields[editingField]?.zebra ?? true) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-4 rounded text-sm font-medium hover:bg-blue-500 hover:text-white transition"
+                                            x-text="(placedFields[editingField]?.zebra ?? true) ? '✓ Zebra aan' : 'Zebra uit'">
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
                         {{-- Lettertype --}}
-                        <div>
+                        <div x-show="!isRect(editingField)">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
                             <select x-model="placedFields[editingField].fontFamily"
                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
@@ -432,7 +532,7 @@
                             </select>
                         </div>
 
-                        <div>
+                        <div x-show="!isRect(editingField)">
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Lettergrootte: <span x-text="placedFields[editingField]?.fontSize || 12"></span>px
                             </label>
@@ -449,7 +549,7 @@
                         </div>
 
                         {{-- Dikgedrukt toggle --}}
-                        <div x-show="editingField !== 'items_table'">
+                        <div x-show="editingField !== 'items_table' && !isRect(editingField)">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tekststijl</label>
                             <button @click="placedFields[editingField].fontWeight = (placedFields[editingField]?.fontWeight === 'bold') ? 'normal' : 'bold'"
                                     :class="placedFields[editingField]?.fontWeight === 'bold' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
@@ -458,8 +558,8 @@
                             </button>
                         </div>
 
-                        {{-- Uitlijning: verbergen voor artikelen tabel --}}
-                        <div x-show="editingField !== 'items_table'">
+                        {{-- Uitlijning: verbergen voor artikelen tabel en kleurvlakken --}}
+                        <div x-show="editingField !== 'items_table' && !isRect(editingField)">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Uitlijning</label>
                             <div class="flex gap-2">
                                 <button @click="placedFields[editingField].align = 'left'"
@@ -892,6 +992,49 @@
                     this.newTextLabel = '';
 
                     this.$nextTick(() => { this.setupDragAndDrop(); });
+                },
+
+                addColorRect() {
+                    // Unieke key zodat meerdere kleurvlakken mogelijk zijn
+                    const key = 'static_rect_' + Date.now();
+
+                    this.placedFields[key] = {
+                        x: 60,
+                        y: 60,
+                        width: 250,
+                        height: 60,
+                        fontSize: 12,
+                        fontFamily: 'inherit',
+                        align: 'left',
+                        staticText: ' ',           // geen tekst, alleen kleur
+                        backgroundColor: '#1e3a8a',
+                        label: 'Kleurvlak',
+                    };
+
+                    this.placedFields = { ...this.placedFields };
+                    this.$nextTick(() => { this.setupDragAndDrop(); });
+                },
+
+                isRect(fieldKey) {
+                    return typeof fieldKey === 'string' && fieldKey.startsWith('static_rect_');
+                },
+
+                /**
+                 * Randen-CSS voor de voorbeeldtabel op het canvas,
+                 * afgestemd op de gekozen borderStyle (zoals de PDF rendert).
+                 */
+                tablePreviewBorder(field, isHeader = false) {
+                    const color = field.borderColor || '#d1d5db';
+                    switch (field.borderStyle) {
+                        case 'horizontal':
+                            return `border:0;border-bottom:1px solid ${color};`;
+                        case 'minimal':
+                            return isHeader
+                                ? `border:0;border-bottom:2px solid ${color};`
+                                : 'border:0;border-bottom:1px solid #e5e7eb;';
+                        default:
+                            return `border:1px solid ${color};`;
+                    }
                 },
 
                 removeField(fieldKey) {

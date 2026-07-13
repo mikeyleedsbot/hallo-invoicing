@@ -43,38 +43,39 @@ class TemplatePresets
      */
     private static function base(): array
     {
+        // Canvas 850×1200; marge links én rechts 50 → content loopt van x=50 tot x=800.
         return [
-            'company_name'        => ['x' => 50,  'y' => 50,  'width' => 400, 'height' => 36,  'fontSize' => 20, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
-            'company_address'     => ['x' => 50,  'y' => 96,  'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_postal_code' => ['x' => 50,  'y' => 122, 'width' => 80,  'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_city'        => ['x' => 135, 'y' => 122, 'width' => 215, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_email'       => ['x' => 50,  'y' => 148, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_phone'       => ['x' => 50,  'y' => 174, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_name'        => ['x' => 50,  'y' => 50,  'width' => 450, 'height' => 40,  'fontSize' => 22, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
+            'company_address'     => ['x' => 50,  'y' => 98,  'width' => 320, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_postal_code' => ['x' => 50,  'y' => 126, 'width' => 90,  'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_city'        => ['x' => 145, 'y' => 126, 'width' => 225, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_email'       => ['x' => 50,  'y' => 154, 'width' => 320, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'company_phone'       => ['x' => 50,  'y' => 182, 'width' => 320, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
 
-            'static_text_lbl_invoice_number' => ['x' => 400, 'y' => 150, 'width' => 145, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurnummer:', 'label' => 'Factuurnummer:'],
-            'static_text_lbl_invoice_date'   => ['x' => 400, 'y' => 176, 'width' => 145, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurdatum:', 'label' => 'Factuurdatum:'],
-            'static_text_lbl_due_date'       => ['x' => 400, 'y' => 202, 'width' => 145, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Vervaldatum:', 'label' => 'Vervaldatum:'],
-            'invoice_number'      => ['x' => 555, 'y' => 150, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'invoice_date'        => ['x' => 555, 'y' => 176, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'due_date'            => ['x' => 555, 'y' => 202, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'static_text_lbl_invoice_number' => ['x' => 450, 'y' => 154, 'width' => 145, 'height' => 24, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurnummer:', 'label' => 'Factuurnummer:'],
+            'static_text_lbl_invoice_date'   => ['x' => 450, 'y' => 182, 'width' => 145, 'height' => 24, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurdatum:', 'label' => 'Factuurdatum:'],
+            'static_text_lbl_due_date'       => ['x' => 450, 'y' => 210, 'width' => 145, 'height' => 24, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Vervaldatum:', 'label' => 'Vervaldatum:'],
+            'invoice_number'      => ['x' => 605, 'y' => 154, 'width' => 195, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'invoice_date'        => ['x' => 605, 'y' => 182, 'width' => 195, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'due_date'            => ['x' => 605, 'y' => 210, 'width' => 195, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
 
-            'static_text_lbl_client' => ['x' => 50, 'y' => 260, 'width' => 300, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold', 'staticText' => 'Aan:', 'label' => 'Aan:'],
-            'client_name'         => ['x' => 50,  'y' => 286, 'width' => 300, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
-            'client_address'      => ['x' => 50,  'y' => 314, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_postal_code'  => ['x' => 50,  'y' => 340, 'width' => 80,  'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_city'         => ['x' => 135, 'y' => 340, 'width' => 215, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_email'        => ['x' => 50,  'y' => 366, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'static_text_lbl_client' => ['x' => 50, 'y' => 272, 'width' => 320, 'height' => 24, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold', 'staticText' => 'Aan:', 'label' => 'Aan:'],
+            'client_name'         => ['x' => 50,  'y' => 300, 'width' => 320, 'height' => 26,  'fontSize' => 13, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
+            'client_address'      => ['x' => 50,  'y' => 330, 'width' => 320, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_postal_code'  => ['x' => 50,  'y' => 358, 'width' => 90,  'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_city'         => ['x' => 145, 'y' => 358, 'width' => 225, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_email'        => ['x' => 50,  'y' => 386, 'width' => 320, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
 
-            'items_table'         => ['x' => 50,  'y' => 430, 'width' => 700, 'height' => 300, 'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'items_table'         => ['x' => 50,  'y' => 440, 'width' => 750, 'height' => 300, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left'],
 
-            'static_text_lbl_subtotal' => ['x' => 380, 'y' => 755, 'width' => 165, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal excl. BTW:', 'label' => 'Totaal excl. BTW:'],
-            'static_text_lbl_tax'      => ['x' => 380, 'y' => 781, 'width' => 165, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'BTW:', 'label' => 'BTW:'],
-            'static_text_lbl_total'    => ['x' => 380, 'y' => 812, 'width' => 165, 'height' => 26, 'fontSize' => 13, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal incl. BTW:', 'label' => 'Totaal incl. BTW:'],
-            'subtotal'            => ['x' => 555, 'y' => 755, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right'],
-            'tax'                 => ['x' => 555, 'y' => 781, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right'],
-            'total'               => ['x' => 555, 'y' => 812, 'width' => 195, 'height' => 26,  'fontSize' => 13, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold'],
+            'static_text_lbl_subtotal' => ['x' => 430, 'y' => 765, 'width' => 165, 'height' => 24, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal excl. BTW:', 'label' => 'Totaal excl. BTW:'],
+            'static_text_lbl_tax'      => ['x' => 430, 'y' => 793, 'width' => 165, 'height' => 24, 'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'BTW:', 'label' => 'BTW:'],
+            'static_text_lbl_total'    => ['x' => 430, 'y' => 824, 'width' => 165, 'height' => 28, 'fontSize' => 15, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal incl. BTW:', 'label' => 'Totaal incl. BTW:'],
+            'subtotal'            => ['x' => 605, 'y' => 765, 'width' => 195, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right'],
+            'tax'                 => ['x' => 605, 'y' => 793, 'width' => 195, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'right'],
+            'total'               => ['x' => 605, 'y' => 824, 'width' => 195, 'height' => 28,  'fontSize' => 15, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold'],
 
-            'payment_terms'       => ['x' => 50,  'y' => 890, 'width' => 700, 'height' => 80,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'payment_terms'       => ['x' => 50,  'y' => 900, 'width' => 750, 'height' => 90,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
         ];
     }
 
@@ -104,28 +105,28 @@ class TemplatePresets
     {
         $positions = self::withOverrides([
             // Bedrijfsblok in witte tekst binnen de blauwe band
-            'company_name'        => ['y' => 40,  'fontSize' => 22, 'height' => 40, 'color' => '#ffffff'],
-            'company_address'     => ['y' => 92,  'color' => '#dbeafe'],
-            'company_postal_code' => ['y' => 118, 'color' => '#dbeafe'],
-            'company_city'        => ['y' => 118, 'color' => '#dbeafe'],
-            'company_email'       => ['y' => 144, 'color' => '#dbeafe'],
-            'company_phone'       => ['y' => 170, 'color' => '#dbeafe'],
+            'company_name'        => ['y' => 40,  'fontSize' => 24, 'height' => 44, 'color' => '#ffffff'],
+            'company_address'     => ['y' => 94,  'color' => '#dbeafe'],
+            'company_postal_code' => ['y' => 122, 'color' => '#dbeafe'],
+            'company_city'        => ['y' => 122, 'color' => '#dbeafe'],
+            'company_email'       => ['y' => 150, 'color' => '#dbeafe'],
+            'company_phone'       => ['y' => 178, 'color' => '#dbeafe'],
 
             // Documentgegevens ook in de band, rechts
-            'static_text_lbl_invoice_number' => ['y' => 92,  'color' => '#bfdbfe'],
-            'static_text_lbl_invoice_date'   => ['y' => 118, 'color' => '#bfdbfe'],
-            'static_text_lbl_due_date'       => ['y' => 144, 'color' => '#bfdbfe'],
-            'invoice_number'      => ['y' => 92,  'color' => '#ffffff'],
-            'invoice_date'        => ['y' => 118, 'color' => '#ffffff'],
-            'due_date'            => ['y' => 144, 'color' => '#ffffff'],
+            'static_text_lbl_invoice_number' => ['y' => 94,  'color' => '#bfdbfe'],
+            'static_text_lbl_invoice_date'   => ['y' => 122, 'color' => '#bfdbfe'],
+            'static_text_lbl_due_date'       => ['y' => 150, 'color' => '#bfdbfe'],
+            'invoice_number'      => ['y' => 94,  'color' => '#ffffff'],
+            'invoice_date'        => ['y' => 122, 'color' => '#ffffff'],
+            'due_date'            => ['y' => 150, 'color' => '#ffffff'],
 
             // Klantblok onder de band
-            'static_text_lbl_client' => ['y' => 250, 'color' => '#1e3a8a'],
-            'client_name'         => ['y' => 276],
-            'client_address'      => ['y' => 304],
-            'client_postal_code'  => ['y' => 330],
-            'client_city'         => ['y' => 330],
-            'client_email'        => ['y' => 356],
+            'static_text_lbl_client' => ['y' => 262, 'color' => '#1e3a8a'],
+            'client_name'         => ['y' => 290],
+            'client_address'      => ['y' => 320],
+            'client_postal_code'  => ['y' => 348],
+            'client_city'         => ['y' => 348],
+            'client_email'        => ['y' => 376],
 
             'items_table' => ['headerBg' => '#1e3a8a', 'headerColor' => '#ffffff', 'borderStyle' => 'horizontal', 'borderColor' => '#dbeafe', 'zebra' => true],
 
@@ -150,7 +151,7 @@ class TemplatePresets
     private static function terracotta(): array
     {
         $positions = self::withOverrides([
-            'company_name'        => ['fontSize' => 22, 'height' => 40, 'color' => '#c2410c'],
+            'company_name'        => ['color' => '#c2410c'],
             'static_text_lbl_invoice_number' => ['color' => '#9a3412'],
             'static_text_lbl_invoice_date'   => ['color' => '#9a3412'],
             'static_text_lbl_due_date'       => ['color' => '#9a3412'],
@@ -177,7 +178,7 @@ class TemplatePresets
     private static function minimalist(): array
     {
         $positions = self::withOverrides([
-            'company_name'        => ['fontSize' => 26, 'height' => 46],
+            'company_name'        => ['fontSize' => 28, 'height' => 50],
             'static_text_lbl_invoice_number' => ['fontWeight' => 'normal', 'color' => '#6b7280'],
             'static_text_lbl_invoice_date'   => ['fontWeight' => 'normal', 'color' => '#6b7280'],
             'static_text_lbl_due_date'       => ['fontWeight' => 'normal', 'color' => '#6b7280'],
@@ -186,13 +187,13 @@ class TemplatePresets
             'items_table' => ['headerBg' => '#ffffff', 'headerColor' => '#111827', 'borderStyle' => 'minimal', 'borderColor' => '#111827', 'zebra' => false],
             'static_text_lbl_subtotal' => ['fontWeight' => 'normal', 'color' => '#6b7280'],
             'static_text_lbl_tax'      => ['fontWeight' => 'normal', 'color' => '#6b7280'],
-            'static_text_lbl_total'    => ['fontSize' => 14],
-            'total'                    => ['fontSize' => 14],
+            'static_text_lbl_total'    => ['fontSize' => 16],
+            'total'                    => ['fontSize' => 16],
             'payment_terms'            => ['color' => '#6b7280'],
         ]);
 
         // Dunne zwarte lijn boven de betalingsvoorwaarden
-        $positions['static_rect_divider'] = ['x' => 50, 'y' => 868, 'width' => 700, 'height' => 3, 'backgroundColor' => '#111827', 'staticText' => ' ', 'label' => 'Lijn'];
+        $positions['static_rect_divider'] = ['x' => 50, 'y' => 878, 'width' => 750, 'height' => 3, 'backgroundColor' => '#111827', 'staticText' => ' ', 'label' => 'Lijn'];
 
         return [
             'name'        => 'Minimalistisch',
@@ -205,7 +206,7 @@ class TemplatePresets
     private static function frisGroen(): array
     {
         $positions = self::withOverrides([
-            'company_name'        => ['fontSize' => 22, 'height' => 40, 'color' => '#065f46'],
+            'company_name'        => ['color' => '#065f46'],
             'static_text_lbl_invoice_number' => ['color' => '#047857'],
             'static_text_lbl_invoice_date'   => ['color' => '#047857'],
             'static_text_lbl_due_date'       => ['color' => '#047857'],
