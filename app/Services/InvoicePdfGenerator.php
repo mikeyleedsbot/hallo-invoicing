@@ -101,13 +101,21 @@ class InvoicePdfGenerator
 
         $totalPages = max(1, count($chunks));
 
-        // CSS — achtergrond als base64 data-URI zodat dompdf geen bestand
-        // hoeft te openen (chroot/symlink-proof, o.a. voor Forge met
-        // gedeelde storage buiten de projectmap)
-        $bgCss = '';
+        // Achtergrond als full-page <img> met base64 data-URI.
+        // Bewust NIET via CSS: dompdf's CSS-parser splitst op puntkomma's
+        // en struikelt over de ';' in 'data:image/png;base64,...' waardoor
+        // de hele .page-regel corrupt raakt. In een HTML-attribuut is de
+        // data-URI wel veilig, en dompdf hoeft zo ook geen bestand te
+        // openen (chroot/symlink-proof, o.a. voor Forge).
+        $bgImg = '';
         if ($template->background_path) {
             $bgUri = $this->dataUri(Storage::path($template->background_path));
-            if ($bgUri) $bgCss = "background-image:url('$bgUri');background-size:cover;background-repeat:no-repeat;";
+            if ($bgUri) {
+                $bgImg = sprintf(
+                    '<img src="%s" style="position:absolute;left:0;top:0;width:%smm;height:%smm;">',
+                    $bgUri, $this->pW, $this->pH
+                );
+            }
         }
 
         $html = "<!DOCTYPE html><html><head><meta charset='utf-8'>
@@ -121,7 +129,6 @@ body { font-family:Arial,sans-serif; }
     height: {$this->pH}mm;
     overflow: hidden;
     page-break-after: always;
-    $bgCss
 }
 .page:last-child { page-break-after: auto; }
 .abs { position:absolute; overflow:hidden; word-wrap:break-word; }
@@ -141,7 +148,10 @@ body { font-family:Arial,sans-serif; }
             $isLast = ($page === $totalPages - 1);
             $html  .= '<div class="page">';
 
-            // Logo (op elke pagina) — ook als data-URI, zie opmerking bij $bgCss
+            // Achtergrond eerst, zodat alle velden er bovenop komen
+            $html .= $bgImg;
+
+            // Logo (op elke pagina) — ook als data-URI, zie opmerking bij $bgImg
             if ($template->logo_path && isset($pos['logo'])) {
                 $logoUri = $this->dataUri(Storage::path($template->logo_path));
                 if ($logoUri) {
