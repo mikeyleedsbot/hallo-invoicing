@@ -30,3 +30,7 @@ Thumbs.db
 # Database dumps horen niet in git (bevatten klantdata/hashes)
 *.sql
 *.sql.gz
+/database/dumps/
+
+# Lokale hulpscripts en hun logs (macOS runners, dev-only)
+/scripts/
