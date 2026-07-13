@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\InvoiceTemplate;
+use App\Services\TemplatePresets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TemplateController extends Controller
@@ -26,7 +28,9 @@ class TemplateController extends Controller
      */
     public function create()
     {
-        return view('templates.create');
+        $presets = TemplatePresets::all();
+
+        return view('templates.create', compact('presets'));
     }
 
     /**
@@ -40,6 +44,7 @@ class TemplateController extends Controller
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB max
             'background' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB max
             'page_size' => 'nullable|string|in:A4,Letter',
+            'preset' => ['nullable', 'string', Rule::in(TemplatePresets::keys())],
         ]);
 
         // Handle logo upload (private storage)
@@ -60,7 +65,8 @@ class TemplateController extends Controller
             'logo_path' => $logoPath,
             'background_path' => $backgroundPath,
             'page_size' => $validated['page_size'] ?? 'A4',
-            'field_positions' => null, // Will be set in editor
+            // Gekozen stijlsjabloon direct toepassen (fijn te tunen in de editor)
+            'field_positions' => TemplatePresets::positions($validated['preset'] ?? 'klassiek'),
         ]);
 
         // If marked as default, unset other defaults

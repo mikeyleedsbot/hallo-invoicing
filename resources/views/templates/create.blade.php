@@ -55,6 +55,44 @@
                     @enderror
                 </div>
 
+                <!-- Stijlsjabloon -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Stijlsjabloon
+                    </label>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        Je template krijgt direct deze opmaak. Alles is daarna nog aan te passen in de editor.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" x-data="{ preset: '{{ old('preset', 'klassiek') }}' }">
+                        @foreach($presets as $key => $preset)
+                            <label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-gray-700 p-4 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+                                   :class="preset === '{{ $key }}' ? 'border-blue-600 ring-2 ring-blue-500' : 'border-gray-300 dark:border-gray-600'">
+                                <input
+                                    type="radio"
+                                    name="preset"
+                                    value="{{ $key }}"
+                                    x-model="preset"
+                                    class="mt-1 w-4 h-4 text-blue-600 bg-white border-gray-300 focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500"
+                                >
+                                <span class="ml-3 flex flex-col">
+                                    <span class="flex items-center gap-2">
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $preset['name'] }}</span>
+                                        <span class="flex gap-1">
+                                            @foreach($preset['colors'] as $color)
+                                                <span class="inline-block w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-500" style="background-color: {{ $color }};"></span>
+                                            @endforeach
+                                        </span>
+                                    </span>
+                                    <span class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{ $preset['description'] }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('preset')
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Logo Upload -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

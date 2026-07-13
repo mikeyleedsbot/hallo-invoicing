@@ -36,30 +36,51 @@
             </div>
         </div>
 
-        <x-slot name="header">
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ __('Template Editor') }}: {{ $template->name }}
-                </h2>
-                <div class="flex gap-2">
-                    <button @click="clearAll"
-                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                        🗑️ Alles Wissen
-                    </button>
-                    <button @click="resetToDefault"
-                            class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
-                        🔄 Standaard Indeling
-                    </button>
-                    <a href="{{ route('templates.index') }}"
-                       class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                        ← Terug
-                    </a>
-                </div>
-            </div>
-        </x-slot>
-
         <div class="py-6">
             <div class="max-w-full mx-auto px-4">
+
+                {{-- Toolbar --}}
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+                    <h2 class="font-semibold text-xl text-gray-900 dark:text-white leading-tight">
+                        Template Editor: {{ $template->name }}
+                    </h2>
+                    <div class="flex gap-2">
+                        <button @click="clearAll"
+                                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                            🗑️ Alles Wissen
+                        </button>
+                        <div class="relative" x-data="{ styleMenuOpen: false }">
+                            <button @click="styleMenuOpen = !styleMenuOpen"
+                                    class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                                🎨 Stijl toepassen ▾
+                            </button>
+                            <div x-show="styleMenuOpen"
+                                 @click.away="styleMenuOpen = false"
+                                 x-transition
+                                 class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden"
+                                 style="display: none;">
+                                <template x-for="[presetKey, preset] in Object.entries(presets)" :key="presetKey">
+                                    <button @click="if (confirm('Stijl \'' + preset.name + '\' toepassen? De huidige veldposities worden vervangen.')) { applyPreset(presetKey); styleMenuOpen = false; }"
+                                            class="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                                        <span class="flex gap-1 mt-1 shrink-0">
+                                            <template x-for="color in preset.colors" :key="color">
+                                                <span class="inline-block w-3 h-3 rounded-full border border-gray-300" :style="`background-color: ${color};`"></span>
+                                            </template>
+                                        </span>
+                                        <span>
+                                            <span class="block text-sm font-semibold text-gray-900" x-text="preset.name"></span>
+                                            <span class="block text-xs text-gray-500" x-text="preset.description"></span>
+                                        </span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                        <a href="{{ route('templates.index') }}"
+                           class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                            ← Terug
+                        </a>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-12 gap-6">
 
@@ -238,7 +259,7 @@
                                                 'justify-end': field.align === 'right'
                                              }"
                                              :data-field-key="key"
-                                             :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'}; font-weight: ${field.fontWeight || 'normal'};`">
+                                             :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'}; font-weight: ${field.fontWeight || 'normal'}; color: ${field.color || 'inherit'}; ${field.backgroundColor ? 'background-color:' + field.backgroundColor + ';' : ''}`">
                                             {{-- Artikelen tabel: toon voorbeeldtabel --}}
                                             <template x-if="key === 'items_table'">
                                                 <div class="w-full h-full overflow-hidden pointer-events-none select-none" :style="`font-size: ${field.fontSize || 10}px; font-family: ${field.fontFamily || 'inherit'}; font-weight: ${field.fontWeight || 'normal'};`">
@@ -497,10 +518,14 @@
     </div>
 
     <script>
+        // Stijlsjablonen — single source of truth in PHP (TemplatePresets)
+        const TEMPLATE_PRESETS = @json(\App\Services\TemplatePresets::all());
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('templateEditor', () => ({
                 template: @json($template),
                 fields: @json($template->field_positions ?? []),
+                presets: TEMPLATE_PRESETS,
                 placedFields: {},
                 logoPosition: null,
                 editingField: null,
@@ -560,7 +585,7 @@
                             } else if (key !== 'background') {
                                 this.placedFields[key] = {
                                     ...position,
-                                    label: this.getFieldLabel(key)
+                                    label: position.label || this.getFieldLabel(key)
                                 };
                             }
                         }
@@ -584,45 +609,27 @@
                 },
 
                 loadDefaultLayout() {
-                    // Standaard nette factuur-layout — MOET identiek blijven aan
-                    // InvoicePdfGenerator::getDefaultPositions() in PHP!
-                    this.placedFields = {
-                        // Bedrijfsblok (linksboven) — consistente regelafstand van 26px
-                        'company_name': { x: 50, y: 50, width: 400, height: 36, fontSize: 20, fontFamily: 'inherit', align: 'left', fontWeight: 'bold', label: 'Bedrijfsnaam' },
-                        'company_address': { x: 50, y: 96, width: 300, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfsadres' },
-                        'company_postal_code': { x: 50, y: 122, width: 80, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Postcode' },
-                        'company_city': { x: 135, y: 122, width: 215, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Plaats' },
-                        'company_email': { x: 50, y: 148, width: 300, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs E-mail' },
-                        'company_phone': { x: 50, y: 174, width: 300, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Bedrijfs Telefoon' },
+                    this.applyPreset('klassiek');
+                },
 
-                        // Documentgegevens (rechtsboven) — labels en waarden op dezelfde regel/grootte
-                        'static_text_lbl_invoice_number': { x: 400, y: 150, width: 145, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Factuurnummer:', label: 'Factuurnummer:' },
-                        'static_text_lbl_invoice_date': { x: 400, y: 176, width: 145, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Factuurdatum:', label: 'Factuurdatum:' },
-                        'static_text_lbl_due_date': { x: 400, y: 202, width: 145, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Vervaldatum:', label: 'Vervaldatum:' },
-                        'invoice_number': { x: 555, y: 150, width: 195, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Factuurnummer' },
-                        'invoice_date': { x: 555, y: 176, width: 195, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Factuurdatum' },
-                        'due_date': { x: 555, y: 202, width: 195, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Vervaldatum' },
+                /**
+                 * Past een stijlsjabloon uit TEMPLATE_PRESETS toe (single source
+                 * of truth: App\Services\TemplatePresets in PHP).
+                 */
+                applyPreset(key) {
+                    const preset = TEMPLATE_PRESETS[key];
+                    if (!preset) return;
 
-                        // Klantblok
-                        'static_text_lbl_client': { x: 50, y: 260, width: 300, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', fontWeight: 'bold', staticText: 'Aan:', label: 'Aan:' },
-                        'client_name': { x: 50, y: 286, width: 300, height: 24, fontSize: 12, fontFamily: 'inherit', align: 'left', fontWeight: 'bold', label: 'Klantnaam' },
-                        'client_address': { x: 50, y: 314, width: 300, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klantadres' },
-                        'client_postal_code': { x: 50, y: 340, width: 80, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klant Postcode' },
-                        'client_city': { x: 135, y: 340, width: 215, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klant Plaats' },
-                        'client_email': { x: 50, y: 366, width: 300, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'left', label: 'Klant E-mail' },
-
-                        'items_table': { x: 50, y: 430, width: 700, height: 300, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Artikelen Tabel' },
-
-                        // Totalen — bedragen rechts uitgelijnd op de rechterrand van de tabel
-                        'static_text_lbl_subtotal': { x: 380, y: 755, width: 165, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Totaal excl. BTW:', label: 'Totaal excl. BTW:' },
-                        'static_text_lbl_tax': { x: 380, y: 781, width: 165, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'BTW:', label: 'BTW:' },
-                        'static_text_lbl_total': { x: 380, y: 812, width: 165, height: 26, fontSize: 13, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', staticText: 'Totaal incl. BTW:', label: 'Totaal incl. BTW:' },
-                        'subtotal': { x: 555, y: 755, width: 195, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', label: 'Subtotaal' },
-                        'tax': { x: 555, y: 781, width: 195, height: 22, fontSize: 11, fontFamily: 'inherit', align: 'right', label: 'BTW' },
-                        'total': { x: 555, y: 812, width: 195, height: 26, fontSize: 13, fontFamily: 'inherit', align: 'right', fontWeight: 'bold', label: 'Totaal' },
-
-                        'payment_terms': { x: 50, y: 890, width: 700, height: 80, fontSize: 10, fontFamily: 'inherit', align: 'left', label: 'Betalingsvoorwaarden' },
-                    };
+                    const positions = JSON.parse(JSON.stringify(preset.positions));
+                    const placed = {};
+                    for (const [fieldKey, position] of Object.entries(positions)) {
+                        placed[fieldKey] = {
+                            ...position,
+                            label: position.label || this.getFieldLabel(fieldKey)
+                        };
+                    }
+                    this.placedFields = placed;
+                    this.$nextTick(() => this.setupDragAndDrop());
                 },
 
                 getFieldLabel(fieldId) {
@@ -943,8 +950,7 @@
 
                 resetToDefault() {
                     if (confirm('Reset naar standaard indeling? Dit verwijdert alle huidige veldposities.')) {
-                        this.loadDefaultLayout();
-                        this.placedFields = { ...this.placedFields }; // Force reactivity
+                        this.applyPreset('klassiek');
                         console.log('Reset to default layout');
                     }
                 },

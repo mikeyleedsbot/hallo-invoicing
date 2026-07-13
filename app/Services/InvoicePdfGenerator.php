@@ -36,49 +36,13 @@ class InvoicePdfGenerator
     }
 
     /**
-     * Standaard veldposities — identiek aan loadDefaultLayout() in de editor JS.
+     * Standaard veldposities (preset 'klassiek' uit TemplatePresets).
      * Wordt gebruikt als field_positions null/leeg is zodat de PDF ook zonder
      * handmatig opslaan een nette lay-out heeft.
      */
     public static function getDefaultPositions(): array
     {
-        return [
-            // Bedrijfsblok (linksboven) — consistente regelafstand van 26px
-            'company_name'        => ['x' => 50,  'y' => 50,  'width' => 400, 'height' => 36,  'fontSize' => 20, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
-            'company_address'     => ['x' => 50,  'y' => 96,  'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_postal_code' => ['x' => 50,  'y' => 122, 'width' => 80,  'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_city'        => ['x' => 135, 'y' => 122, 'width' => 215, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_email'       => ['x' => 50,  'y' => 148, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'company_phone'       => ['x' => 50,  'y' => 174, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-
-            // Documentgegevens (rechtsboven) — labels en waarden op dezelfde regel/grootte
-            'static_text_lbl_invoice_number' => ['x' => 400, 'y' => 150, 'width' => 145, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurnummer:', 'label' => 'Factuurnummer:'],
-            'static_text_lbl_invoice_date'   => ['x' => 400, 'y' => 176, 'width' => 145, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Factuurdatum:', 'label' => 'Factuurdatum:'],
-            'static_text_lbl_due_date'       => ['x' => 400, 'y' => 202, 'width' => 145, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Vervaldatum:', 'label' => 'Vervaldatum:'],
-            'invoice_number'      => ['x' => 555, 'y' => 150, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'invoice_date'        => ['x' => 555, 'y' => 176, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'due_date'            => ['x' => 555, 'y' => 202, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-
-            // Klantblok
-            'static_text_lbl_client' => ['x' => 50, 'y' => 260, 'width' => 300, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold', 'staticText' => 'Aan:', 'label' => 'Aan:'],
-            'client_name'         => ['x' => 50,  'y' => 286, 'width' => 300, 'height' => 24,  'fontSize' => 12, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
-            'client_address'      => ['x' => 50,  'y' => 314, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_postal_code'  => ['x' => 50,  'y' => 340, 'width' => 80,  'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_city'         => ['x' => 135, 'y' => 340, 'width' => 215, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_email'        => ['x' => 50,  'y' => 366, 'width' => 300, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'left'],
-
-            'items_table'         => ['x' => 50,  'y' => 430, 'width' => 700, 'height' => 300, 'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
-
-            // Totalen — bedragen rechts uitgelijnd op de rechterrand van de tabel
-            'static_text_lbl_subtotal' => ['x' => 380, 'y' => 755, 'width' => 165, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal excl. BTW:', 'label' => 'Totaal excl. BTW:'],
-            'static_text_lbl_tax'      => ['x' => 380, 'y' => 781, 'width' => 165, 'height' => 22, 'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'BTW:', 'label' => 'BTW:'],
-            'static_text_lbl_total'    => ['x' => 380, 'y' => 812, 'width' => 165, 'height' => 26, 'fontSize' => 13, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold', 'staticText' => 'Totaal incl. BTW:', 'label' => 'Totaal incl. BTW:'],
-            'subtotal'            => ['x' => 555, 'y' => 755, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right'],
-            'tax'                 => ['x' => 555, 'y' => 781, 'width' => 195, 'height' => 22,  'fontSize' => 11, 'fontFamily' => 'inherit', 'align' => 'right'],
-            'total'               => ['x' => 555, 'y' => 812, 'width' => 195, 'height' => 26,  'fontSize' => 13, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold'],
-
-            'payment_terms'       => ['x' => 50,  'y' => 890, 'width' => 700, 'height' => 80,  'fontSize' => 10, 'fontFamily' => 'inherit', 'align' => 'left'],
-        ];
+        return TemplatePresets::positions('klassiek');
     }
 
     private function build(array $pos, array $data, InvoiceTemplate $template): string
@@ -103,6 +67,10 @@ class InvoicePdfGenerator
 
         // Velden splitsen op basis van pageVisibility (editor-instelling heeft prioriteit).
         // Fallback: boven tabel Y = alle pagina's, onder tabel Y = alleen laatste pagina.
+        // Decoratieve vlakken (static_rect_*) worden eerst gesorteerd zodat ze
+        // áchter de tekstvelden renderen.
+        $pos = $this->rectsFirst($pos);
+
         $firstOnlyFields = [];  // alleen pagina 1
         $allPageFields   = [];  // elke pagina
         $lastOnlyFields  = [];  // alleen laatste pagina
@@ -163,10 +131,7 @@ body { font-family:Arial,sans-serif; }
     height: {$tH}mm;
     overflow: hidden;
 }
-.items-table { width:100%; border-collapse:collapse; }
-.items-table th, .items-table td { border:1px solid #ccc; padding:3px 5px; }
-.items-table th { background:#f0f0f0; font-weight:bold; }
-.items-table tr:nth-child(even) td { background:#fafafa; }
+{$this->tableCss($tp)}
 </style></head><body>";
 
         // Elke pagina opbouwen
@@ -250,7 +215,15 @@ body { font-family:Arial,sans-serif; }
 
     private function renderAbs(array $p, mixed $value): string
     {
-        $fontWeight = ($p['fontWeight'] ?? 'normal') === 'bold' ? 'font-weight:bold;' : '';
+        $extra = ($p['fontWeight'] ?? 'normal') === 'bold' ? 'font-weight:bold;' : '';
+
+        if (!empty($p['color']) && ($c = $this->safeColor($p['color']))) {
+            $extra .= "color:{$c};";
+        }
+        if (!empty($p['backgroundColor']) && ($c = $this->safeColor($p['backgroundColor']))) {
+            $extra .= "background-color:{$c};";
+        }
+
         return sprintf(
             '<div class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;%s">%s</div>',
             $this->x($p['x']      ?? 0),
@@ -260,9 +233,58 @@ body { font-family:Arial,sans-serif; }
             $this->pt($p['fontSize'] ?? 12),
             $this->safeFontFamily($p['fontFamily'] ?? 'Arial'),
             $this->safeAlign($p['align'] ?? 'left'),
-            $fontWeight,
-            nl2br(htmlspecialchars((string)$value))
+            $extra,
+            nl2br(htmlspecialchars(trim((string)$value)))
         );
+    }
+
+    /**
+     * Sorteer decoratieve vlakken (static_rect_*) vóór de overige velden,
+     * zodat tekst er bovenop komt te liggen.
+     */
+    private function rectsFirst(array $pos): array
+    {
+        $rects = array_filter($pos, fn ($id) => str_starts_with((string)$id, 'static_rect_'), ARRAY_FILTER_USE_KEY);
+        $rest  = array_filter($pos, fn ($id) => !str_starts_with((string)$id, 'static_rect_'), ARRAY_FILTER_USE_KEY);
+
+        return $rects + $rest;
+    }
+
+    /**
+     * CSS voor de artikelen-tabel, stuurbaar via extra keys op het
+     * items_table-veld: headerBg, headerColor, borderColor,
+     * borderStyle (full|horizontal|minimal) en zebra (bool).
+     */
+    private function tableCss(?array $tp): string
+    {
+        $headerBg    = $this->safeColor($tp['headerBg'] ?? '')    ?: '#f0f0f0';
+        $headerColor = $this->safeColor($tp['headerColor'] ?? '') ?: '#000000';
+        $borderColor = $this->safeColor($tp['borderColor'] ?? '') ?: '#cccccc';
+        $borderStyle = in_array($tp['borderStyle'] ?? '', ['full', 'horizontal', 'minimal'], true)
+            ? $tp['borderStyle'] : 'full';
+        $zebra = array_key_exists('zebra', $tp ?? []) ? (bool)$tp['zebra'] : true;
+
+        $css = ".items-table { width:100%; border-collapse:collapse; }\n";
+
+        switch ($borderStyle) {
+            case 'horizontal':
+                $css .= ".items-table th, .items-table td { border:0; border-bottom:1px solid {$borderColor}; padding:4px 6px; }\n";
+                break;
+            case 'minimal':
+                $css .= ".items-table td { border:0; border-bottom:1px solid #e5e7eb; padding:4px 6px; }\n";
+                $css .= ".items-table th { border:0; border-bottom:2px solid {$borderColor}; padding:4px 6px; }\n";
+                break;
+            default: // full
+                $css .= ".items-table th, .items-table td { border:1px solid {$borderColor}; padding:3px 5px; }\n";
+        }
+
+        $css .= ".items-table th { background:{$headerBg}; color:{$headerColor}; font-weight:bold; }\n";
+
+        if ($zebra) {
+            $css .= ".items-table tr:nth-child(even) td { background:#fafafa; }\n";
+        }
+
+        return $css;
     }
 
     /**
@@ -284,8 +306,21 @@ body { font-family:Arial,sans-serif; }
             : 'left';
     }
 
+    /**
+     * Whitelist voor kleuren uit user-input (hex only).
+     */
+    private function safeColor(mixed $color): string
+    {
+        $color = (string)$color;
+
+        return preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $color) ? strtolower($color) : '';
+    }
+
     private function getValue(string $id, array $pos, array $data): mixed
     {
+        if (str_starts_with($id, 'static_rect_')) {
+            return ''; // decoratief vlak: geen tekst, alleen backgroundColor
+        }
         if (str_starts_with($id, 'static_text_')) {
             return $pos['staticText'] ?? ($pos['label'] ?? '');
         }
