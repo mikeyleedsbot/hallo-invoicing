@@ -101,11 +101,13 @@ class InvoicePdfGenerator
 
         $totalPages = max(1, count($chunks));
 
-        // CSS
+        // CSS — achtergrond als base64 data-URI zodat dompdf geen bestand
+        // hoeft te openen (chroot/symlink-proof, o.a. voor Forge met
+        // gedeelde storage buiten de projectmap)
         $bgCss = '';
         if ($template->background_path) {
-            $p = Storage::path($template->background_path);
-            if (file_exists($p)) $bgCss = "background-image:url('$p');background-size:cover;background-repeat:no-repeat;";
+            $bgUri = $this->dataUri(Storage::path($template->background_path));
+            if ($bgUri) $bgCss = "background-image:url('$bgUri');background-size:cover;background-repeat:no-repeat;";
         }
 
         $html = "<!DOCTYPE html><html><head><meta charset='utf-8'>
@@ -139,14 +141,14 @@ body { font-family:Arial,sans-serif; }
             $isLast = ($page === $totalPages - 1);
             $html  .= '<div class="page">';
 
-            // Logo (op elke pagina)
+            // Logo (op elke pagina) — ook als data-URI, zie opmerking bij $bgCss
             if ($template->logo_path && isset($pos['logo'])) {
-                $lp = Storage::path($template->logo_path);
-                if (file_exists($lp)) {
+                $logoUri = $this->dataUri(Storage::path($template->logo_path));
+                if ($logoUri) {
                     $l = $pos['logo'];
                     $html .= sprintf(
                         '<img src="%s" class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;">',
-                        $lp,
+                        $logoUri,
                         $this->x($l['x'] ?? 0), $this->y($l['y'] ?? 0),
                         $this->x($l['width'] ?? 150), $this->y($l['height'] ?? 80)
                     );
@@ -304,6 +306,22 @@ body { font-family:Arial,sans-serif; }
         return in_array($align, ['left', 'right', 'center', 'justify'], true)
             ? $align
             : 'left';
+    }
+
+    /**
+     * Lees een afbeelding in als base64 data-URI. Retourneert null als het
+     * bestand niet bestaat of niet leesbaar is.
+     */
+    private function dataUri(string $path): ?string
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+
+        $mime = mime_content_type($path) ?: 'image/png';
+        $data = file_get_contents($path);
+
+        return $data === false ? null : 'data:' . $mime . ';base64,' . base64_encode($data);
     }
 
     /**
