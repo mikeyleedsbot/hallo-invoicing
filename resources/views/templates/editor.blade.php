@@ -834,9 +834,14 @@
                                 right:  '.resize-tr, .resize-br',
                             },
                             modifiers: [
+                                // Niet buiten het canvas resizen
+                                interact.modifiers.restrictEdges({ outer: 'parent' }),
                                 interact.modifiers.restrictSize({
-                                    min: { width: 30, height: 16 },
-                                    max: { width: 800, height: 400 }
+                                    // Max = volledige canvasgrootte (850×1200), zodat
+                                    // full-width/full-height kleurvlakken mogelijk zijn.
+                                    // Min laag genoeg voor dunne lijnen.
+                                    min: { width: 10, height: 2 },
+                                    max: { width: 850, height: 1200 }
                                 })
                             ],
                             inertia: false,
