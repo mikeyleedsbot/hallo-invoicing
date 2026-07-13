@@ -254,15 +254,16 @@ class QuoteController extends Controller
     {
         $quote->load('customer', 'lines', 'template');
         
-        // Use template if selected, otherwise fall back to default view
-        if ($quote->template) {
+        // Gekozen template, anders de standaardtemplate van het account
+        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareQuoteData($quote);
-            $pdf = $pdfGenerator->generateFromTemplate($quote->template, $data);
+            $pdf = $pdfGenerator->generateFromTemplate($template, $data);
         } else {
             $pdf = Pdf::loadView('quotes.pdf', compact('quote'));
         }
-        
+
         return $pdf->download($quote->quote_number . '.pdf');
     }
 
@@ -270,15 +271,16 @@ class QuoteController extends Controller
     {
         $quote->load('customer', 'lines', 'template');
         
-        // Use template if selected, otherwise fall back to default view
-        if ($quote->template) {
+        // Gekozen template, anders de standaardtemplate van het account
+        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareQuoteData($quote);
-            $pdf = $pdfGenerator->generateFromTemplate($quote->template, $data);
+            $pdf = $pdfGenerator->generateFromTemplate($template, $data);
         } else {
             $pdf = Pdf::loadView('quotes.pdf', compact('quote'));
         }
-        
+
         return $pdf->stream($quote->quote_number . '.pdf');
     }
 
@@ -301,9 +303,10 @@ class QuoteController extends Controller
         }
 
         // PDF genereren (zelfde logica als de download)
-        if ($quote->template) {
+        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
-            $pdf = $pdfGenerator->generateFromTemplate($quote->template, $this->prepareQuoteData($quote));
+            $pdf = $pdfGenerator->generateFromTemplate($template, $this->prepareQuoteData($quote));
         } else {
             $pdf = Pdf::loadView('quotes.pdf', compact('quote'));
         }

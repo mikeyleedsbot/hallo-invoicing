@@ -295,15 +295,16 @@ class InvoiceController extends Controller
     {
         $invoice->load('customer', 'lines', 'template');
         
-        // Use template if selected, otherwise fall back to default view
-        if ($invoice->template) {
+        // Gekozen template, anders de standaardtemplate van het account
+        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareInvoiceData($invoice);
-            $pdf = $pdfGenerator->generateFromTemplate($invoice->template, $data);
+            $pdf = $pdfGenerator->generateFromTemplate($template, $data);
         } else {
             $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
         }
-        
+
         return $pdf->download($invoice->invoice_number . '.pdf');
     }
 
@@ -311,15 +312,16 @@ class InvoiceController extends Controller
     {
         $invoice->load('customer', 'lines', 'template');
         
-        // Use template if selected, otherwise fall back to default view
-        if ($invoice->template) {
+        // Gekozen template, anders de standaardtemplate van het account
+        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareInvoiceData($invoice);
-            $pdf = $pdfGenerator->generateFromTemplate($invoice->template, $data);
+            $pdf = $pdfGenerator->generateFromTemplate($template, $data);
         } else {
             $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
         }
-        
+
         return $pdf->stream($invoice->invoice_number . '.pdf');
     }
 
@@ -342,9 +344,10 @@ class InvoiceController extends Controller
         }
 
         // PDF genereren (zelfde logica als de download)
-        if ($invoice->template) {
+        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
-            $pdf = $pdfGenerator->generateFromTemplate($invoice->template, $this->prepareInvoiceData($invoice));
+            $pdf = $pdfGenerator->generateFromTemplate($template, $this->prepareInvoiceData($invoice));
         } else {
             $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
         }
