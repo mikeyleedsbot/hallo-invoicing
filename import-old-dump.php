@@ -1,10 +1,10 @@
 <?php
 /**
- * Importeert een MySQL dump in de database.
- * De dump zelf bevat CREATE DATABASE + USE statements, dus die regelt de databasenaam.
- * Wij zorgen alleen dat de oude database eerst weg is.
+ * Importeert een MySQL dump in de database goforitsit_invoice.
+ * Werkt zowel met dumps mét als zónder CREATE DATABASE/USE statements:
+ * we droppen de database, maken hem zelf aan en selecteren hem vooraf.
  *
- * Gebruik: php import-old-dump.php goforitsit_invoice.sql
+ * Gebruik: php import-old-dump.php goforitsit_invoice_20260713.sql
  */
 
 // Lees .env voor database credentials
@@ -46,9 +46,11 @@ if ($mysqli->connect_error) {
 
 echo "✅ MySQL verbinding OK ($host:$port)\n";
 
-// Verwijder oude database als die bestaat (dump maakt zelf een nieuwe aan)
+// Verwijder oude database als die bestaat en maak hem opnieuw aan
 $mysqli->query("DROP DATABASE IF EXISTS goforitsit_invoice");
-echo "🗑️  Oude database verwijderd (indien aanwezig)\n";
+$mysqli->query("CREATE DATABASE goforitsit_invoice CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+$mysqli->select_db("goforitsit_invoice");
+echo "🗑️  Database goforitsit_invoice opnieuw aangemaakt\n";
 
 // Stel character set in
 $mysqli->set_charset("utf8mb4");
