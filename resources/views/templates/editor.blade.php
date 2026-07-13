@@ -251,7 +251,7 @@
                                             <img :src="logoUrl"
                                                  alt="Logo"
                                                  class="w-full h-full object-contain pointer-events-none">
-                                            <div class="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition">
+                                            <div class="absolute top-0 right-0 -mt-2 mr-3 opacity-0 group-hover:opacity-100 transition">
                                                 <button @click="removeLogo"
                                                         class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
                                                         title="Logo verwijderen">
@@ -316,8 +316,8 @@
                                                 <span class="font-semibold text-gray-800 pointer-events-none select-none truncate px-1 italic" x-text="'{' + field.label + '}'"></span>
                                             </template>
 
-                                            {{-- Actieknoppen --}}
-                                            <div class="absolute top-0 right-0 -mt-2 -mr-2 opacity-0 group-hover:opacity-100 transition flex gap-1" style="pointer-events: none;" :style="'pointer-events: auto;'">
+                                            {{-- Actieknoppen: iets naar binnen zodat ze de resize-hoeken vrijlaten --}}
+                                            <div class="absolute top-0 right-0 -mt-2 mr-3 opacity-0 group-hover:opacity-100 transition flex gap-1" style="pointer-events: none;" :style="'pointer-events: auto;'">
                                                 <button @click.stop="openFieldEditor(key)"
                                                         class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 shadow-lg"
                                                         title="Veld bewerken">✎</button>
