@@ -208,7 +208,7 @@
                                                     </td>
                                                     <td class="pr-3 w-28">
                                                         <input type="number" :name="'lines[' + index + '][quantity]'" x-model="line.quantity" required
-                                                            step="0.01" min="0.01" placeholder="1"
+                                                            step="0.01" placeholder="1"
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                     </td>
                                                     <td class="pr-3 w-32">
@@ -217,7 +217,7 @@
                                                                 <span class="text-gray-500 dark:text-gray-400 text-xs">€</span>
                                                             </div>
                                                             <input type="number" :name="'lines[' + index + '][unit_price]'" x-model="line.unit_price" required
-                                                                step="0.01" min="0" placeholder="0.00"
+                                                                step="0.01" placeholder="0.00"
                                                                 class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                         </div>
                                                     </td>
