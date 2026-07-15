@@ -75,7 +75,7 @@ class QuoteController extends Controller
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
-        
+
         // Generate next quote number met prefix uit instellingen
         $appSettings = AppSetting::get();
         $prefix = $appSettings->quote_prefix ?? 'OFF';
@@ -105,8 +105,8 @@ class QuoteController extends Controller
             'notes' => 'nullable|string',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
+            'lines.*.quantity' => 'required|numeric',
+            'lines.*.unit_price' => 'required|numeric',
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
@@ -114,16 +114,16 @@ class QuoteController extends Controller
             // Calculate totals
             $subtotal = 0;
             $totalVat = 0;
-            
+
             foreach ($validated['lines'] as $line) {
                 $lineTotal = $line['quantity'] * $line['unit_price'];
                 $lineVat = $lineTotal * ($line['vat_rate'] / 100);
                 $subtotal += $lineTotal;
                 $totalVat += $lineVat;
             }
-            
+
             $total = $subtotal + $totalVat;
-            
+
             // Create quote
             $quote = Quote::create([
                 'customer_id' => $validated['customer_id'],
@@ -138,7 +138,7 @@ class QuoteController extends Controller
                 'status' => 'draft',
                 'notes' => $validated['notes'],
             ]);
-            
+
             // Create quote lines
             foreach ($validated['lines'] as $line) {
                 $quote->lines()->create([
@@ -168,7 +168,7 @@ class QuoteController extends Controller
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $quote->load('lines');
-        
+
         $vatRates   = VatRate::ordered()->get();
         $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
 
@@ -188,8 +188,8 @@ class QuoteController extends Controller
             'status' => 'required|in:draft,sent,accepted,rejected,expired',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
+            'lines.*.quantity' => 'required|numeric',
+            'lines.*.unit_price' => 'required|numeric',
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
@@ -197,16 +197,16 @@ class QuoteController extends Controller
             // Calculate totals
             $subtotal = 0;
             $totalVat = 0;
-            
+
             foreach ($validated['lines'] as $line) {
                 $lineTotal = $line['quantity'] * $line['unit_price'];
                 $lineVat = $lineTotal * ($line['vat_rate'] / 100);
                 $subtotal += $lineTotal;
                 $totalVat += $lineVat;
             }
-            
+
             $total = $subtotal + $totalVat;
-            
+
             // Update quote
             $quote->update([
                 'customer_id' => $validated['customer_id'],
@@ -221,10 +221,10 @@ class QuoteController extends Controller
                 'status' => $validated['status'],
                 'notes' => $validated['notes'],
             ]);
-            
+
             // Delete old lines and create new ones
             $quote->lines()->delete();
-            
+
             foreach ($validated['lines'] as $line) {
                 $quote->lines()->create([
                     'description' => $line['description'],
@@ -244,7 +244,7 @@ class QuoteController extends Controller
     public function destroy(Quote $quote)
     {
         $quote->delete();
-        
+
         return redirect()
             ->route('quotes.index')
             ->with('success', 'Offerte verwijderd!');
@@ -253,7 +253,7 @@ class QuoteController extends Controller
     public function pdf(Quote $quote)
     {
         $quote->load('customer', 'lines', 'template');
-        
+
         // Gekozen template, anders de standaardtemplate van het account
         $template = $quote->template ?? InvoiceTemplate::getDefault();
         if ($template) {
@@ -270,7 +270,7 @@ class QuoteController extends Controller
     public function preview(Quote $quote)
     {
         $quote->load('customer', 'lines', 'template');
-        
+
         // Gekozen template, anders de standaardtemplate van het account
         $template = $quote->template ?? InvoiceTemplate::getDefault();
         if ($template) {
@@ -338,7 +338,7 @@ class QuoteController extends Controller
     public function print(Quote $quote)
     {
         $quote->load('customer', 'lines');
-        
+
         return view('quotes.print', compact('quote'));
     }
 
@@ -404,7 +404,7 @@ class QuoteController extends Controller
     private function prepareQuoteData(Quote $quote): array
     {
         $company = \App\Models\CompanySetting::get();
-        
+
         return [
             // Quote data
             'quote_number' => $quote->quote_number,
@@ -413,7 +413,7 @@ class QuoteController extends Controller
             'invoice_date' => $quote->quote_date->format('d-m-Y'), // Alias
             'valid_until' => $quote->valid_until->format('d-m-Y'),
             'due_date' => $quote->valid_until->format('d-m-Y'), // Alias
-            
+
             // Customer data (customer_* + client_* aliassen voor template-compatibiliteit)
             'customer_name' => $quote->customer->name,
             'customer_company' => $quote->customer->company_name ?? '',
@@ -427,7 +427,7 @@ class QuoteController extends Controller
             'client_postal_code' => $quote->customer->postal_code ?? '',
             'client_city' => $quote->customer->city ?? '',
             'client_email' => $quote->customer->email ?? '',
-            
+
             // Company data
             'company_name' => $company->company_name ?? '',
             'company_address' => $company->address ?? '',
@@ -442,7 +442,7 @@ class QuoteController extends Controller
             'company_iban' => $company->iban ?? '',
             'company_bic' => $company->bic ?? '',
             'company_bank' => $company->bank_name ?? '',
-            
+
             // Amounts (+ tax alias voor template-compatibiliteit)
             'subtotal' => '€ ' . number_format($quote->subtotal, 2, ',', '.'),
             'vat_amount' => '€ ' . number_format($quote->vat_amount, 2, ',', '.'),

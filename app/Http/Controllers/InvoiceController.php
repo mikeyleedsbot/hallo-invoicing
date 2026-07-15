@@ -75,7 +75,7 @@ class InvoiceController extends Controller
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
-        
+
         // Generate next invoice number met prefix uit instellingen
         $appSettings = AppSetting::get();
         $prefix = $appSettings->invoice_prefix ?? 'INV';
@@ -106,8 +106,8 @@ class InvoiceController extends Controller
             'vat_reverse_charged' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
+            'lines.*.quantity' => 'required|numeric',
+            'lines.*.unit_price' => 'required|numeric',
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
@@ -144,7 +144,7 @@ class InvoiceController extends Controller
             }
 
             $total = $subtotal + $totalVat;
-            
+
             // Create invoice
             $invoice = Invoice::create([
                 'customer_id' => $validated['customer_id'],
@@ -160,7 +160,7 @@ class InvoiceController extends Controller
                 'notes' => $validated['notes'],
                 'vat_reverse_charged' => $reverseCharged,
             ]);
-            
+
             // Create invoice lines
             foreach ($validated['lines'] as $line) {
                 $invoice->lines()->create([
@@ -190,7 +190,7 @@ class InvoiceController extends Controller
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $invoice->load('lines');
-        
+
         $vatRates   = VatRate::ordered()->get();
         $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
 
@@ -210,8 +210,8 @@ class InvoiceController extends Controller
             'vat_reverse_charged' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
-            'lines.*.quantity' => 'required|numeric|min:0.01',
-            'lines.*.unit_price' => 'required|numeric|min:0',
+            'lines.*.quantity' => 'required|numeric',
+            'lines.*.unit_price' => 'required|numeric',
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
@@ -247,7 +247,7 @@ class InvoiceController extends Controller
             }
 
             $total = $subtotal + $totalVat;
-            
+
             // Update invoice
             $invoice->update([
                 'customer_id' => $validated['customer_id'],
@@ -262,10 +262,10 @@ class InvoiceController extends Controller
                 'notes' => $validated['notes'],
                 'vat_reverse_charged' => $reverseCharged,
             ]);
-            
+
             // Delete old lines and create new ones
             $invoice->lines()->delete();
-            
+
             foreach ($validated['lines'] as $line) {
                 $invoice->lines()->create([
                     'description' => $line['description'],
@@ -285,7 +285,7 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice)
     {
         $invoice->delete();
-        
+
         return redirect()
             ->route('invoices.index')
             ->with('success', 'Factuur verwijderd!');
@@ -294,7 +294,7 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         $invoice->load('customer', 'lines', 'template');
-        
+
         // Gekozen template, anders de standaardtemplate van het account
         $template = $invoice->template ?? InvoiceTemplate::getDefault();
         if ($template) {
@@ -311,7 +311,7 @@ class InvoiceController extends Controller
     public function preview(Invoice $invoice)
     {
         $invoice->load('customer', 'lines', 'template');
-        
+
         // Gekozen template, anders de standaardtemplate van het account
         $template = $invoice->template ?? InvoiceTemplate::getDefault();
         if ($template) {
@@ -382,13 +382,13 @@ class InvoiceController extends Controller
     private function prepareInvoiceData(Invoice $invoice): array
     {
         $company = \App\Models\CompanySetting::get();
-        
+
         return [
             // Invoice data
             'invoice_number' => $invoice->invoice_number,
             'invoice_date' => $invoice->invoice_date->format('d-m-Y'),
             'due_date' => $invoice->due_date->format('d-m-Y'),
-            
+
             // Customer data (customer_* + client_* aliassen voor template-compatibiliteit)
             'customer_name' => $invoice->customer->name,
             'customer_company' => $invoice->customer->company_name ?? '',
@@ -402,7 +402,7 @@ class InvoiceController extends Controller
             'client_postal_code' => $invoice->customer->postal_code ?? '',
             'client_city' => $invoice->customer->city ?? '',
             'client_email' => $invoice->customer->email ?? '',
-            
+
             // Company data
             'company_name' => $company->company_name ?? '',
             'company_address' => $company->address ?? '',
@@ -417,7 +417,7 @@ class InvoiceController extends Controller
             'company_iban' => $company->iban ?? '',
             'company_bic' => $company->bic ?? '',
             'company_bank' => $company->bank_name ?? '',
-            
+
             // Amounts (+ tax alias voor template-compatibiliteit)
             'subtotal' => '€ ' . number_format($invoice->subtotal, 2, ',', '.'),
             'vat_amount' => '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
@@ -443,7 +443,7 @@ class InvoiceController extends Controller
     public function print(Invoice $invoice)
     {
         $invoice->load('customer', 'lines');
-        
+
         return view('invoices.print', compact('invoice'));
     }
 
