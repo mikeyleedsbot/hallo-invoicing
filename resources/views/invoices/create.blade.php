@@ -22,7 +22,7 @@
 
         <form action="{{ route('invoices.store') }}" method="POST" @submit="submitForm" class="space-y-6">
             @csrf
-            
+
             {{-- Summary Card (Top) --}}
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-sm border border-blue-200 dark:border-gray-600 p-6">
                 <div class="grid grid-cols-3 gap-6">
@@ -44,7 +44,7 @@
             {{-- Invoice Details --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Factuurgegevens</h2>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -114,7 +114,7 @@
                             </svg>
                             Product toevoegen
                         </button>
-                        <button type="button" @click="addLine()" 
+                        <button type="button" @click="addLine()"
                             class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-4 py-2 inline-flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -184,12 +184,12 @@
                                                 <tr>
                                                     <td class="pr-3">
                                                         <input type="text" :name="'lines[' + index + '][description]'" x-model="line.description" required
-                                                            placeholder="Bijv: Website ontwikkeling" 
+                                                            placeholder="Bijv: Website ontwikkeling"
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                     </td>
                                                     <td class="pr-3 w-28">
                                                         <input type="number" :name="'lines[' + index + '][quantity]'" x-model="line.quantity" required
-                                                            step="0.01" min="0.01" placeholder="1"
+                                                            step="0.01" placeholder="1"
                                                             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                     </td>
                                                     <td class="pr-3 w-32">
@@ -198,7 +198,7 @@
                                                                 <span class="text-gray-500 dark:text-gray-400 text-xs">€</span>
                                                             </div>
                                                             <input type="number" :name="'lines[' + index + '][unit_price]'" x-model="line.unit_price" required
-                                                                step="0.01" min="0" placeholder="0.00"
+                                                                step="0.01" placeholder="0.00"
                                                                 class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:placeholder-gray-400">
                                                         </div>
                                                     </td>
