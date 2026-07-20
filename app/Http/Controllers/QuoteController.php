@@ -389,6 +389,11 @@ class QuoteController extends Controller
     {
         $company = \App\Models\CompanySetting::get();
 
+        // Betalingsvoorwaarden-veld op offertes: eigen voettekst, anders geldigheid
+        $paymentTerms = trim((string) ($company->invoice_footer ?? '')) !== ''
+            ? $company->invoice_footer
+            : 'Deze offerte is geldig tot en met ' . $quote->valid_until->format('d-m-Y') . '.';
+
         return [
             // Quote data
             'quote_number' => $quote->quote_number,
@@ -397,6 +402,7 @@ class QuoteController extends Controller
             'invoice_date' => $quote->quote_date->format('d-m-Y'), // Alias
             'valid_until' => $quote->valid_until->format('d-m-Y'),
             'due_date' => $quote->valid_until->format('d-m-Y'), // Alias
+            'invoice_reference' => '',
 
             // Customer data (customer_* + client_* aliassen voor template-compatibiliteit)
             'customer_name' => $quote->customer->name,
@@ -435,7 +441,7 @@ class QuoteController extends Controller
 
             // Notes & items
             'notes' => $quote->notes ?? '',
-            'payment_terms' => $company->invoice_footer ?? '',
+            'payment_terms' => $paymentTerms,
             'thank_you' => '',
             'invoice_footer' => $company->invoice_footer ?? '',
             'items_table' => $quote->lines->map(function($line) {

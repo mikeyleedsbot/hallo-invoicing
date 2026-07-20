@@ -391,11 +391,22 @@ class InvoiceController extends Controller
             ];
         }
 
+        // Referentie: het offertenummer als deze factuur uit een offerte komt
+        $sourceQuote = \App\Models\Quote::where('converted_invoice_id', $invoice->id)->first();
+
+        // Betalingsvoorwaarden: eigen voettekst, anders nette standaardtekst
+        $paymentTerms = trim((string) ($company->invoice_footer ?? '')) !== ''
+            ? $company->invoice_footer
+            : 'Wij verzoeken u vriendelijk het totaalbedrag vóór ' . $invoice->due_date->format('d-m-Y')
+                . ' over te maken' . (($company->iban ?? '') !== '' ? ' op ' . $company->iban : '')
+                . ' o.v.v. factuurnummer ' . $invoice->invoice_number . '.';
+
         return $creditSurchargeData + [
             // Invoice data
             'invoice_number' => $invoice->invoice_number,
             'invoice_date' => $invoice->invoice_date->format('d-m-Y'),
             'due_date' => $invoice->due_date->format('d-m-Y'),
+            'invoice_reference' => $sourceQuote ? 'Offerte ' . $sourceQuote->quote_number : '',
 
             // Customer data (customer_* + client_* aliassen voor template-compatibiliteit)
             'customer_name' => $invoice->customer->name,
@@ -434,7 +445,7 @@ class InvoiceController extends Controller
 
             // Notes & items
             'notes' => $invoice->notes ?? '',
-            'payment_terms' => $company->invoice_footer ?? '',
+            'payment_terms' => $paymentTerms,
             'thank_you' => '',
             'invoice_footer' => $company->invoice_footer ?? '',
             'items_table' => $invoice->lines->map(function($line) {

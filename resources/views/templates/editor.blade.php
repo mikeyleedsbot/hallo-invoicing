@@ -647,6 +647,8 @@
                     { id: 'company_kvk', align: 'left', label: 'KvK Nummer' },
                     { id: 'company_vat', align: 'left', label: 'BTW Nummer' },
                     { id: 'company_iban', align: 'left', label: 'IBAN' },
+                    { id: 'company_bic', align: 'left', label: 'BIC' },
+                    { id: 'company_bank', align: 'left', label: 'Banknaam' },
                 ],
                 clientFields: [
                     { id: 'client_name', align: 'left', label: 'Klantnaam' },
@@ -671,6 +673,7 @@
                     { id: 'tax', align: 'left', label: 'BTW' },
                     { id: 'total', align: 'left', label: 'Totaal' },
                     { id: 'payment_terms', align: 'left', label: 'Betalingsvoorwaarden' },
+                    { id: 'notes', align: 'left', label: 'Opmerkingen' },
                 ],
 
                 init() {
