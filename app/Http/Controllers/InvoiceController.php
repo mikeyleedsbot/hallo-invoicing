@@ -76,16 +76,8 @@ class InvoiceController extends Controller
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
 
-        // Generate next invoice number met prefix uit instellingen
-        $appSettings = AppSetting::get();
-        $prefix = $appSettings->invoice_prefix ?? 'INV';
-        $lastInvoice = Invoice::orderBy('id', 'desc')->first();
-        if ($lastInvoice && preg_match('/(\d+)\s*$/', $lastInvoice->invoice_number, $matches)) {
-            $nextNumber = (int)$matches[1] + 1;
-        } else {
-            $nextNumber = $appSettings->invoice_number_start ?? 1;
-        }
-        $invoiceNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        // Volgend factuurnummer (prefix + teller uit instellingen)
+        $invoiceNumber = AppSetting::get()->nextInvoiceNumber();
 
         $vatRates    = VatRate::ordered()->get();
         $defaultVat  = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
@@ -481,16 +473,8 @@ class InvoiceController extends Controller
 
     public function duplicate(Invoice $invoice)
     {
-        // Generate new invoice number met prefix uit instellingen
-        $appSettings = AppSetting::get();
-        $prefix = $appSettings->invoice_prefix ?? 'INV';
-        $lastInvoice = Invoice::orderBy('id', 'desc')->first();
-        if ($lastInvoice && preg_match('/(\d+)\s*$/', $lastInvoice->invoice_number, $matches)) {
-            $nextNumber = (int)$matches[1] + 1;
-        } else {
-            $nextNumber = $appSettings->invoice_number_start ?? 1;
-        }
-        $newInvoiceNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        // Volgend factuurnummer (prefix + teller uit instellingen)
+        $newInvoiceNumber = AppSetting::get()->nextInvoiceNumber();
 
         // Create duplicate invoice
         $newInvoice = $invoice->replicate();

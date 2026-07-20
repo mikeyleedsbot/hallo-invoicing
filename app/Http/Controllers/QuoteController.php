@@ -76,16 +76,8 @@ class QuoteController extends Controller
         $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
 
-        // Generate next quote number met prefix uit instellingen
-        $appSettings = AppSetting::get();
-        $prefix = $appSettings->quote_prefix ?? 'OFF';
-        $lastQuote = Quote::orderBy('id', 'desc')->first();
-        if ($lastQuote && preg_match('/(\d+)\s*$/', $lastQuote->quote_number, $matches)) {
-            $nextNumber = (int)$matches[1] + 1;
-        } else {
-            $nextNumber = $appSettings->quote_number_start ?? 1;
-        }
-        $quoteNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        // Volgend offertenummer (prefix + teller uit instellingen)
+        $quoteNumber = AppSetting::get()->nextQuoteNumber();
 
         $vatRates   = VatRate::ordered()->get();
         $defaultVat = (int)($vatRates->firstWhere('is_default', true)?->rate ?? 21);
@@ -345,16 +337,8 @@ class QuoteController extends Controller
     public function convertToInvoice(Quote $quote)
     {
         $invoice = DB::transaction(function () use ($quote) {
-            // Generate invoice number met prefix uit instellingen
-            $appSettings = AppSetting::get();
-            $invoicePrefix = $appSettings->invoice_prefix ?? 'INV';
-            $lastInvoice = Invoice::orderBy('id', 'desc')->first();
-            if ($lastInvoice && preg_match('/(\d+)\s*$/', $lastInvoice->invoice_number, $matches)) {
-                $nextNumber = (int)$matches[1] + 1;
-            } else {
-                $nextNumber = $appSettings->invoice_number_start ?? 1;
-            }
-            $invoiceNumber = $invoicePrefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            // Volgend factuurnummer (prefix + teller uit instellingen)
+            $invoiceNumber = AppSetting::get()->nextInvoiceNumber();
 
             // Create invoice from quote
             $invoice = Invoice::create([

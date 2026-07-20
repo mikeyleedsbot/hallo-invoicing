@@ -86,6 +86,39 @@ class AppSetting extends Model
         'quote_number_start' => 'integer',
     ];
 
+    /**
+     * Volgende factuurnummer (met prefix). De teller uit de instellingen
+     * geldt als minimum: hoger zetten laat de nummering vooruit springen,
+     * lager zetten kan nooit tot dubbele nummers leiden.
+     */
+    public function nextInvoiceNumber(): string
+    {
+        $next = max(1, (int) ($this->invoice_number_start ?? 1));
+
+        $last = Invoice::orderBy('id', 'desc')->first();
+        if ($last && preg_match('/(\d+)\s*$/', $last->invoice_number, $m)) {
+            $next = max((int) $m[1] + 1, $next);
+        }
+
+        return ($this->invoice_prefix ?? 'INV') . str_pad($next, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Volgende offertenummer (met prefix). Zelfde teller-als-minimum
+     * gedrag als nextInvoiceNumber().
+     */
+    public function nextQuoteNumber(): string
+    {
+        $next = max(1, (int) ($this->quote_number_start ?? 1));
+
+        $last = Quote::orderBy('id', 'desc')->first();
+        if ($last && preg_match('/(\d+)\s*$/', $last->quote_number, $m)) {
+            $next = max((int) $m[1] + 1, $next);
+        }
+
+        return ($this->quote_prefix ?? 'OFF') . str_pad($next, 5, '0', STR_PAD_LEFT);
+    }
+
     // Per-user singleton: elke gebruiker heeft eigen app-instellingen
     public static function get()
     {

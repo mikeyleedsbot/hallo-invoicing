@@ -118,6 +118,32 @@
                                 placeholder="OFF">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->quote_prefix ?? 'OFF' }}00001</p>
                         </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                Factuurteller
+                            </label>
+                            <input type="number" name="invoice_number_start" min="1" max="99999"
+                                value="{{ old('invoice_number_start', $settings->invoice_number_start ?? 1) }}" required
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Volgende factuur wordt <strong>{{ $settings->nextInvoiceNumber() }}</strong>.
+                                De teller geldt als minimum: hoger zetten laat de nummering vooruit springen.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                Offerteteller
+                            </label>
+                            <input type="number" name="quote_number_start" min="1" max="99999"
+                                value="{{ old('quote_number_start', $settings->quote_number_start ?? 1) }}" required
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Volgende offerte wordt <strong>{{ $settings->nextQuoteNumber() }}</strong>.
+                                De teller geldt als minimum: hoger zetten laat de nummering vooruit springen.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

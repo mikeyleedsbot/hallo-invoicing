@@ -99,6 +99,8 @@ class AppSettingController extends Controller
             'date_format' => 'required|string|max:20',
             'invoice_prefix' => 'required|string|max:10',
             'quote_prefix' => 'required|string|max:10',
+            'invoice_number_start' => 'required|integer|min:1|max:99999',
+            'quote_number_start' => 'required|integer|min:1|max:99999',
             'invoice_email_subject' => 'nullable|string|max:255',
             'invoice_email_body'    => 'nullable|string|max:20000',
             'quote_email_subject'   => 'nullable|string|max:255',
