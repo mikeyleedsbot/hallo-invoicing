@@ -443,6 +443,8 @@ class InvoiceController extends Controller
                     'quantity' => $line->quantity,
                     'price' => $line->unit_price,
                     'vat_rate' => $line->vat_rate,
+                    'vat_total' => $line->unit_price * $line->quantity * ($line->vat_rate / 100),
+                    'total' => ($line->unit_price * $line->quantity) + ($line->unit_price * $line->quantity * ($line->vat_rate / 100)),
                 ];
             })->toArray(),
         ];

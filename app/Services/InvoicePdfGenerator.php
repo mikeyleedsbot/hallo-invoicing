@@ -211,6 +211,8 @@ body { font-family:Arial,sans-serif; }
                 <th style="text-align:left;">Omschrijving</th>
                 <th style="text-align:right;width:36px;">Aantal</th>
                 <th style="text-align:right;width:52px;">Prijs</th>
+                <th style="text-align:right;width:52px;">BTW%</th>
+                <th style="text-align:right;width:52px;">BTW</th>
                 <th style="text-align:right;width:52px;">Totaal</th>
             </tr></thead><tbody>';
 
@@ -220,11 +222,15 @@ body { font-family:Arial,sans-serif; }
                     <td>%s</td>
                     <td style="text-align:right;">%s</td>
                     <td style="text-align:right;">€&nbsp;%s</td>
+                    <td style="text-align:right;">%s</td>
+                    <td style="text-align:right;">%s</td>
                     <td style="text-align:right;">€&nbsp;%s</td>
                 </tr>',
                     htmlspecialchars($item['description'] ?? ''),
                     number_format($item['quantity'] ?? 0, 0, ',', '.'),
                     number_format($item['price']    ?? 0, 2, ',', '.'),
+                    number_format($item['vat_rate'] ?? 0, 0, ',', '.') . "%",
+                    number_format($item['vat_total'] ?? 0, 2, ',', '.'),
                     number_format($total,               2, ',', '.')
                 );
             }
