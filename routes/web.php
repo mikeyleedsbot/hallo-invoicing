@@ -64,11 +64,16 @@ Route::middleware(['auth', 'mfa'])->group(function () {
         Route::post('/gebruikers/{user}/resend-invite',        [UserManagementController::class, 'resendInvite'])->name('users.resend-invite');
         Route::post('/gebruikers/{user}/approve',              [UserManagementController::class, 'approve'])->name('users.approve');
         Route::post('/gebruikers/{user}/reject',               [UserManagementController::class, 'reject'])->name('users.reject');
+        Route::post('/gebruikers/{user}/impersonate',          [App\Http\Controllers\ImpersonationController::class, 'start'])->name('users.impersonate');
 
         // E-mailinstellingen (admin only)
         Route::get('/email-instellingen',                      [EmailSettingController::class, 'edit'])->name('email-settings.edit');
         Route::post('/email-instellingen/test',                [EmailSettingController::class, 'test'])->name('email-settings.test');
     });
+
+    // Impersonatie stoppen (géén admin-middleware: tijdens het meekijken
+    // ben je immers ingelogd als de niet-admin gebruiker)
+    Route::post('/impersonatie/stop', [App\Http\Controllers\ImpersonationController::class, 'stop'])->name('impersonation.stop');
 
     // Persoonlijke mailverbindingen (OAuth Google/Microsoft)
     Route::get('/mailverbindingen',                                        [App\Http\Controllers\MailConnectionController::class, 'index'])->name('mail-connections.index');
