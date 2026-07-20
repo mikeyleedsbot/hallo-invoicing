@@ -8,8 +8,10 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\InvoiceTemplate;
 use App\Models\VatRate;
+use App\Services\InvoicePdfGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -450,7 +452,32 @@ class InvoiceController extends Controller
     {
         $invoice->load('customer', 'lines');
 
-        return view('invoices.print', compact('invoice'));
+        try {
+            $template = $invoice->template ?? InvoiceTemplate::getDefault();
+            $pdf = null;
+            if ($template) {
+                /** @var InvoicePdfGenerator $pdfGenerator */
+                $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
+                $pdfGenerator->withBackground = false;
+                $data = $this->prepareInvoiceData($invoice);
+                $pdf = $pdfGenerator->generateFromTemplateToHtml($template, $data);
+            }
+
+            if (is_null($pdf)) {
+                throw new \Exception('No template found to print invoice.');
+            }
+
+            return view('invoices.print', compact('invoice', 'pdf'));
+        }
+        catch (\Throwable $e) {
+            Log::error('Error while generating printable invoice', [
+                'exception' => $e->getMessage(),
+                'invoice_id' => $invoice->id
+            ]);
+
+            return back()
+                ->with('warning', 'Er is iets fout gegaan. Probeer het later opnieuw.');
+        }
     }
 
     public function markSent(Request $request, Invoice $invoice)

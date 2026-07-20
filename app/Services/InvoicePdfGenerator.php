@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class InvoicePdfGenerator
 {
+    public bool $withBackground = true;
+
     private float $cW = 850;
     private float $cH = 1200;
     private float $pW = 210;  // mm
@@ -33,6 +35,16 @@ class InvoicePdfGenerator
         }
         $html = $this->build($positions, $data, $template);
         return Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+    }
+
+    public function generateFromTemplateToHtml(InvoiceTemplate $template, array $data): string
+    {
+        $positions = $template->field_positions ?? [];
+        if (empty($positions)) {
+            $positions = self::getDefaultPositions();
+        }
+
+        return $this->build($positions, $data, $template);
     }
 
     /**
@@ -108,7 +120,7 @@ class InvoicePdfGenerator
         // data-URI wel veilig, en dompdf hoeft zo ook geen bestand te
         // openen (chroot/symlink-proof, o.a. voor Forge).
         $bgImg = '';
-        if ($template->background_path) {
+        if ($template->background_path && $this->withBackground) {
             $bgUri = $this->dataUri(Storage::path($template->background_path));
             if ($bgUri) {
                 $bgImg = sprintf(
