@@ -11,6 +11,14 @@ class Invoice extends Model
 {
     use BelongsToUser;
 
+    protected static function booted(): void
+    {
+        // Factuurteller in de instellingen automatisch doorschuiven
+        static::created(function (Invoice $invoice) {
+            AppSetting::advanceCounter('invoice_number_start', $invoice->invoice_number, $invoice->user_id);
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'invoice_number',

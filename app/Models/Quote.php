@@ -11,6 +11,14 @@ class Quote extends Model
 {
     use BelongsToUser;
 
+    protected static function booted(): void
+    {
+        // Offerteteller in de instellingen automatisch doorschuiven
+        static::created(function (Quote $quote) {
+            AppSetting::advanceCounter('quote_number_start', $quote->quote_number, $quote->user_id);
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'quote_number',

@@ -87,36 +87,56 @@ class AppSetting extends Model
     ];
 
     /**
-     * Volgende factuurnummer (met prefix). De teller uit de instellingen
-     * geldt als minimum: hoger zetten laat de nummering vooruit springen,
-     * lager zetten kan nooit tot dubbele nummers leiden.
+     * Volgende factuurnummer: prefix + teller uit de instellingen.
+     * De teller is leidend; nummers die al bestaan (bv. geïmporteerd of
+     * handmatig aangemaakt) worden overgeslagen. Na het aanmaken van een
+     * factuur schuift de teller automatisch door (zie Invoice::booted).
      */
     public function nextInvoiceNumber(): string
     {
+        $prefix = $this->invoice_prefix ?? 'INV';
         $next = max(1, (int) ($this->invoice_number_start ?? 1));
 
-        $last = Invoice::orderBy('id', 'desc')->first();
-        if ($last && preg_match('/(\d+)\s*$/', $last->invoice_number, $m)) {
-            $next = max((int) $m[1] + 1, $next);
-        }
+        do {
+            $number = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            $exists = Invoice::where('invoice_number', $number)->exists();
+            $next++;
+        } while ($exists);
 
-        return ($this->invoice_prefix ?? 'INV') . str_pad($next, 5, '0', STR_PAD_LEFT);
+        return $number;
     }
 
     /**
-     * Volgende offertenummer (met prefix). Zelfde teller-als-minimum
-     * gedrag als nextInvoiceNumber().
+     * Volgende offertenummer — zelfde gedrag als nextInvoiceNumber().
      */
     public function nextQuoteNumber(): string
     {
+        $prefix = $this->quote_prefix ?? 'OFF';
         $next = max(1, (int) ($this->quote_number_start ?? 1));
 
-        $last = Quote::orderBy('id', 'desc')->first();
-        if ($last && preg_match('/(\d+)\s*$/', $last->quote_number, $m)) {
-            $next = max((int) $m[1] + 1, $next);
+        do {
+            $number = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            $exists = Quote::where('quote_number', $number)->exists();
+            $next++;
+        } while ($exists);
+
+        return $number;
+    }
+
+    /**
+     * Teller doorschuiven naar (gebruikt nummer + 1). Wordt aangeroepen
+     * vanuit de created-hooks van Invoice en Quote.
+     */
+    public static function advanceCounter(string $column, string $usedNumber, int $userId): void
+    {
+        if (!preg_match('/(\d+)\s*$/', $usedNumber, $m)) {
+            return;
         }
 
-        return ($this->quote_prefix ?? 'OFF') . str_pad($next, 5, '0', STR_PAD_LEFT);
+        static::withoutGlobalScope('belongs_to_user')
+            ->where('user_id', $userId)
+            ->where($column, '<=', (int) $m[1])
+            ->update([$column => (int) $m[1] + 1]);
     }
 
     // Per-user singleton: elke gebruiker heeft eigen app-instellingen
