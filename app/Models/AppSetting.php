@@ -21,6 +21,8 @@ class AppSetting extends Model
         'quote_prefix',
         'invoice_number_start',
         'quote_number_start',
+        'credit_surcharge_enabled',
+        'credit_surcharge_percent',
         'invoice_email_subject',
         'invoice_email_body',
         'quote_email_subject',
@@ -84,7 +86,23 @@ class AppSetting extends Model
         'quote_valid_days' => 'integer',
         'invoice_number_start' => 'integer',
         'quote_number_start' => 'integer',
+        'credit_surcharge_enabled' => 'boolean',
+        'credit_surcharge_percent' => 'integer',
     ];
+
+    /**
+     * Kredietbeperkingstoeslag over een totaalbedrag (incl. btw).
+     * Conform Belastingdienst: percentage van het totaal incl. btw,
+     * zonder btw over de toeslag zelf.
+     */
+    public function creditSurchargeAmount(float $totalInclVat): float
+    {
+        if (!$this->credit_surcharge_enabled) {
+            return 0.0;
+        }
+
+        return round($totalInclVat * max(1, (int) $this->credit_surcharge_percent) / 100, 2);
+    }
 
     /**
      * Volgende factuurnummer: prefix + teller uit de instellingen.

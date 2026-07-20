@@ -279,7 +279,19 @@ class TemplateController extends Controller
         $tax      = round($subtotal * 0.21, 2);
         $total    = $subtotal + $tax;
 
-        $mockData = [
+        // Kredietbeperking in testdata (alleen als ingeschakeld in instellingen)
+        $appSettings = \App\Models\AppSetting::get();
+        $creditSurchargeData = [];
+        if ($appSettings->credit_surcharge_enabled) {
+            $surcharge = $appSettings->creditSurchargeAmount((float) $total);
+            $creditSurchargeData = [
+                'credit_surcharge'         => '€ ' . number_format($surcharge, 2, ',', '.'),
+                'credit_surcharge_percent' => $appSettings->credit_surcharge_percent . '%',
+                'total_with_surcharge'     => '€ ' . number_format($total + $surcharge, 2, ',', '.'),
+            ];
+        }
+
+        $mockData = $creditSurchargeData + [
             'company_name'        => 'Hallo ICT B.V.',
             'company_address'     => 'Teststraat 123',
             'company_postal_code' => '1234 AB',

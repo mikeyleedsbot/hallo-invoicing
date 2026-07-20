@@ -660,6 +660,10 @@
                     { id: 'invoice_date', align: 'left', label: 'Factuurdatum' },
                     { id: 'due_date', align: 'left', label: 'Vervaldatum' },
                     { id: 'invoice_reference', align: 'left', label: 'Referentie' },
+                    @if(\App\Models\AppSetting::get()->credit_surcharge_enabled)
+                    { id: 'credit_surcharge', align: 'right', label: 'Kredietbeperking' },
+                    { id: 'total_with_surcharge', align: 'right', label: 'Totaal incl. kredietbeperking' },
+                    @endif
                 ],
                 specialFields: [
                     { id: 'items_table', align: 'left', label: 'Artikelen Tabel' },

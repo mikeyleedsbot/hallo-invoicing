@@ -147,6 +147,44 @@
                     </div>
                 </div>
 
+                {{-- Kredietbeperking --}}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                     x-data="{ surchargeEnabled: {{ old('credit_surcharge_enabled', $settings->credit_surcharge_enabled) ? 'true' : 'false' }} }">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Kredietbeperking</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Toeslag die vervalt bij tijdige betaling. Wordt berekend over het factuurtotaal
+                        <strong>inclusief btw</strong> en zonder btw over de toeslag zelf, conform de richtlijn
+                        van de Belastingdienst.
+                    </p>
+
+                    <div class="flex items-center gap-3 mb-4">
+                        <input type="checkbox" id="credit_surcharge_enabled" name="credit_surcharge_enabled" value="1"
+                            x-model="surchargeEnabled"
+                            class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                        <label for="credit_surcharge_enabled" class="text-sm text-gray-700 dark:text-gray-300">
+                            Kredietbeperking toepassen op facturen
+                        </label>
+                    </div>
+
+                    <div x-show="surchargeEnabled" x-transition>
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                            Percentage
+                        </label>
+                        <select name="credit_surcharge_percent"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-48 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            @foreach([1, 2, 3, 4, 5] as $pct)
+                                <option value="{{ $pct }}" {{ (int) old('credit_surcharge_percent', $settings->credit_surcharge_percent ?? 2) === $pct ? 'selected' : '' }}>
+                                    {{ $pct }}%
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Zet daarna in de template-editor de velden <strong>Kredietbeperking</strong> en
+                            <strong>Totaal incl. kredietbeperking</strong> op je factuurtemplate (onder "Factuur Info").
+                        </p>
+                    </div>
+                </div>
+
                 {{-- E-mailteksten --}}
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">E-mailteksten</h2>

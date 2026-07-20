@@ -374,8 +374,22 @@ class InvoiceController extends Controller
     private function prepareInvoiceData(Invoice $invoice): array
     {
         $company = \App\Models\CompanySetting::get();
+        $appSettings = AppSetting::get();
 
-        return [
+        // Kredietbeperkingstoeslag (over totaal incl. btw, zonder btw over
+        // de toeslag — conform Belastingdienst). Alleen als ingeschakeld;
+        // anders blijven de velden leeg en rendert de template ze niet.
+        $creditSurchargeData = [];
+        if ($appSettings->credit_surcharge_enabled) {
+            $surcharge = $appSettings->creditSurchargeAmount((float) $invoice->total);
+            $creditSurchargeData = [
+                'credit_surcharge'         => '€ ' . number_format($surcharge, 2, ',', '.'),
+                'credit_surcharge_percent' => $appSettings->credit_surcharge_percent . '%',
+                'total_with_surcharge'     => '€ ' . number_format($invoice->total + $surcharge, 2, ',', '.'),
+            ];
+        }
+
+        return $creditSurchargeData + [
             // Invoice data
             'invoice_number' => $invoice->invoice_number,
             'invoice_date' => $invoice->invoice_date->format('d-m-Y'),
