@@ -160,7 +160,7 @@ class InvoiceController extends Controller
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric',
             'lines.*.unit_price' => 'required|numeric',
-            'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
+            'lines.*.vat_rate' => ($request->boolean('vat_reverse_charged') ? 'nullable' : 'required') . '|numeric|min:0|max:100',
         ]);
 
         $reverseCharged = (bool) ($validated['vat_reverse_charged'] ?? false);
@@ -219,7 +219,7 @@ class InvoiceController extends Controller
                     'description' => $line['description'],
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
-                    'vat_rate' => $line['vat_rate'],
+                    'vat_rate' => $line['vat_rate'] ?? 0,
                     'total' => $line['quantity'] * $line['unit_price'],
                 ]);
             }
