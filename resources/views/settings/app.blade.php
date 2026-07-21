@@ -22,6 +22,16 @@
             </div>
             @endif
 
+            {{-- Validatiefouten --}}
+            @if($errors->any())
+            <div class="p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800">
+                <p class="font-medium mb-1">Opslaan is niet gelukt. Controleer de volgende velden:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                </ul>
+            </div>
+            @endif
+
             {{-- Form --}}
             <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
                 @csrf

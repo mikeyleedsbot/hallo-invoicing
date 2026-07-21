@@ -30,6 +30,27 @@ class CompanySettingController extends Controller
             'bic' => 'nullable|string|max:20',
             'bank_name' => 'nullable|string|max:100',
             'invoice_footer' => 'nullable|string|max:1000',
+        ], [
+            'required' => ':attribute is verplicht.',
+            'string'   => ':attribute moet tekst zijn.',
+            'max'      => ':attribute mag maximaal :max tekens zijn.',
+            'email'    => ':attribute moet een geldig e-mailadres zijn.',
+            'url'      => ':attribute moet een geldige website-URL zijn (inclusief https://).',
+        ], [
+            'company_name'   => 'Bedrijfsnaam',
+            'address'        => 'Adres',
+            'postal_code'    => 'Postcode',
+            'city'           => 'Plaats',
+            'country'        => 'Land',
+            'phone'          => 'Telefoon',
+            'email'          => 'E-mailadres',
+            'website'        => 'Website',
+            'kvk_number'     => 'KvK-nummer',
+            'vat_number'     => 'BTW-nummer',
+            'iban'           => 'IBAN',
+            'bic'            => 'BIC',
+            'bank_name'      => 'Banknaam',
+            'invoice_footer' => 'Factuur-voettekst',
         ]);
 
         $settings = CompanySetting::get();

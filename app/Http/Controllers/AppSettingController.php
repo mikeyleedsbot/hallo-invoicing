@@ -107,6 +107,32 @@ class AppSettingController extends Controller
             'invoice_email_body'    => 'nullable|string|max:20000',
             'quote_email_subject'   => 'nullable|string|max:255',
             'quote_email_body'      => 'nullable|string|max:20000',
+        ], [
+            'required' => ':attribute is verplicht.',
+            'integer'  => ':attribute moet een geheel getal zijn.',
+            'numeric'  => ':attribute moet een getal zijn.',
+            'min'      => ':attribute moet minimaal :min zijn.',
+            'max'      => ':attribute mag maximaal :max zijn.',
+            'in'       => ':attribute heeft een ongeldige waarde.',
+            'string'   => ':attribute moet tekst zijn.',
+            'boolean'  => ':attribute moet aan of uit zijn.',
+        ], [
+            'default_vat_rate'         => 'Standaard BTW-tarief',
+            'default_payment_terms'    => 'Standaard betalingstermijn',
+            'quote_valid_days'         => 'Geldigheidsduur offerte',
+            'currency'                 => 'Valuta',
+            'currency_symbol'          => 'Valutasymbool',
+            'date_format'              => 'Datumformaat',
+            'invoice_prefix'           => 'Factuur prefix',
+            'quote_prefix'             => 'Offerte prefix',
+            'invoice_number_start'     => 'Factuurteller',
+            'quote_number_start'       => 'Offerteteller',
+            'credit_surcharge_enabled' => 'Kredietbeperking',
+            'credit_surcharge_percent' => 'Kredietbeperkingspercentage',
+            'invoice_email_subject'    => 'Onderwerp factuurmail',
+            'invoice_email_body'       => 'Tekst factuurmail',
+            'quote_email_subject'      => 'Onderwerp offertemail',
+            'quote_email_body'         => 'Tekst offertemail',
         ]);
 
         // E-mailteksten opschonen: alleen veilige opmaak-tags toestaan en
