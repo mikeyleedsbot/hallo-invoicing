@@ -1,5 +1,6 @@
 <x-app-layout>
     <div class="space-y-6" x-data="{
+        selectedIds: [],
         showEmailModal: false,
         pdfUrl: '',
         mailtoHref: '',
@@ -98,6 +99,36 @@
                 $_composer    = app(\App\Services\DocumentEmailComposer::class);
             @endphp
 
+            {{-- Bulk-acties: zichtbaar zodra er rijen geselecteerd zijn --}}
+            <form method="POST" action="{{ route('invoices.bulk-status') }}"
+                  x-show="selectedIds.length > 0"
+                  style="display: none;"
+                  class="flex flex-wrap items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                @csrf
+                <template x-for="id in selectedIds" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <span class="text-sm font-medium text-blue-900 dark:text-blue-100"
+                      x-text="selectedIds.length + ' geselecteerd'"></span>
+                <select name="status" required
+                        class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">Wijzig status naar...</option>
+                        <option value="draft">Concept</option>
+                        <option value="sent">Verzonden</option>
+                        <option value="paid">Betaald</option>
+                        <option value="overdue">Verlopen</option>
+                        <option value="cancelled">Geannuleerd</option>
+                </select>
+                <button type="submit"
+                        class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    Toepassen
+                </button>
+                <button type="button" @click="selectedIds = []"
+                        class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors">
+                    Selectie wissen
+                </button>
+            </form>
+
             {{-- Table --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 @if($invoices->count() > 0)
@@ -105,6 +136,12 @@
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
+                                    <th scope="col" class="px-4 py-3 w-4">
+                                        <input type="checkbox"
+                                               class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                                               :checked="selectedIds.length > 0 && selectedIds.length === {{ $invoices->count() }}"
+                                               @change='selectedIds = $event.target.checked ? {!! json_encode($invoices->pluck('id')->map(fn ($id) => (string) $id)) !!} : []'>
+                                    </th>
                                     <th scope="col" class="px-6 py-3"><x-sort-header column="invoice_number" label="Factuurnummer" :sort="$sort" :direction="$direction" /></th>
                                     <th scope="col" class="px-6 py-3"><x-sort-header column="customer_name" label="Klant" :sort="$sort" :direction="$direction" /></th>
                                     <th scope="col" class="px-6 py-3"><x-sort-header column="invoice_date" label="Datum" :sort="$sort" :direction="$direction" /></th>
@@ -127,6 +164,10 @@
                                     $_hasEmail = !empty($_cust->email);
                                 @endphp
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td class="px-4 py-4 w-4">
+                                        <input type="checkbox" value="{{ $invoice->id }}" x-model="selectedIds"
+                                               class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                    </td>
                                     <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                         {{ $invoice->invoice_number }}
                                     </td>

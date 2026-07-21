@@ -346,6 +346,33 @@ class QuoteController extends Controller
         return $pdf->stream($quote->quote_number . '-print.pdf');
     }
 
+    /**
+     * Bulk-status: meerdere offertes tegelijk van status wisselen.
+     * Tenant-scope op Quote beperkt de ids automatisch tot eigen offertes.
+     */
+    public function bulkStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'integer',
+            'status' => 'required|in:draft,sent,accepted,rejected,expired',
+        ]);
+
+        $status = $validated['status'];
+        $quotes = Quote::whereIn('id', $validated['ids'])->get();
+
+        foreach ($quotes as $quote) {
+            $quote->update([
+                'status'  => $status,
+                'sent_at' => $status === 'draft' ? null : ($quote->sent_at ?? now()),
+            ]);
+        }
+
+        $labels = ['draft' => 'Concept', 'sent' => 'Verzonden', 'accepted' => 'Geaccepteerd', 'rejected' => 'Afgewezen', 'expired' => 'Verlopen'];
+
+        return back()->with('success', $quotes->count() . ' offertes bijgewerkt naar "' . $labels[$status] . '".');
+    }
+
     public function convertToInvoice(Quote $quote)
     {
         $invoice = DB::transaction(function () use ($quote) {

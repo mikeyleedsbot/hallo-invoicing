@@ -512,6 +512,45 @@ class InvoiceController extends Controller
             ->with('success', 'Factuur gemarkeerd als betaald!');
     }
 
+    /**
+     * Bulk-status: meerdere facturen tegelijk van status wisselen.
+     * Tenant-scope op Invoice beperkt de ids automatisch tot eigen facturen.
+     */
+    public function bulkStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'integer',
+            'status' => 'required|in:draft,sent,paid,overdue,cancelled',
+        ]);
+
+        $status = $validated['status'];
+        $invoices = Invoice::whereIn('id', $validated['ids'])->get();
+
+        foreach ($invoices as $invoice) {
+            $invoice->update([
+                'status'  => $status,
+                // Zelfde datumgedrag als de losse acties: verzonden/betaald
+                // krijgen een datum als die er nog niet is; terug naar concept
+                // maakt ze weer leeg.
+                'sent_at' => match ($status) {
+                    'draft' => null,
+                    'sent', 'overdue', 'paid' => $invoice->sent_at ?? now(),
+                    default => $invoice->sent_at,
+                },
+                'paid_at' => match ($status) {
+                    'paid' => $invoice->paid_at ?? now(),
+                    'draft', 'sent', 'overdue' => null,
+                    default => $invoice->paid_at,
+                },
+            ]);
+        }
+
+        $labels = ['draft' => 'Concept', 'sent' => 'Verzonden', 'paid' => 'Betaald', 'overdue' => 'Verlopen', 'cancelled' => 'Geannuleerd'];
+
+        return back()->with('success', $invoices->count() . ' facturen bijgewerkt naar "' . $labels[$status] . '".');
+    }
+
     public function duplicate(Invoice $invoice)
     {
         // Volgend factuurnummer (prefix + teller uit instellingen)

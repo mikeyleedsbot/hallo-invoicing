@@ -92,6 +92,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::get('/quotes/{quote}/print',       [App\Http\Controllers\QuoteController::class, 'print'])->name('quotes.print');
     Route::post('/quotes/{quote}/convert',    [App\Http\Controllers\QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
     Route::post('/quotes/{quote}/mark-sent',  [App\Http\Controllers\QuoteController::class, 'markSent'])->name('quotes.mark-sent');
+    Route::post('/quotes/bulk-status',        [App\Http\Controllers\QuoteController::class, 'bulkStatus'])->name('quotes.bulk-status');
     Route::post('/quotes/{quote}/send-email', [App\Http\Controllers\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
 
     // Invoices
@@ -101,6 +102,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::get('/invoices/{invoice}/print',       [App\Http\Controllers\InvoiceController::class, 'print'])->name('invoices.print');
     Route::post('/invoices/{invoice}/mark-sent',  [App\Http\Controllers\InvoiceController::class, 'markSent'])->name('invoices.mark-sent');
     Route::post('/invoices/{invoice}/mark-paid',  [App\Http\Controllers\InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
+    Route::post('/invoices/bulk-status',          [App\Http\Controllers\InvoiceController::class, 'bulkStatus'])->name('invoices.bulk-status');
     Route::post('/invoices/{invoice}/duplicate',  [App\Http\Controllers\InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
     Route::post('/invoices/{invoice}/send-email', [App\Http\Controllers\InvoiceController::class, 'sendEmail'])->name('invoices.send-email');
 
