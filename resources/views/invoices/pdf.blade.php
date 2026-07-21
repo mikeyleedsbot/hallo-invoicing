@@ -350,7 +350,9 @@
                     <th style="width: 50%;">Omschrijving</th>
                     <th style="width: 12%; text-align: center;">Aantal</th>
                     <th style="width: 13%; text-align: right;">Prijs</th>
+                    @unless($invoice->vat_reverse_charged)
                     <th style="width: 10%; text-align: center;">BTW</th>
+                    @endunless
                     <th style="width: 15%; text-align: right;">Totaal</th>
                 </tr>
             </thead>
@@ -362,7 +364,9 @@
                     </td>
                     <td style="text-align: center;">{{ number_format($line->quantity, 0, ',', '.') }}</td>
                     <td style="text-align: right;">€ {{ number_format($line->unit_price, 2, ',', '.') }}</td>
+                    @unless($invoice->vat_reverse_charged)
                     <td style="text-align: center;">{{ $line->vat_rate }}%</td>
+                    @endunless
                     <td style="text-align: right;">€ {{ number_format($line->quantity * $line->unit_price, 2, ',', '.') }}</td>
                 </tr>
                 @endforeach
@@ -376,12 +380,14 @@
                     <td class="label">Subtotaal (excl. BTW)</td>
                     <td class="value">€ {{ number_format($invoice->subtotal, 2, ',', '.') }}</td>
                 </tr>
+                @unless($invoice->vat_reverse_charged)
                 <tr>
                     <td class="label">BTW</td>
                     <td class="value">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td>
                 </tr>
+                @endunless
                 <tr class="total-row">
-                    <td>TOTAAL (incl. BTW)</td>
+                    <td>{{ $invoice->vat_reverse_charged ? 'TOTAAL' : 'TOTAAL (incl. BTW)' }}</td>
                     <td>€ {{ number_format($invoice->total, 2, ',', '.') }}</td>
                 </tr>
             </table>

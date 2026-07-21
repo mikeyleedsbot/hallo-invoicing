@@ -211,13 +211,23 @@
                                                         </div>
                                                     </td>
                                                     <td class="pr-3 w-24">
-                                                        <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
-                                                            :disabled="vatReverseCharged"
-                                                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed">
-                                                            @foreach($vatRates as $vat)
-                                                                <option value="{{ (int)$vat->rate }}">{{ number_format($vat->rate, 0) }}%</option>
-                                                            @endforeach
-                                                        </select>
+                                                        {{-- Normaal: BTW-tarief aanpasbaar (0% blijft een geldige keuze) --}}
+                                                        <template x-if="!vatReverseCharged">
+                                                            <select :name="'lines[' + index + '][vat_rate]'" x-model="line.vat_rate" required
+                                                                class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                                @foreach($vatRates as $vat)
+                                                                    <option value="{{ (int)$vat->rate }}">{{ number_format($vat->rate, 0) }}%</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </template>
+                                                        {{-- BTW verlegd: niet aanpasbaar, oorspronkelijk tarief blijft wel bewaard --}}
+                                                        <template x-if="vatReverseCharged">
+                                                            <div>
+                                                                <input type="hidden" :name="'lines[' + index + '][vat_rate]'" :value="line.vat_rate">
+                                                                <span class="flex items-center justify-center w-full p-2.5 text-sm rounded-lg border border-dashed border-gray-300 bg-gray-100 text-gray-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 cursor-not-allowed"
+                                                                    title="BTW verlegd naar de afnemer">Verlegd</span>
+                                                            </div>
+                                                        </template>
                                                     </td>
                                                     <td class="w-12 text-center">
                                                         <button type="button" @click="removeLine(index)" :disabled="lines.length === 1"
@@ -252,7 +262,7 @@
                     <div class="flex-1">
                         <span class="text-sm font-medium text-gray-900 dark:text-white">BTW verlegd</span>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            Alle regels worden automatisch op 0% gezet en er wordt een opmerking toegevoegd met het BTW-nummer van de klant.
+                            Het BTW-tarief per regel wordt vastgezet op 'verlegd' en is niet meer aanpasbaar. Er wordt geen BTW berekend en er wordt een opmerking toegevoegd met het BTW-nummer van de klant.
                         </p>
                         <div x-show="vatReverseCharged && customerVatNumber()" x-cloak
                             class="mt-3 p-3 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">

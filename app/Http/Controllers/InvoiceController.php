@@ -495,10 +495,20 @@ class InvoiceController extends Controller
             'company_bic' => $company->bic ?? '',
             'company_bank' => $company->bank_name ?? '',
 
-            // Amounts (+ tax alias voor template-compatibiliteit)
+            // BTW verlegd: PDF toont geen BTW-kolommen/-bedrag, alle totalen zijn excl. BTW.
+            // De verplichte vermelding wordt altijd op de PDF gezet (los van 'notes').
+            'vat_reverse_charged' => (bool) $invoice->vat_reverse_charged,
+            'reverse_charge_note' => $invoice->vat_reverse_charged
+                ? 'BTW verlegd naar BTW-nummer afnemer'
+                    . (trim((string) $invoice->customer->vat_number) !== '' ? ': ' . trim($invoice->customer->vat_number) : '') . '.'
+                : '',
+
+            // Amounts (+ tax alias voor template-compatibiliteit).
+            // Bij verlegd is vat_amount 0 en total == subtotal; het BTW-bedrag
+            // wordt leeggelaten zodat er geen BTW op de factuur verschijnt.
             'subtotal' => '€ ' . number_format($invoice->subtotal, 2, ',', '.'),
-            'vat_amount' => '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
-            'tax' => '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
+            'vat_amount' => $invoice->vat_reverse_charged ? '' : '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
+            'tax' => $invoice->vat_reverse_charged ? '' : '€ ' . number_format($invoice->vat_amount, 2, ',', '.'),
             'total' => '€ ' . number_format($invoice->total, 2, ',', '.'),
 
             // Notes & items

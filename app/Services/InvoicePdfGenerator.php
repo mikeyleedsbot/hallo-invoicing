@@ -83,6 +83,19 @@ class InvoicePdfGenerator
         // áchter de tekstvelden renderen.
         $pos = $this->rectsFirst($pos);
 
+        // BTW verlegd: geen BTW-bedrag/-label tonen en "Totaal incl. BTW" wordt
+        // gewoon "Totaal" (alle bedragen zijn immers excl. BTW).
+        $reverseCharged = (bool) ($data['vat_reverse_charged'] ?? false);
+        if ($reverseCharged) {
+            unset($pos['static_text_lbl_tax'], $pos['tax'], $pos['vat_amount']);
+            foreach (['static_text_lbl_total' => 'Totaal:'] as $id => $txt) {
+                if (isset($pos[$id])) {
+                    $pos[$id]['staticText'] = $txt;
+                    $pos[$id]['label']      = $txt;
+                }
+            }
+        }
+
         $firstOnlyFields = [];  // alleen pagina 1
         $allPageFields   = [];  // elke pagina
         $lastOnlyFields  = [];  // alleen laatste pagina
@@ -202,35 +215,51 @@ body { font-family:Arial,sans-serif; }
                 }
             }
 
+            // Verplichte vermelding bij verlegde BTW — altijd op de laatste pagina,
+            // los van het notities-veld (dat niet elke template rendert).
+            if ($isLast && $reverseCharged && !empty($data['reverse_charge_note'])) {
+                $html .= sprintf(
+                    '<div class="abs" style="left:%smm;top:%smm;width:%smm;font-size:%spt;font-family:Arial;font-weight:bold;color:#78350f;border:1px solid #f59e0b;background-color:#fffbeb;padding:4px 8px;">%s</div>',
+                    $this->x(50), $this->y(862), $this->x(750), $this->pt(13),
+                    htmlspecialchars($data['reverse_charge_note'])
+                );
+            }
+
             // Tabelblok met rijen van deze pagina
             $html .= "<div class='tabel-blok'>";
             $html .= "<table class='items-table' style='font-size:{$tFontPt}pt;font-family:{$tFontFam};'>";
 
-            // Koptekst op elke pagina
+            // Koptekst op elke pagina (bij verlegd zonder BTW-kolommen)
+            $vatHeaders = $reverseCharged ? '' :
+                '<th style="text-align:right;width:52px;">BTW%</th>
+                <th style="text-align:right;width:52px;">BTW</th>';
             $html .= '<thead><tr>
                 <th style="text-align:left;">Omschrijving</th>
                 <th style="text-align:right;width:36px;">Aantal</th>
                 <th style="text-align:right;width:52px;">Prijs</th>
-                <th style="text-align:right;width:52px;">BTW%</th>
-                <th style="text-align:right;width:52px;">BTW</th>
+                ' . $vatHeaders . '
                 <th style="text-align:right;width:52px;">Totaal</th>
             </tr></thead><tbody>';
 
             foreach ($chunks[$page] as $item) {
                 $total = ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
+                $vatCells = $reverseCharged ? '' : sprintf(
+                    '<td style="text-align:right;">%s</td>
+                    <td style="text-align:right;">%s</td>',
+                    number_format($item['vat_rate'] ?? 0, 0, ',', '.') . "%",
+                    number_format($item['vat_total'] ?? 0, 2, ',', '.')
+                );
                 $html .= sprintf('<tr>
                     <td>%s</td>
                     <td style="text-align:right;">%s</td>
                     <td style="text-align:right;">€&nbsp;%s</td>
-                    <td style="text-align:right;">%s</td>
-                    <td style="text-align:right;">%s</td>
+                    %s
                     <td style="text-align:right;">€&nbsp;%s</td>
                 </tr>',
                     htmlspecialchars($item['description'] ?? ''),
                     number_format($item['quantity'] ?? 0, 0, ',', '.'),
                     number_format($item['price']    ?? 0, 2, ',', '.'),
-                    number_format($item['vat_rate'] ?? 0, 0, ',', '.') . "%",
-                    number_format($item['vat_total'] ?? 0, 2, ',', '.'),
+                    $vatCells,
                     number_format($total,               2, ',', '.')
                 );
             }

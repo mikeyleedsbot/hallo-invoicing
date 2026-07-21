@@ -228,7 +228,9 @@
                                         <th scope="col" class="px-6 py-3 text-left">Omschrijving</th>
                                         <th scope="col" class="px-6 py-3 text-center">Aantal</th>
                                         <th scope="col" class="px-6 py-3 text-right">Prijs</th>
+                                        @unless($invoice->vat_reverse_charged)
                                         <th scope="col" class="px-6 py-3 text-center">BTW</th>
+                                        @endunless
                                         <th scope="col" class="px-6 py-3 text-right">Totaal</th>
                                     </tr>
                                 </thead>
@@ -244,9 +246,11 @@
                                         <td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">
                                             € {{ number_format($line->unit_price, 2, ',', '.') }}
                                         </td>
+                                        @unless($invoice->vat_reverse_charged)
                                         <td class="px-6 py-4 text-center text-gray-700 dark:text-gray-300">
                                             {{ $line->vat_rate }}%
                                         </td>
+                                        @endunless
                                         <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">
                                             € {{ number_format($line->quantity * $line->unit_price, 2, ',', '.') }}
                                         </td>
@@ -276,10 +280,12 @@
                                 <span class="text-gray-700 dark:text-gray-300">Subtotaal (excl. BTW)</span>
                                 <span class="font-medium text-gray-900 dark:text-white">€ {{ number_format($invoice->subtotal, 2, ',', '.') }}</span>
                             </div>
+                            @unless($invoice->vat_reverse_charged)
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-700 dark:text-gray-300">BTW</span>
                                 <span class="font-medium text-gray-900 dark:text-white">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</span>
                             </div>
+                            @endunless
                             @if($invoice->vat_reverse_charged)
                             <div class="text-xs px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-100">
                                 <strong>BTW verlegd</strong> naar BTW-nummer afnemer{{ $invoice->customer->vat_number ? ': ' . $invoice->customer->vat_number : '' }}.
@@ -287,7 +293,7 @@
                             @endif
                             <div class="border-t-2 border-blue-300 dark:border-gray-600 pt-3">
                                 <div class="flex justify-between">
-                                    <span class="text-lg font-bold text-gray-900 dark:text-white">Totaal (incl. BTW)</span>
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white">{{ $invoice->vat_reverse_charged ? 'Totaal' : 'Totaal (incl. BTW)' }}</span>
                                     <span class="text-xl font-bold text-blue-700 dark:text-blue-400">€ {{ number_format($invoice->total, 2, ',', '.') }}</span>
                                 </div>
                             </div>
