@@ -32,6 +32,9 @@
         </div>
         @endif
 
+        {{-- Zoeken --}}
+        <x-search-bar :action="route('vat-rates.index')" :search="$search" placeholder="Zoek op naam of percentage..." />
+
         <!-- Tabel -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div class="overflow-x-auto">

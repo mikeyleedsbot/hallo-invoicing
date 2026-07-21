@@ -14,9 +14,20 @@ class VatRateController extends Controller
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'sort_order';
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
 
-        $vatRates = VatRate::orderBy($sort, $direction)->get();
+        $search = trim((string) $request->query('search', ''));
 
-        return view('vat-rates.index', compact('vatRates', 'sort', 'direction'));
+        $query = VatRate::orderBy($sort, $direction);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('rate', 'like', "%{$search}%");
+            });
+        }
+
+        $vatRates = $query->get();
+
+        return view('vat-rates.index', compact('vatRates', 'sort', 'direction', 'search'));
     }
 
     public function store(Request $request)

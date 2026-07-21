@@ -38,6 +38,9 @@
             </div>
         @endif
 
+        {{-- Zoeken --}}
+        <x-search-bar :action="route('customers.index')" :search="$search" placeholder="Zoek op naam, bedrijf, e-mail, telefoon of plaats..." />
+
         <!-- Table -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div class="overflow-x-auto">

@@ -14,13 +14,20 @@ class TemplateController extends Controller
     /**
      * Display a listing of templates.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $templates = InvoiceTemplate::orderBy('is_default', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $search = trim((string) $request->query('search', ''));
 
-        return view('templates.index', compact('templates'));
+        $query = InvoiceTemplate::orderBy('is_default', 'desc')
+            ->orderBy('created_at', 'desc');
+
+        if ($search !== '') {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $templates = $query->get();
+
+        return view('templates.index', compact('templates', 'search'));
     }
 
     /**

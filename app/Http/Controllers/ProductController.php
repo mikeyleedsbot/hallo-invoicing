@@ -14,9 +14,20 @@ class ProductController extends Controller
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'name';
         $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
 
-        $products = Product::orderBy($sort, $direction)->paginate(20)->withQueryString();
+        $search = trim((string) $request->query('search', ''));
 
-        return view('products.index', compact('products', 'sort', 'direction'));
+        $query = Product::orderBy($sort, $direction);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->paginate(20)->withQueryString();
+
+        return view('products.index', compact('products', 'sort', 'direction', 'search'));
     }
 
     public function store(Request $request)

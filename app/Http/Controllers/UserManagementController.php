@@ -12,18 +12,30 @@ use Illuminate\Validation\Rules\Password;
 
 class UserManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         abort_unless(Auth::user()->is_admin, 403);
 
-        $pendingUsers  = User::pending()->orderByDesc('created_at')->get();
-        $approvedUsers = User::approved()->orderBy('name')->get();
-        $rejectedUsers = User::rejected()->orderBy('name')->get();
+        $search = trim((string) $request->query('search', ''));
+
+        $applySearch = function ($query) use ($search) {
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+            return $query;
+        };
+
+        $pendingUsers  = $applySearch(User::pending())->orderByDesc('created_at')->get();
+        $approvedUsers = $applySearch(User::approved())->orderBy('name')->get();
+        $rejectedUsers = $applySearch(User::rejected())->orderBy('name')->get();
 
         // Backwards-compat: sommige oudere views verwachten nog 'users'.
         $users = $approvedUsers;
 
-        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers'));
+        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers', 'search'));
     }
 
     public function approve(User $user)

@@ -45,6 +45,9 @@
         </div>
         @endif
 
+        {{-- Zoeken --}}
+        <x-search-bar :action="route('users.index')" :search="$search" placeholder="Zoek op naam of e-mail..." />
+
         {{-- Aanvragen in behandeling --}}
         @if(isset($pendingUsers) && $pendingUsers->count() > 0)
         <div class="bg-white rounded-xl shadow-sm border border-amber-200 dark:bg-gray-800 dark:border-amber-800">

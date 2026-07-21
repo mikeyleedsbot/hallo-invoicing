@@ -37,6 +37,9 @@
         </div>
         @endif
 
+        {{-- Zoeken --}}
+        <x-search-bar :action="route('templates.index')" :search="$search" placeholder="Zoek op templatenaam..." />
+
         <!-- Templates Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($templates as $template)

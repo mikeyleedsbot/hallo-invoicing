@@ -34,6 +34,11 @@
             </div>
             @endif
 
+            {{-- Zoeken --}}
+            <div class="mb-4">
+                <x-search-bar :action="route('products.index')" :search="$search" placeholder="Zoek op naam of omschrijving..." />
+            </div>
+
             {{-- Table --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 @if($products->count() > 0)

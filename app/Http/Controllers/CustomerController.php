@@ -14,9 +14,23 @@ class CustomerController extends Controller
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'created_at';
         $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
 
-        $customers = Customer::orderBy($sort, $direction)->paginate(15)->withQueryString();
+        $search = trim((string) $request->query('search', ''));
 
-        return view('customers.index', compact('customers', 'sort', 'direction'));
+        $query = Customer::orderBy($sort, $direction);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $query->paginate(15)->withQueryString();
+
+        return view('customers.index', compact('customers', 'sort', 'direction', 'search'));
     }
 
     public function store(Request $request)
