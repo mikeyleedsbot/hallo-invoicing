@@ -18,6 +18,18 @@ class QuoteController extends Controller
 {
     public function index(Request $request)
     {
+        [$query, $filters, $sort, $direction] = $this->buildIndexQuery($request);
+
+        $quotes = $query->paginate(20)->withQueryString();
+
+        return view('quotes.index', compact('quotes', 'filters', 'sort', 'direction'));
+    }
+
+    /**
+     * Gedeelde query-opbouw voor index en export (zelfde filters/sortering).
+     */
+    private function buildIndexQuery(Request $request): array
+    {
         $filters = [
             'search'    => trim((string) $request->query('search', '')),
             'status'    => (string) $request->query('status', ''),
@@ -64,9 +76,48 @@ class QuoteController extends Controller
             $query->whereDate('quotes.quote_date', '<=', $filters['date_to']);
         }
 
-        $quotes = $query->paginate(20)->withQueryString();
+        return [$query, $filters, $sort, $direction];
+    }
 
-        return view('quotes.index', compact('quotes', 'filters', 'sort', 'direction'));
+    /**
+     * Exporteer de (gefilterde) offertelijst naar Excel — één rij per
+     * offerte met bedragen excl., btw en incl. (zonder artikelregels).
+     */
+    public function export(Request $request)
+    {
+        [$query] = $this->buildIndexQuery($request);
+        $quotes = $query->get();
+
+        $statusLabels = ['draft' => 'Concept', 'sent' => 'Verzonden', 'accepted' => 'Geaccepteerd', 'rejected' => 'Afgewezen', 'expired' => 'Verlopen'];
+
+        $rows = [[
+            'Offertenummer', 'Klant', 'Bedrijf', 'Offertedatum', 'Geldig tot',
+            'Status', 'Subtotaal excl. BTW', 'BTW', 'Totaal incl. BTW',
+            'Verzonden op', 'Opmerkingen',
+        ]];
+
+        foreach ($quotes as $quote) {
+            $rows[] = [
+                $quote->quote_number,
+                $quote->customer->name ?? '',
+                $quote->customer->company_name ?? '',
+                $quote->quote_date?->format('d-m-Y') ?? '',
+                $quote->valid_until?->format('d-m-Y') ?? '',
+                $statusLabels[$quote->status] ?? $quote->status,
+                (float) $quote->subtotal,
+                (float) $quote->vat_amount,
+                (float) $quote->total,
+                $quote->sent_at?->format('d-m-Y') ?? '',
+                $quote->notes ?? '',
+            ];
+        }
+
+        $xlsx = \App\Services\SimpleXlsxWriter::make($rows, 'Offertes');
+
+        return response($xlsx, 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="offertes-' . now()->format('Y-m-d') . '.xlsx"',
+        ]);
     }
 
     public function create()

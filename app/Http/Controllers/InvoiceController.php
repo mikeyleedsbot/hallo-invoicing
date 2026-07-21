@@ -20,6 +20,18 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
+        [$query, $filters, $sort, $direction] = $this->buildIndexQuery($request);
+
+        $invoices = $query->paginate(20)->withQueryString();
+
+        return view('invoices.index', compact('invoices', 'filters', 'sort', 'direction'));
+    }
+
+    /**
+     * Gedeelde query-opbouw voor index en export (zelfde filters/sortering).
+     */
+    private function buildIndexQuery(Request $request): array
+    {
         $filters = [
             'search'    => trim((string) $request->query('search', '')),
             'status'    => (string) $request->query('status', ''),
@@ -66,9 +78,55 @@ class InvoiceController extends Controller
             $query->whereDate('invoices.invoice_date', '<=', $filters['date_to']);
         }
 
-        $invoices = $query->paginate(20)->withQueryString();
+        return [$query, $filters, $sort, $direction];
+    }
 
-        return view('invoices.index', compact('invoices', 'filters', 'sort', 'direction'));
+    /**
+     * Exporteer de (gefilterde) factuurlijst naar Excel — één rij per
+     * factuur met bedragen excl., btw en incl. (zonder artikelregels).
+     */
+    public function export(Request $request)
+    {
+        [$query] = $this->buildIndexQuery($request);
+        $invoices = $query->get();
+
+        $statusLabels = ['draft' => 'Concept', 'sent' => 'Verzonden', 'paid' => 'Betaald', 'overdue' => 'Verlopen', 'cancelled' => 'Geannuleerd'];
+
+        // Referenties (offertenummer) in één query ophalen i.p.v. per factuur
+        $quoteRefs = \App\Models\Quote::whereIn('converted_invoice_id', $invoices->pluck('id'))
+            ->pluck('quote_number', 'converted_invoice_id');
+
+        $rows = [[
+            'Factuurnummer', 'Klant', 'Bedrijf', 'Factuurdatum', 'Vervaldatum',
+            'Status', 'Subtotaal excl. BTW', 'BTW', 'Totaal incl. BTW',
+            'BTW verlegd', 'Verzonden op', 'Betaald op', 'Referentie', 'Opmerkingen',
+        ]];
+
+        foreach ($invoices as $invoice) {
+            $rows[] = [
+                $invoice->invoice_number,
+                $invoice->customer->name ?? '',
+                $invoice->customer->company_name ?? '',
+                $invoice->invoice_date?->format('d-m-Y') ?? '',
+                $invoice->due_date?->format('d-m-Y') ?? '',
+                $statusLabels[$invoice->status] ?? $invoice->status,
+                (float) $invoice->subtotal,
+                (float) $invoice->vat_amount,
+                (float) $invoice->total,
+                $invoice->vat_reverse_charged ? 'Ja' : 'Nee',
+                $invoice->sent_at?->format('d-m-Y') ?? '',
+                $invoice->paid_at?->format('d-m-Y') ?? '',
+                isset($quoteRefs[$invoice->id]) ? 'Offerte ' . $quoteRefs[$invoice->id] : '',
+                $invoice->notes ?? '',
+            ];
+        }
+
+        $xlsx = \App\Services\SimpleXlsxWriter::make($rows, 'Facturen');
+
+        return response($xlsx, 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="facturen-' . now()->format('Y-m-d') . '.xlsx"',
+        ]);
     }
 
     public function create()

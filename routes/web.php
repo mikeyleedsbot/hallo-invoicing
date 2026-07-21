@@ -85,7 +85,8 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::post('/mailverbindingen/credentials/{provider}',                [App\Http\Controllers\MailConnectionController::class, 'saveCredentials'])->name('mail-connections.credentials.save');
     Route::delete('/mailverbindingen/credentials/{provider}',              [App\Http\Controllers\MailConnectionController::class, 'deleteCredentials'])->name('mail-connections.credentials.delete');
 
-    // Quotes
+    // Quotes (export vóór de resource, anders vangt {quote} het pad 'export' af)
+    Route::get('/quotes/export', [App\Http\Controllers\QuoteController::class, 'export'])->name('quotes.export');
     Route::resource('quotes', App\Http\Controllers\QuoteController::class);
     Route::get('/quotes/{quote}/pdf',         [App\Http\Controllers\QuoteController::class, 'pdf'])->name('quotes.pdf');
     Route::get('/quotes/{quote}/preview',     [App\Http\Controllers\QuoteController::class, 'preview'])->name('quotes.preview');
@@ -95,7 +96,8 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::post('/quotes/bulk-status',        [App\Http\Controllers\QuoteController::class, 'bulkStatus'])->name('quotes.bulk-status');
     Route::post('/quotes/{quote}/send-email', [App\Http\Controllers\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
 
-    // Invoices
+    // Invoices (export vóór de resource, anders vangt {invoice} het pad 'export' af)
+    Route::get('/invoices/export', [App\Http\Controllers\InvoiceController::class, 'export'])->name('invoices.export');
     Route::resource('invoices', App\Http\Controllers\InvoiceController::class);
     Route::get('/invoices/{invoice}/pdf',         [App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('/invoices/{invoice}/preview',     [App\Http\Controllers\InvoiceController::class, 'preview'])->name('invoices.preview');
