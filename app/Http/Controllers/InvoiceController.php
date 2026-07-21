@@ -463,34 +463,21 @@ class InvoiceController extends Controller
 
     public function print(Invoice $invoice)
     {
-        $invoice->load('customer', 'lines');
+        $invoice->load('customer', 'lines', 'template');
 
-        try {
-            $template = $invoice->template ?? InvoiceTemplate::getDefault();
-            $pdf = null;
-            if ($template) {
-                /** @var InvoicePdfGenerator $pdfGenerator */
-                $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
-                $pdfGenerator->withBackground = false;
-                $data = $this->prepareInvoiceData($invoice);
-                $pdf = $pdfGenerator->generateFromTemplateToHtml($template, $data);
-            }
-
-            if (is_null($pdf)) {
-                throw new \Exception('No template found to print invoice.');
-            }
-
-            return view('invoices.print', compact('invoice', 'pdf'));
+        // Exact dezelfde PDF als de download/preview, maar zonder
+        // achtergrond (voor printen op voorbedrukt briefpapier).
+        // Het logo blijft wél staan.
+        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
+            $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
+            $pdfGenerator->withBackground = false;
+            $pdf = $pdfGenerator->generateFromTemplate($template, $this->prepareInvoiceData($invoice));
+        } else {
+            $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
         }
-        catch (\Throwable $e) {
-            Log::error('Error while generating printable invoice', [
-                'exception' => $e->getMessage(),
-                'invoice_id' => $invoice->id
-            ]);
 
-            return back()
-                ->with('warning', 'Er is iets fout gegaan. Probeer het later opnieuw.');
-        }
+        return $pdf->stream($invoice->invoice_number . '-print.pdf');
     }
 
     public function markSent(Request $request, Invoice $invoice)

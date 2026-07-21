@@ -329,9 +329,21 @@ class QuoteController extends Controller
 
     public function print(Quote $quote)
     {
-        $quote->load('customer', 'lines');
+        $quote->load('customer', 'lines', 'template');
 
-        return view('quotes.print', compact('quote'));
+        // Exact dezelfde PDF als de download/preview, maar zonder
+        // achtergrond (voor printen op voorbedrukt briefpapier).
+        // Het logo blijft wél staan.
+        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        if ($template) {
+            $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
+            $pdfGenerator->withBackground = false;
+            $pdf = $pdfGenerator->generateFromTemplate($template, $this->prepareQuoteData($quote));
+        } else {
+            $pdf = Pdf::loadView('quotes.pdf', compact('quote'));
+        }
+
+        return $pdf->stream($quote->quote_number . '-print.pdf');
     }
 
     public function convertToInvoice(Quote $quote)
