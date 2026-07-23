@@ -257,7 +257,7 @@ body { font-family:Arial,sans-serif; }
                     <td style="text-align:right;">€&nbsp;%s</td>
                 </tr>',
                     htmlspecialchars($item['description'] ?? ''),
-                    number_format($item['quantity'] ?? 0, 0, ',', '.'),
+                    number_format($item['quantity'] ?? 0, 2, ',', '.'),
                     number_format($item['price']    ?? 0, 2, ',', '.'),
                     $vatCells,
                     number_format($total,               2, ',', '.')
