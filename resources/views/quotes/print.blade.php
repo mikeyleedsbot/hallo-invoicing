@@ -10,12 +10,12 @@
             .no-print {
                 display: none !important;
             }
-            
+
             body {
                 margin: 0;
                 padding: 20px;
             }
-            
+
             @page {
                 margin: 1cm;
             }
@@ -49,7 +49,7 @@
                         <p>+31 (0)30 123 4567</p>
                     </div>
                 </div>
-                
+
                 <div class="text-right">
                     <h1 class="text-4xl font-bold text-blue-900 mb-2">OFFERTE</h1>
                     <p class="text-xl font-semibold text-gray-600 mb-3">{{ $quote->quote_number }}</p>
@@ -88,7 +88,7 @@
                     @endif
                 </div>
             </div>
-            
+
             <div>
                 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Offertedetails</h3>
                 <div class="bg-gray-50 border-l-4 border-blue-600 p-4 space-y-2">
@@ -126,7 +126,7 @@
                         <td class="p-3">
                             <div class="font-semibold text-gray-900">{{ $line->description }}</div>
                         </td>
-                        <td class="p-3 text-center text-gray-700">{{ number_format($line->quantity, 0, ',', '.') }}</td>
+                        <td class="p-3 text-center text-gray-700">{{ number_format($line->quantity, 2, ',', '.') }}</td>
                         <td class="p-3 text-right text-gray-700">€ {{ number_format($line->unit_price, 2, ',', '.') }}</td>
                         <td class="p-3 text-center text-gray-700">{{ $line->vat_rate }}%</td>
                         <td class="p-3 text-right font-semibold text-gray-900">€ {{ number_format($line->quantity * $line->unit_price, 2, ',', '.') }}</td>

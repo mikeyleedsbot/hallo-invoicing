@@ -56,7 +56,7 @@
             this.showEmailModal = false;
         }
     }">
-        
+
             {{-- Header --}}
             <div class="mb-6">
                 {{-- Success Message --}}
@@ -241,7 +241,7 @@
                                             {{ $line->description }}
                                         </td>
                                         <td class="px-6 py-4 text-center text-gray-700 dark:text-gray-300">
-                                            {{ number_format($line->quantity, 0, ',', '.') }}
+                                            {{ number_format($line->quantity, 2, ',', '.') }}
                                         </td>
                                         <td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">
                                             € {{ number_format($line->unit_price, 2, ',', '.') }}
@@ -320,7 +320,7 @@
                                     Dupliceer Factuur
                                 </button>
                             </form>
-                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" 
+                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST"
                                 onsubmit="return confirm('Weet je zeker dat je deze factuur wilt verwijderen?');">
                                 @csrf
                                 @method('DELETE')
@@ -334,7 +334,7 @@
             </div>
 
         {{-- Markeer als Verzonden Modal --}}
-        <div x-show="showSentModal" 
+        <div x-show="showSentModal"
             x-cloak
             @click.self="showSentModal = false"
             class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80 z-50 flex items-center justify-center p-4">
@@ -373,7 +373,7 @@
         </div>
 
         {{-- Markeer als Betaald Modal --}}
-        <div x-show="showPaidModal" 
+        <div x-show="showPaidModal"
             x-cloak
             @click.self="showPaidModal = false"
             class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80 z-50 flex items-center justify-center p-4">

@@ -3,7 +3,7 @@
         showSentModal: false,
         sentDate: '{{ now()->format('Y-m-d') }}'
     }">
-        
+
             {{-- Header --}}
             <div class="mb-6">
                 {{-- Success Message --}}
@@ -205,7 +205,7 @@
                                             {{ $line->description }}
                                         </td>
                                         <td class="px-6 py-4 text-center text-gray-700 dark:text-gray-300">
-                                            {{ number_format($line->quantity, 0, ',', '.') }}
+                                            {{ number_format($line->quantity, 2, ',', '.') }}
                                         </td>
                                         <td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">
                                             € {{ number_format($line->unit_price, 2, ',', '.') }}
@@ -264,7 +264,7 @@
                                 Markeer als Verzonden
                             </button>
                             @endif
-                            
+
                             @if(!$quote->converted_invoice_id)
                             <form action="{{ route('quotes.convert', $quote) }}" method="POST" onsubmit="return confirm('Offerte omzetten naar factuur?');">
                                 @csrf
@@ -273,11 +273,11 @@
                                 </button>
                             </form>
                             @endif
-                            
+
                             <button class="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors">
                                 Dupliceer Offerte
                             </button>
-                            <form action="{{ route('quotes.destroy', $quote) }}" method="POST" 
+                            <form action="{{ route('quotes.destroy', $quote) }}" method="POST"
                                 onsubmit="return confirm('Weet je zeker dat je deze offerte wilt verwijderen?');">
                                 @csrf
                                 @method('DELETE')
@@ -291,7 +291,7 @@
             </div>
 
         {{-- Markeer als Verzonden Modal --}}
-        <div x-show="showSentModal" 
+        <div x-show="showSentModal"
             x-cloak
             @click.self="showSentModal = false"
             class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80 z-50 flex items-center justify-center p-4">
