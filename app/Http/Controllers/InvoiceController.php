@@ -134,8 +134,8 @@ class InvoiceController extends Controller
     {
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
-        $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
-        $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
+        $templates = InvoiceTemplate::orderBy('is_default_invoice', 'desc')->orderBy('name')->get();
+        $defaultTemplate = InvoiceTemplate::getDefaultForInvoices();
 
         // Volgend factuurnummer (prefix + teller uit instellingen)
         $invoiceNumber = AppSetting::get()->nextInvoiceNumber();
@@ -200,7 +200,7 @@ class InvoiceController extends Controller
             // Create invoice
             $invoice = Invoice::create([
                 'customer_id' => $validated['customer_id'],
-                'template_id' => $validated['template_id'] ?? InvoiceTemplate::where('is_default', true)->first()?->id,
+                'template_id' => $validated['template_id'] ?? InvoiceTemplate::getDefaultForInvoices()?->id,
                 'invoice_number' => $validated['invoice_number'],
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
@@ -241,7 +241,7 @@ class InvoiceController extends Controller
     {
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
-        $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
+        $templates = InvoiceTemplate::orderBy('is_default_invoice', 'desc')->orderBy('name')->get();
         $invoice->load('lines');
 
         $vatRates   = VatRate::ordered()->get();
@@ -303,7 +303,7 @@ class InvoiceController extends Controller
             // Update invoice
             $invoice->update([
                 'customer_id' => $validated['customer_id'],
-                'template_id' => $validated['template_id'] ?? InvoiceTemplate::where('is_default', true)->first()?->id,
+                'template_id' => $validated['template_id'] ?? InvoiceTemplate::getDefaultForInvoices()?->id,
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
                 'payment_terms' => $validated['payment_terms'] ?? 14,
@@ -349,7 +349,7 @@ class InvoiceController extends Controller
         $invoice->load('customer', 'lines', 'template');
 
         // Gekozen template, anders de standaardtemplate van het account
-        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        $template = $invoice->template ?? InvoiceTemplate::getDefaultForInvoices();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareInvoiceData($invoice);
@@ -366,7 +366,7 @@ class InvoiceController extends Controller
         $invoice->load('customer', 'lines', 'template');
 
         // Gekozen template, anders de standaardtemplate van het account
-        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        $template = $invoice->template ?? InvoiceTemplate::getDefaultForInvoices();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareInvoiceData($invoice);
@@ -397,7 +397,7 @@ class InvoiceController extends Controller
         }
 
         // PDF genereren (zelfde logica als de download)
-        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        $template = $invoice->template ?? InvoiceTemplate::getDefaultForInvoices();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $pdf = $pdfGenerator->generateFromTemplate($template, $this->prepareInvoiceData($invoice));
@@ -548,7 +548,7 @@ class InvoiceController extends Controller
         // Exact dezelfde PDF als de download/preview, maar zonder
         // achtergrond (voor printen op voorbedrukt briefpapier).
         // Het logo blijft wél staan.
-        $template = $invoice->template ?? InvoiceTemplate::getDefault();
+        $template = $invoice->template ?? InvoiceTemplate::getDefaultForInvoices();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $pdfGenerator->withBackground = false;

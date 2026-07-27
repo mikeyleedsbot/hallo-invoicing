@@ -18,7 +18,8 @@ class TemplateController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
 
-        $query = InvoiceTemplate::orderBy('is_default', 'desc')
+        $query = InvoiceTemplate::orderBy('is_default_invoice', 'desc')
+            ->orderBy('is_default_quote', 'desc')
             ->orderBy('created_at', 'desc');
 
         if ($search !== '') {
@@ -47,7 +48,8 @@ class TemplateController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'is_default' => 'boolean',
+            'is_default_invoice' => 'boolean',
+            'is_default_quote' => 'boolean',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB max
             'background' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB max
             'page_size' => 'nullable|string|in:A4,Letter',
@@ -68,7 +70,8 @@ class TemplateController extends Controller
 
         $template = InvoiceTemplate::create([
             'name' => $validated['name'],
-            'is_default' => $request->boolean('is_default'),
+            'is_default_invoice' => $request->boolean('is_default_invoice'),
+            'is_default_quote' => $request->boolean('is_default_quote'),
             'logo_path' => $logoPath,
             'background_path' => $backgroundPath,
             'page_size' => $validated['page_size'] ?? 'A4',
@@ -76,11 +79,7 @@ class TemplateController extends Controller
             'field_positions' => TemplatePresets::positions($validated['preset'] ?? 'klassiek'),
         ]);
 
-        // If marked as default, unset other defaults
-        if ($template->is_default) {
-            InvoiceTemplate::where('id', '!=', $template->id)
-                ->update(['is_default' => false]);
-        }
+        $this->clearOtherDefaults($template);
 
         return redirect()
             ->route('templates.index')
@@ -102,7 +101,8 @@ class TemplateController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'is_default' => 'boolean',
+            'is_default_invoice' => 'boolean',
+            'is_default_quote' => 'boolean',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB max
             'background' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB max
             'page_size' => 'nullable|string|in:A4,Letter',
@@ -143,18 +143,29 @@ class TemplateController extends Controller
         // Update basic fields
         $template->name = $validated['name'];
         $template->page_size = $validated['page_size'] ?? 'A4';
-        $template->is_default = $request->boolean('is_default');
+        $template->is_default_invoice = $request->boolean('is_default_invoice');
+        $template->is_default_quote = $request->boolean('is_default_quote');
         $template->save();
 
-        // If marked as default, unset other defaults
-        if ($template->is_default) {
-            InvoiceTemplate::where('id', '!=', $template->id)
-                ->update(['is_default' => false]);
-        }
+        $this->clearOtherDefaults($template);
 
         return redirect()
             ->route('templates.index')
             ->with('success', 'Template bijgewerkt!');
+    }
+
+    /**
+     * Er kan per documentsoort maar één standaard zijn: haal het vinkje bij
+     * de overige templates weg voor de soorten die deze template claimt.
+     */
+    private function clearOtherDefaults(InvoiceTemplate $template): void
+    {
+        foreach ([InvoiceTemplate::TYPE_INVOICE, InvoiceTemplate::TYPE_QUOTE] as $type) {
+            if ($template->isDefaultFor($type)) {
+                InvoiceTemplate::where('id', '!=', $template->id)
+                    ->update([InvoiceTemplate::defaultColumn($type) => false]);
+            }
+        }
     }
 
     /**
@@ -189,7 +200,7 @@ class TemplateController extends Controller
     public function destroy(InvoiceTemplate $template)
     {
         // Don't allow deleting the default template if it's the only one
-        if ($template->is_default && InvoiceTemplate::count() === 1) {
+        if (InvoiceTemplate::count() === 1) {
             return back()->with('error', 'Kan de enige template niet verwijderen!');
         }
 
@@ -203,11 +214,16 @@ class TemplateController extends Controller
 
         $template->delete();
 
-        // If this was the default, make another one default
-        if ($template->is_default) {
+        // Was dit de standaard voor een soort? Dan een andere aanwijzen,
+        // zodat er altijd een template klaarstaat.
+        foreach ([InvoiceTemplate::TYPE_INVOICE, InvoiceTemplate::TYPE_QUOTE] as $type) {
+            if (! $template->isDefaultFor($type)) {
+                continue;
+            }
+
             $newDefault = InvoiceTemplate::first();
             if ($newDefault) {
-                $newDefault->setAsDefault();
+                $newDefault->setAsDefaultFor($type);
             }
         }
 
@@ -217,13 +233,93 @@ class TemplateController extends Controller
     }
 
     /**
-     * Set a template as default.
+     * Maak deze template standaard voor facturen, offertes of beide.
      */
-    public function setDefault(InvoiceTemplate $template)
+    public function setDefault(Request $request, InvoiceTemplate $template)
     {
-        $template->setAsDefault();
+        $validated = $request->validate([
+            'type' => ['required', Rule::in([
+                InvoiceTemplate::TYPE_INVOICE,
+                InvoiceTemplate::TYPE_QUOTE,
+                'both',
+            ])],
+        ]);
 
-        return back()->with('success', 'Template is nu de standaard!');
+        $types = $validated['type'] === 'both'
+            ? [InvoiceTemplate::TYPE_INVOICE, InvoiceTemplate::TYPE_QUOTE]
+            : [$validated['type']];
+
+        foreach ($types as $type) {
+            $template->setAsDefaultFor($type);
+        }
+
+        $labels = [
+            InvoiceTemplate::TYPE_INVOICE => 'facturen',
+            InvoiceTemplate::TYPE_QUOTE   => 'offertes',
+        ];
+        $what = $validated['type'] === 'both'
+            ? 'facturen en offertes'
+            : $labels[$validated['type']];
+
+        return back()->with('success', "'{$template->name}' is nu de standaard voor {$what}.");
+    }
+
+    /**
+     * Dupliceer een template, inclusief lay-out en afbeeldingen.
+     */
+    public function duplicate(InvoiceTemplate $template)
+    {
+        $copy = $template->replicate(['is_default_invoice', 'is_default_quote']);
+        $copy->name = $this->copyName($template->name);
+
+        // Een kopie neemt de standaard-status niet over
+        $copy->is_default_invoice = false;
+        $copy->is_default_quote = false;
+
+        // Bestanden fysiek kopiëren: bij hergebruik van hetzelfde pad zou het
+        // verwijderen van de ene template het logo van de andere weggooien.
+        $copy->logo_path = $this->copyStoredFile($template->logo_path, 'template-files/logos');
+        $copy->background_path = $this->copyStoredFile($template->background_path, 'template-files/backgrounds');
+
+        $copy->save();
+
+        return redirect()
+            ->route('templates.index')
+            ->with('success', "Template gedupliceerd als '{$copy->name}'.");
+    }
+
+    /**
+     * Unieke naam voor een kopie: "Naam (kopie)", daarna "(kopie 2)" enz.
+     */
+    private function copyName(string $name): string
+    {
+        $base = preg_replace('/ \(kopie(?: \d+)?\)$/', '', $name);
+        $candidate = $base . ' (kopie)';
+
+        $counter = 2;
+        while (InvoiceTemplate::where('name', $candidate)->exists()) {
+            $candidate = $base . ' (kopie ' . $counter . ')';
+            $counter++;
+        }
+
+        return mb_substr($candidate, 0, 255);
+    }
+
+    /**
+     * Kopieer een opgeslagen bestand naar een nieuw pad in dezelfde map.
+     */
+    private function copyStoredFile(?string $path, string $directory): ?string
+    {
+        if (! $path || ! Storage::exists($path)) {
+            return null;
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $target = $directory . '/' . \Illuminate\Support\Str::random(40) . ($extension ? '.' . $extension : '');
+
+        Storage::copy($path, $target);
+
+        return $target;
     }
 
     /**

@@ -125,8 +125,8 @@ class QuoteController extends Controller
     {
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
-        $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
-        $defaultTemplate = InvoiceTemplate::where('is_default', true)->first();
+        $templates = InvoiceTemplate::orderBy('is_default_quote', 'desc')->orderBy('name')->get();
+        $defaultTemplate = InvoiceTemplate::getDefaultForQuotes();
 
         // Volgend offertenummer (prefix + teller uit instellingen)
         $quoteNumber = AppSetting::get()->nextQuoteNumber();
@@ -169,7 +169,7 @@ class QuoteController extends Controller
             // Create quote
             $quote = Quote::create([
                 'customer_id' => $validated['customer_id'],
-                'template_id' => $validated['template_id'] ?? InvoiceTemplate::where('is_default', true)->first()?->id,
+                'template_id' => $validated['template_id'] ?? InvoiceTemplate::getDefaultForQuotes()?->id,
                 'quote_number' => $validated['quote_number'],
                 'quote_date' => $validated['quote_date'],
                 'valid_until' => $validated['valid_until'],
@@ -209,7 +209,7 @@ class QuoteController extends Controller
     {
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
-        $templates = InvoiceTemplate::orderBy('is_default', 'desc')->orderBy('name')->get();
+        $templates = InvoiceTemplate::orderBy('is_default_quote', 'desc')->orderBy('name')->get();
         $quote->load('lines');
 
         $vatRates   = VatRate::ordered()->get();
@@ -251,7 +251,7 @@ class QuoteController extends Controller
             // Update quote
             $quote->update([
                 'customer_id' => $validated['customer_id'],
-                'template_id' => $validated['template_id'] ?? InvoiceTemplate::where('is_default', true)->first()?->id,
+                'template_id' => $validated['template_id'] ?? InvoiceTemplate::getDefaultForQuotes()?->id,
                 'quote_number' => $validated['quote_number'],
                 'quote_date' => $validated['quote_date'],
                 'valid_until' => $validated['valid_until'],
@@ -297,7 +297,7 @@ class QuoteController extends Controller
         $quote->load('customer', 'lines', 'template');
 
         // Gekozen template, anders de standaardtemplate van het account
-        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        $template = $quote->template ?? InvoiceTemplate::getDefaultForQuotes();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareQuoteData($quote);
@@ -314,7 +314,7 @@ class QuoteController extends Controller
         $quote->load('customer', 'lines', 'template');
 
         // Gekozen template, anders de standaardtemplate van het account
-        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        $template = $quote->template ?? InvoiceTemplate::getDefaultForQuotes();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $data = $this->prepareQuoteData($quote);
@@ -345,7 +345,7 @@ class QuoteController extends Controller
         }
 
         // PDF genereren (zelfde logica als de download)
-        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        $template = $quote->template ?? InvoiceTemplate::getDefaultForQuotes();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $pdf = $pdfGenerator->generateFromTemplate($template, $this->prepareQuoteData($quote));
@@ -384,7 +384,7 @@ class QuoteController extends Controller
         // Exact dezelfde PDF als de download/preview, maar zonder
         // achtergrond (voor printen op voorbedrukt briefpapier).
         // Het logo blijft wél staan.
-        $template = $quote->template ?? InvoiceTemplate::getDefault();
+        $template = $quote->template ?? InvoiceTemplate::getDefaultForQuotes();
         if ($template) {
             $pdfGenerator = app(\App\Services\InvoicePdfGenerator::class);
             $pdfGenerator->withBackground = false;

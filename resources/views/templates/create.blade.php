@@ -172,18 +172,41 @@
                 </div>
 
                 <!-- Set as Default -->
-                <div class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <input 
-                        type="checkbox" 
-                        id="is_default" 
-                        name="is_default" 
-                        value="1"
-                        {{ old('is_default') ? 'checked' : '' }}
-                        class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                    >
-                    <label for="is_default" class="text-sm text-gray-700 dark:text-gray-300">
-                        Deze template instellen als <strong>standaard</strong> voor nieuwe facturen
-                    </label>
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-3">
+                        Deze template instellen als <strong>standaard</strong> voor:
+                    </p>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="is_default_invoice"
+                                name="is_default_invoice"
+                                value="1"
+                                {{ old('is_default_invoice') ? 'checked' : '' }}
+                                class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                            >
+                            <label for="is_default_invoice" class="text-sm text-blue-900 dark:text-blue-100">
+                                Nieuwe <strong>facturen</strong>
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="is_default_quote"
+                                name="is_default_quote"
+                                value="1"
+                                {{ old('is_default_quote') ? 'checked' : '' }}
+                                class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                            >
+                            <label for="is_default_quote" class="text-sm text-blue-900 dark:text-blue-100">
+                                Nieuwe <strong>offertes</strong>
+                            </label>
+                        </div>
+                    </div>
+                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-3">
+                        Per soort kan er één standaardtemplate zijn; een eerdere standaard wordt vervangen.
+                    </p>
                 </div>
 
                 <!-- Actions -->

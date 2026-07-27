@@ -33,7 +33,8 @@ class InvoiceTemplateSeeder extends Seeder
         \DB::table('invoice_templates')->insert([
             'user_id' => $user->id,
             'name' => 'Standaard Template',
-            'is_default' => true,
+            'is_default_invoice' => true,
+            'is_default_quote' => true,
             'logo_path' => null,
             'background_path' => null,
             'page_size' => 'A4',
@@ -46,7 +47,8 @@ class InvoiceTemplateSeeder extends Seeder
         \DB::table('invoice_templates')->insert([
             'user_id' => $user->id,
             'name' => 'Modern Template',
-            'is_default' => false,
+            'is_default_invoice' => false,
+            'is_default_quote' => false,
             'logo_path' => null,
             'background_path' => null,
             'page_size' => 'A4',

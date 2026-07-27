@@ -115,6 +115,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     // Invoice Templates
     Route::resource('templates', App\Http\Controllers\TemplateController::class);
     Route::post('/templates/{template}/set-default',  [App\Http\Controllers\TemplateController::class, 'setDefault'])->name('templates.set-default');
+    Route::post('/templates/{template}/dupliceren',   [App\Http\Controllers\TemplateController::class, 'duplicate'])->name('templates.duplicate');
     Route::get('/templates/{template}/editor',        [App\Http\Controllers\TemplateController::class, 'editor'])->name('templates.editor');
     Route::post('/templates/{template}/positions',    [App\Http\Controllers\TemplateController::class, 'savePositions'])->name('templates.save-positions');
     Route::get('/templates/{template}/test-pdf',      [App\Http\Controllers\TemplateController::class, 'testPdf'])->name('templates.test-pdf');

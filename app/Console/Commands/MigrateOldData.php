@@ -611,7 +611,8 @@ class MigrateOldData extends Command
                 DB::table('invoice_templates')->insert([
                     'user_id'    => $newId,
                     'name'       => 'Standaard Template',
-                    'is_default' => true,
+                    'is_default_invoice' => true,
+                    'is_default_quote' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
