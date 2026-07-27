@@ -193,9 +193,9 @@
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left">Omschrijving</th>
                                         <th scope="col" class="px-6 py-3 text-center">Aantal</th>
-                                        <th scope="col" class="px-6 py-3 text-right">Prijs</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Prijs{{ $quote->prices_include_vat ? ' incl.' : '' }}</th>
                                         <th scope="col" class="px-6 py-3 text-center">BTW</th>
-                                        <th scope="col" class="px-6 py-3 text-right">Totaal</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Totaal{{ $quote->prices_include_vat ? ' incl.' : '' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

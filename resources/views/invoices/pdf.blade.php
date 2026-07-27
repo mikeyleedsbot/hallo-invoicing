@@ -349,11 +349,11 @@
                 <tr>
                     <th style="width: 50%;">Omschrijving</th>
                     <th style="width: 12%; text-align: center;">Aantal</th>
-                    <th style="width: 13%; text-align: right;">Prijs</th>
+                    <th style="width: 13%; text-align: right;">Prijs{{ $invoice->prices_include_vat ? ' incl.' : '' }}</th>
                     @unless($invoice->vat_reverse_charged)
                     <th style="width: 10%; text-align: center;">BTW</th>
                     @endunless
-                    <th style="width: 15%; text-align: right;">Totaal</th>
+                    <th style="width: 15%; text-align: right;">Totaal{{ $invoice->prices_include_vat ? ' incl.' : '' }}</th>
                 </tr>
             </thead>
             <tbody>

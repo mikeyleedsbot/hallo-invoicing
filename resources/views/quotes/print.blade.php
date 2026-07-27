@@ -115,9 +115,9 @@
                     <tr class="bg-blue-900 text-white">
                         <th class="text-left p-3 text-xs font-bold uppercase tracking-wide">Omschrijving</th>
                         <th class="text-center p-3 text-xs font-bold uppercase tracking-wide">Aantal</th>
-                        <th class="text-right p-3 text-xs font-bold uppercase tracking-wide">Prijs</th>
+                        <th class="text-right p-3 text-xs font-bold uppercase tracking-wide">Prijs{{ $quote->prices_include_vat ? ' incl.' : '' }}</th>
                         <th class="text-center p-3 text-xs font-bold uppercase tracking-wide">BTW</th>
-                        <th class="text-right p-3 text-xs font-bold uppercase tracking-wide">Totaal</th>
+                        <th class="text-right p-3 text-xs font-bold uppercase tracking-wide">Totaal{{ $quote->prices_include_vat ? ' incl.' : '' }}</th>
                     </tr>
                 </thead>
                 <tbody>

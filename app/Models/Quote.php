@@ -35,6 +35,7 @@ class Quote extends Model
         'converted_invoice_id',
         'converted_at',
         'sent_at',
+        'prices_include_vat',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class Quote extends Model
         'total' => 'decimal:2',
         'valid_days' => 'integer',
         'converted_at' => 'datetime',
+        'prices_include_vat' => 'boolean',
     ];
 
     public function customer(): BelongsTo

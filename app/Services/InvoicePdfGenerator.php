@@ -229,16 +229,18 @@ body { font-family:Arial,sans-serif; }
             $html .= "<div class='tabel-blok'>";
             $html .= "<table class='items-table' style='font-size:{$tFontPt}pt;font-family:{$tFontFam};'>";
 
-            // Koptekst op elke pagina (bij verlegd zonder BTW-kolommen)
+            // Koptekst op elke pagina (bij verlegd zonder BTW-kolommen).
+            // Zijn de bedragen inclusief BTW ingevoerd, dan staat dat in de kop.
             $vatHeaders = $reverseCharged ? '' :
                 '<th style="text-align:right;width:52px;">BTW%</th>
                 <th style="text-align:right;width:52px;">BTW</th>';
+            $amountSuffix = (! $reverseCharged && ! empty($data['prices_include_vat'])) ? ' incl.' : '';
             $html .= '<thead><tr>
                 <th style="text-align:left;">Omschrijving</th>
                 <th style="text-align:right;width:36px;">Aantal</th>
-                <th style="text-align:right;width:52px;">Prijs</th>
+                <th style="text-align:right;width:52px;">Prijs' . $amountSuffix . '</th>
                 ' . $vatHeaders . '
-                <th style="text-align:right;width:52px;">Totaal</th>
+                <th style="text-align:right;width:52px;">Totaal' . $amountSuffix . '</th>
             </tr></thead><tbody>';
 
             foreach ($chunks[$page] as $item) {

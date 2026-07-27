@@ -187,6 +187,11 @@
                                     </td>
                                     <td class="px-6 py-4 font-medium">
                                         € {{ number_format($invoice->total, 2, ',', '.') }}
+                                        {{-- Het totaal is altijd inclusief BTW, behalve bij verlegde BTW
+                                             (dan wordt er geen BTW in rekening gebracht) --}}
+                                        <span class="block text-xs font-normal text-gray-500 dark:text-gray-400">
+                                            {{ $invoice->vat_reverse_charged ? 'BTW verlegd' : 'incl. BTW' }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4">
                                         @php

@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\InvoiceTemplate;
 use App\Models\VatRate;
 use App\Services\InvoicePdfGenerator;
+use App\Services\VatCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -156,6 +157,7 @@ class InvoiceController extends Controller
             'payment_terms' => 'nullable|integer',
             'notes' => 'nullable|string',
             'vat_reverse_charged' => 'nullable|boolean',
+            'prices_include_vat' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric',
@@ -164,6 +166,10 @@ class InvoiceController extends Controller
         ]);
 
         $reverseCharged = (bool) ($validated['vat_reverse_charged'] ?? false);
+
+        // Bij verlegde BTW wordt er geen BTW berekend, dus inclusief invoeren
+        // heeft geen betekenis: dan zijn de bedragen altijd exclusief.
+        $pricesIncludeVat = ! $reverseCharged && (bool) ($validated['prices_include_vat'] ?? false);
 
         if ($reverseCharged) {
             $customer = Customer::find($validated['customer_id']);
@@ -181,21 +187,15 @@ class InvoiceController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, $reverseCharged) {
-            // Calculate totals (originele vat_rates blijven op de regels staan,
-            // maar als BTW verlegd is wordt er geen BTW berekend op het totaal)
-            $subtotal = 0;
-            $totalVat = 0;
+        DB::transaction(function () use ($validated, $reverseCharged, $pricesIncludeVat) {
+            // Totalen (originele vat_rates blijven op de regels staan; bij verlegde
+            // BTW wordt er geen BTW berekend, bij inclusieve invoer wordt de BTW
+            // uit de bedragen gehaald in plaats van erbij opgeteld)
+            $totals = VatCalculator::totals($validated['lines'], $pricesIncludeVat, $reverseCharged);
 
-            foreach ($validated['lines'] as $line) {
-                $lineTotal = $line['quantity'] * $line['unit_price'];
-                $subtotal += $lineTotal;
-                if (! $reverseCharged) {
-                    $totalVat += $lineTotal * ($line['vat_rate'] / 100);
-                }
-            }
-
-            $total = $subtotal + $totalVat;
+            $subtotal = $totals['subtotal'];
+            $totalVat = $totals['vat_amount'];
+            $total    = $totals['total'];
 
             // Create invoice
             $invoice = Invoice::create([
@@ -209,18 +209,19 @@ class InvoiceController extends Controller
                 'vat_amount' => $totalVat,
                 'total' => $total,
                 'status' => 'draft',
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
                 'vat_reverse_charged' => $reverseCharged,
+                'prices_include_vat' => $pricesIncludeVat,
             ]);
 
-            // Create invoice lines
+            // Create invoice lines (unit_price/total zoals ingevoerd: excl. of incl. BTW)
             foreach ($validated['lines'] as $line) {
                 $invoice->lines()->create([
                     'description' => $line['description'],
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
                     'vat_rate' => $line['vat_rate'] ?? 0,
-                    'total' => $line['quantity'] * $line['unit_price'],
+                    'total' => round($line['quantity'] * $line['unit_price'], 2),
                 ]);
             }
         });
@@ -260,6 +261,7 @@ class InvoiceController extends Controller
             'notes' => 'nullable|string',
             'status' => 'required|in:draft,sent,paid,overdue,cancelled',
             'vat_reverse_charged' => 'nullable|boolean',
+            'prices_include_vat' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric',
@@ -268,6 +270,10 @@ class InvoiceController extends Controller
         ]);
 
         $reverseCharged = (bool) ($validated['vat_reverse_charged'] ?? false);
+
+        // Bij verlegde BTW wordt er geen BTW berekend, dus inclusief invoeren
+        // heeft geen betekenis: dan zijn de bedragen altijd exclusief.
+        $pricesIncludeVat = ! $reverseCharged && (bool) ($validated['prices_include_vat'] ?? false);
 
         if ($reverseCharged) {
             $customer = Customer::find($validated['customer_id']);
@@ -284,21 +290,15 @@ class InvoiceController extends Controller
             }
         }
 
-        DB::transaction(function () use ($validated, $invoice, $reverseCharged) {
-            // Calculate totals (originele vat_rates blijven op de regels staan,
-            // maar als BTW verlegd is wordt er geen BTW berekend op het totaal)
-            $subtotal = 0;
-            $totalVat = 0;
+        DB::transaction(function () use ($validated, $invoice, $reverseCharged, $pricesIncludeVat) {
+            // Totalen (originele vat_rates blijven op de regels staan; bij verlegde
+            // BTW wordt er geen BTW berekend, bij inclusieve invoer wordt de BTW
+            // uit de bedragen gehaald in plaats van erbij opgeteld)
+            $totals = VatCalculator::totals($validated['lines'], $pricesIncludeVat, $reverseCharged);
 
-            foreach ($validated['lines'] as $line) {
-                $lineTotal = $line['quantity'] * $line['unit_price'];
-                $subtotal += $lineTotal;
-                if (! $reverseCharged) {
-                    $totalVat += $lineTotal * ($line['vat_rate'] / 100);
-                }
-            }
-
-            $total = $subtotal + $totalVat;
+            $subtotal = $totals['subtotal'];
+            $totalVat = $totals['vat_amount'];
+            $total    = $totals['total'];
 
             // Update invoice
             $invoice->update([
@@ -311,8 +311,9 @@ class InvoiceController extends Controller
                 'vat_amount' => $totalVat,
                 'total' => $total,
                 'status' => $validated['status'],
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
                 'vat_reverse_charged' => $reverseCharged,
+                'prices_include_vat' => $pricesIncludeVat,
             ]);
 
             // Delete old lines and create new ones
@@ -324,7 +325,7 @@ class InvoiceController extends Controller
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
                     'vat_rate' => $line['vat_rate'],
-                    'total' => $line['quantity'] * $line['unit_price'],
+                    'total' => round($line['quantity'] * $line['unit_price'], 2),
                 ]);
             }
         });
@@ -516,14 +517,25 @@ class InvoiceController extends Controller
             'payment_terms' => $paymentTerms,
             'thank_you' => '',
             'invoice_footer' => $company->invoice_footer ?? '',
-            'items_table' => $invoice->lines->map(function($line) {
+            // Bedragen op de regels staan zoals ingevoerd (excl. of incl. BTW);
+            // de BTW per regel wordt daaruit afgeleid.
+            'prices_include_vat' => (bool) $invoice->prices_include_vat,
+            'items_table' => $invoice->lines->map(function ($line) use ($invoice) {
+                $amounts = VatCalculator::line(
+                    (float) $line->quantity,
+                    (float) $line->unit_price,
+                    (float) $line->vat_rate,
+                    (bool) $invoice->prices_include_vat,
+                    (bool) $invoice->vat_reverse_charged
+                );
+
                 return [
                     'description' => $line->description,
                     'quantity' => $line->quantity,
                     'price' => $line->unit_price,
                     'vat_rate' => $line->vat_rate,
-                    'vat_total' => $line->unit_price * $line->quantity * ($line->vat_rate / 100),
-                    'total' => ($line->unit_price * $line->quantity) + ($line->unit_price * $line->quantity * ($line->vat_rate / 100)),
+                    'vat_total' => $amounts['vat'],
+                    'total' => $invoice->prices_include_vat ? $amounts['incl'] : $amounts['excl'],
                 ];
             })->toArray(),
         ];

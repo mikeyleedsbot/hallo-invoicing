@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Invoice;
 use App\Models\InvoiceTemplate;
 use App\Models\VatRate;
+use App\Services\VatCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -146,6 +147,7 @@ class QuoteController extends Controller
             'valid_until' => 'required|date|after_or_equal:quote_date',
             'valid_days' => 'nullable|integer',
             'notes' => 'nullable|string',
+            'prices_include_vat' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric',
@@ -153,19 +155,16 @@ class QuoteController extends Controller
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            // Calculate totals
-            $subtotal = 0;
-            $totalVat = 0;
+        $pricesIncludeVat = (bool) ($validated['prices_include_vat'] ?? false);
 
-            foreach ($validated['lines'] as $line) {
-                $lineTotal = $line['quantity'] * $line['unit_price'];
-                $lineVat = $lineTotal * ($line['vat_rate'] / 100);
-                $subtotal += $lineTotal;
-                $totalVat += $lineVat;
-            }
+        DB::transaction(function () use ($validated, $pricesIncludeVat) {
+            // Totalen (bij inclusieve invoer wordt de BTW uit de bedragen
+            // gehaald in plaats van erbij opgeteld)
+            $totals = VatCalculator::totals($validated['lines'], $pricesIncludeVat);
 
-            $total = $subtotal + $totalVat;
+            $subtotal = $totals['subtotal'];
+            $totalVat = $totals['vat_amount'];
+            $total    = $totals['total'];
 
             // Create quote
             $quote = Quote::create([
@@ -179,17 +178,18 @@ class QuoteController extends Controller
                 'vat_amount' => $totalVat,
                 'total' => $total,
                 'status' => 'draft',
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
+                'prices_include_vat' => $pricesIncludeVat,
             ]);
 
-            // Create quote lines
+            // Create quote lines (unit_price/total zoals ingevoerd: excl. of incl. BTW)
             foreach ($validated['lines'] as $line) {
                 $quote->lines()->create([
                     'description' => $line['description'],
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
                     'vat_rate' => $line['vat_rate'],
-                    'total' => $line['quantity'] * $line['unit_price'],
+                    'total' => round($line['quantity'] * $line['unit_price'], 2),
                 ]);
             }
         });
@@ -229,6 +229,7 @@ class QuoteController extends Controller
             'valid_days' => 'nullable|integer',
             'notes' => 'nullable|string',
             'status' => 'required|in:draft,sent,accepted,rejected,expired',
+            'prices_include_vat' => 'nullable|boolean',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string',
             'lines.*.quantity' => 'required|numeric',
@@ -236,19 +237,16 @@ class QuoteController extends Controller
             'lines.*.vat_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        DB::transaction(function () use ($validated, $quote) {
-            // Calculate totals
-            $subtotal = 0;
-            $totalVat = 0;
+        $pricesIncludeVat = (bool) ($validated['prices_include_vat'] ?? false);
 
-            foreach ($validated['lines'] as $line) {
-                $lineTotal = $line['quantity'] * $line['unit_price'];
-                $lineVat = $lineTotal * ($line['vat_rate'] / 100);
-                $subtotal += $lineTotal;
-                $totalVat += $lineVat;
-            }
+        DB::transaction(function () use ($validated, $quote, $pricesIncludeVat) {
+            // Totalen (bij inclusieve invoer wordt de BTW uit de bedragen
+            // gehaald in plaats van erbij opgeteld)
+            $totals = VatCalculator::totals($validated['lines'], $pricesIncludeVat);
 
-            $total = $subtotal + $totalVat;
+            $subtotal = $totals['subtotal'];
+            $totalVat = $totals['vat_amount'];
+            $total    = $totals['total'];
 
             // Update quote
             $quote->update([
@@ -262,7 +260,8 @@ class QuoteController extends Controller
                 'vat_amount' => $totalVat,
                 'total' => $total,
                 'status' => $validated['status'],
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
+                'prices_include_vat' => $pricesIncludeVat,
             ]);
 
             // Delete old lines and create new ones
@@ -274,7 +273,7 @@ class QuoteController extends Controller
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
                     'vat_rate' => $line['vat_rate'],
-                    'total' => $line['quantity'] * $line['unit_price'],
+                    'total' => round($line['quantity'] * $line['unit_price'], 2),
                 ]);
             }
         });
@@ -443,6 +442,9 @@ class QuoteController extends Controller
                 'total' => $quote->total,
                 'status' => 'draft',
                 'notes' => $quote->notes,
+                // Invoerwijze meenemen, anders krijgen de regelbedragen op de
+                // factuur een andere betekenis dan op de offerte
+                'prices_include_vat' => $quote->prices_include_vat,
             ]);
 
             // Copy quote lines to invoice lines
@@ -534,12 +536,24 @@ class QuoteController extends Controller
             'payment_terms' => $paymentTerms,
             'thank_you' => '',
             'invoice_footer' => $company->invoice_footer ?? '',
-            'items_table' => $quote->lines->map(function($line) {
+            // Bedragen op de regels staan zoals ingevoerd (excl. of incl. BTW);
+            // de BTW per regel wordt daaruit afgeleid.
+            'prices_include_vat' => (bool) $quote->prices_include_vat,
+            'items_table' => $quote->lines->map(function ($line) use ($quote) {
+                $amounts = VatCalculator::line(
+                    (float) $line->quantity,
+                    (float) $line->unit_price,
+                    (float) $line->vat_rate,
+                    (bool) $quote->prices_include_vat
+                );
+
                 return [
                     'description' => $line->description,
                     'quantity' => $line->quantity,
                     'price' => $line->unit_price,
                     'vat_rate' => $line->vat_rate,
+                    'vat_total' => $amounts['vat'],
+                    'total' => $quote->prices_include_vat ? $amounts['incl'] : $amounts['excl'],
                 ];
             })->toArray(),
         ];

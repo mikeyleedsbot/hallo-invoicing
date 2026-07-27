@@ -35,7 +35,7 @@
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-sm border border-blue-200 dark:border-gray-600 p-6">
                 <div class="grid grid-cols-3 gap-6">
                     <div class="text-center">
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Subtotaal</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Subtotaal (excl. BTW)</div>
                         <div class="text-2xl font-bold text-gray-900 dark:text-white" x-text="formatCurrency(subtotal)">€ 0,00</div>
                     </div>
                     <div class="text-center">
@@ -43,7 +43,7 @@
                         <div class="text-2xl font-bold text-gray-900 dark:text-white" x-text="formatCurrency(vatAmount)">€ 0,00</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Totaal</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1" x-text="vatReverseCharged ? 'Totaal' : 'Totaal (incl. BTW)'">Totaal (incl. BTW)</div>
                         <div class="text-3xl font-bold text-blue-600 dark:text-blue-400" x-text="formatCurrency(total)">€ 0,00</div>
                     </div>
                 </div>
@@ -164,11 +164,43 @@
                                 </div>
                                 <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 ml-4 whitespace-nowrap">
                                     € {{ number_format($product->price, 2, ',', '.') }}
+                                    <span class="block text-xs font-normal text-gray-500 dark:text-gray-400">excl. BTW</span>
                                 </div>
                             </button>
                             @endforeach
                             <p x-show="!hasVisibleProducts()" class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Geen producten gevonden.</p>
                         </div>
+                    </div>
+                </div>
+
+                {{-- Invoerwijze: zijn de ingevoerde bedragen excl. of incl. BTW? --}}
+                <input type="hidden" name="prices_include_vat" :value="pricesIncludeVat ? 1 : 0">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                    <div>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">Bedragen invoeren</span>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+                            x-text="vatReverseCharged
+                                ? 'BTW is verlegd: er wordt geen BTW berekend, bedragen zijn exclusief BTW.'
+                                : (pricesIncludeVat
+                                    ? 'De prijzen die je invult zijn inclusief BTW; de BTW wordt eruit gerekend.'
+                                    : 'De prijzen die je invult zijn exclusief BTW; de BTW wordt erbij gerekend.')"></p>
+                    </div>
+                    <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-500 overflow-hidden"
+                        :class="vatReverseCharged ? 'opacity-60' : ''">
+                        <button type="button" @click="pricesIncludeVat = false" :disabled="vatReverseCharged"
+                            class="px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed"
+                            :class="!pricesIncludeVat
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'">
+                            Excl. BTW
+                        </button>
+                        <button type="button" @click="pricesIncludeVat = true" :disabled="vatReverseCharged"
+                            class="px-4 py-2 text-sm font-medium border-l border-gray-300 dark:border-gray-500 transition-colors disabled:cursor-not-allowed"
+                            :class="pricesIncludeVat && !vatReverseCharged
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'">
+                            Incl. BTW
+                        </button>
                     </div>
                 </div>
 
@@ -178,7 +210,8 @@
                             <tr class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
                                 <th class="text-left pb-2">Omschrijving</th>
                                 <th class="text-left pb-2 w-28">Aantal</th>
-                                <th class="text-left pb-2 w-32">Prijs/stuk</th>
+                                <th class="text-left pb-2 w-32"
+                                    x-text="pricesIncludeVat && !vatReverseCharged ? 'Prijs/stuk incl.' : 'Prijs/stuk excl.'">Prijs/stuk excl.</th>
                                 <th class="text-left pb-2 w-24">BTW%</th>
                                 <th class="text-center pb-2 w-12"></th>
                             </tr>
@@ -241,7 +274,8 @@
                                                 </tr>
                                             </table>
                                             <div class="mt-2 pt-2 border-t border-gray-300 dark:border-gray-600 text-right">
-                                                <span class="text-xs text-gray-600 dark:text-gray-400">Regeltotaal: </span>
+                                                <span class="text-xs text-gray-600 dark:text-gray-400"
+                                                    x-text="(pricesIncludeVat && !vatReverseCharged ? 'Regeltotaal incl. BTW' : 'Regeltotaal excl. BTW') + ': '">Regeltotaal: </span>
                                                 <span class="text-sm font-bold text-gray-900 dark:text-white" x-text="formatCurrency(lineTotal(line))">€ 0,00</span>
                                             </div>
                                         </div>
@@ -310,6 +344,7 @@
                 productSearch: '',
                 customerId: '{{ $invoice->customer_id }}',
                 vatReverseCharged: {{ $invoice->vat_reverse_charged ? 'true' : 'false' }},
+                pricesIncludeVat: {{ $invoice->prices_include_vat ? 'true' : 'false' }},
                 customers: @json($customers->pluck('vat_number', 'id')),
                 lines: invoiceLines.map(line => ({
                     description: line.description,
@@ -332,26 +367,41 @@
                     // Originele BTW-percentages blijven staan; berekening negeert ze als verlegd.
                 },
 
+                // Zelfde afronding als PHP's round(): halve centen van nul af
+                round2(value) {
+                    return Math.sign(value) * Math.round(Math.abs(value) * 100) / 100;
+                },
+
+                // Spiegelt App\Services\VatCalculator::line() — de server rekent
+                // bij het opslaan opnieuw en is leidend.
+                lineAmounts(line) {
+                    const rate = this.vatReverseCharged ? 0 : Math.max(0, parseFloat(line.vat_rate) || 0);
+                    const lineTotal = this.lineTotal(line);
+
+                    if (this.pricesIncludeVat && !this.vatReverseCharged) {
+                        const excl = this.round2(lineTotal / (1 + rate / 100));
+                        return { excl: excl, vat: this.round2(lineTotal - excl), incl: lineTotal };
+                    }
+
+                    const vat = this.round2(lineTotal * rate / 100);
+                    return { excl: lineTotal, vat: vat, incl: this.round2(lineTotal + vat) };
+                },
+
                 get subtotal() {
-                    return this.lines.reduce((sum, line) => {
-                        return sum + this.lineTotal(line);
-                    }, 0);
+                    return this.round2(this.lines.reduce((sum, line) => sum + this.lineAmounts(line).excl, 0));
                 },
 
                 get vatAmount() {
-                    if (this.vatReverseCharged) return 0;
-                    return this.lines.reduce((sum, line) => {
-                        const lineTotal = this.lineTotal(line);
-                        return sum + (lineTotal * (parseFloat(line.vat_rate) / 100));
-                    }, 0);
+                    return this.round2(this.lines.reduce((sum, line) => sum + this.lineAmounts(line).vat, 0));
                 },
 
                 get total() {
-                    return this.subtotal + this.vatAmount;
+                    return this.round2(this.subtotal + this.vatAmount);
                 },
 
+                // Regeltotaal in de ingevoerde vorm (excl. of incl. BTW)
                 lineTotal(line) {
-                    return parseFloat(line.quantity || 0) * parseFloat(line.unit_price || 0);
+                    return this.round2((parseFloat(line.quantity) || 0) * (parseFloat(line.unit_price) || 0));
                 },
 
                 formatCurrency(amount) {
@@ -368,11 +418,17 @@
                 },
 
                 addProduct(product) {
+                    const vatRate = {{ $defaultVat }};
+                    // Productprijzen staan exclusief BTW; bij inclusieve invoer omrekenen
+                    const unitPrice = this.pricesIncludeVat && !this.vatReverseCharged
+                        ? this.round2(product.unit_price * (1 + vatRate / 100))
+                        : product.unit_price;
+
                     this.lines.push({
                         description: product.description,
                         quantity: product.quantity,
-                        unit_price: product.unit_price,
-                        vat_rate: {{ $defaultVat }}
+                        unit_price: unitPrice,
+                        vat_rate: vatRate
                     });
                     this.showProductModal = false;
                     this.productSearch = '';

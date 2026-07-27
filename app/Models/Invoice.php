@@ -35,6 +35,7 @@ class Invoice extends Model
         'sent_at',
         'paid_at',
         'vat_reverse_charged',
+        'prices_include_vat',
     ];
 
     protected $casts = [
@@ -47,6 +48,7 @@ class Invoice extends Model
         'total' => 'decimal:2',
         'payment_terms' => 'integer',
         'vat_reverse_charged' => 'boolean',
+        'prices_include_vat' => 'boolean',
     ];
 
     public function customer(): BelongsTo

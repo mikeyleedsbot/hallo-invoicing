@@ -227,11 +227,11 @@
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left">Omschrijving</th>
                                         <th scope="col" class="px-6 py-3 text-center">Aantal</th>
-                                        <th scope="col" class="px-6 py-3 text-right">Prijs</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Prijs{{ $invoice->prices_include_vat ? ' incl.' : '' }}</th>
                                         @unless($invoice->vat_reverse_charged)
                                         <th scope="col" class="px-6 py-3 text-center">BTW</th>
                                         @endunless
-                                        <th scope="col" class="px-6 py-3 text-right">Totaal</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Totaal{{ $invoice->prices_include_vat ? ' incl.' : '' }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
