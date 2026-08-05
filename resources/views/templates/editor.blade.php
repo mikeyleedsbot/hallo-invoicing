@@ -653,6 +653,9 @@
                 logoPosition: null,
                 editingField: null,
                 selectedField: null,
+                history: [],
+                historyIndex: -1,
+                _arrowDebounceTimer: null,
                 newTextLabel: '',
                 logoUploading: false,
                 logoUploadError: null,
@@ -705,6 +708,7 @@
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
                         this.setupCanvasKeyboard();
+                        this.pushHistory(); // baseline snapshot
                     });
                 },
 
@@ -752,6 +756,7 @@
                     const preset = TEMPLATE_PRESETS[key];
                     if (!preset) return;
 
+                    this.pushHistory();
                     const positions = JSON.parse(JSON.stringify(preset.positions));
                     const placed = {};
                     for (const [fieldKey, position] of Object.entries(positions)) {
@@ -770,6 +775,27 @@
                     return field ? field.label : fieldId;
                 },
 
+                pushHistory() {
+                    const snapshot = {
+                        placedFields: JSON.parse(JSON.stringify(this.placedFields)),
+                        logoPosition: this.logoPosition ? JSON.parse(JSON.stringify(this.logoPosition)) : null,
+                    };
+                    // Drop any redo-future when a new action is taken
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                    this.history.push(snapshot);
+                    if (this.history.length > 50) this.history.shift();
+                    this.historyIndex = this.history.length - 1;
+                },
+
+                undo() {
+                    if (this.historyIndex <= 0) return;
+                    this.historyIndex--;
+                    const snapshot = this.history[this.historyIndex];
+                    this.placedFields = JSON.parse(JSON.stringify(snapshot.placedFields));
+                    this.logoPosition = snapshot.logoPosition ? JSON.parse(JSON.stringify(snapshot.logoPosition)) : null;
+                    this.$nextTick(() => this.setupDragAndDrop());
+                },
+
                 selectField(key) {
                     this.selectedField = key;
                 },
@@ -781,6 +807,16 @@
                 moveSelectedField(dx, dy) {
                     const key = this.selectedField;
                     if (!key) return;
+
+                    // Push history before the first keypress in a burst, then debounce
+                    if (!this._arrowDebounceTimer) {
+                        this.pushHistory();
+                    }
+                    clearTimeout(this._arrowDebounceTimer);
+                    this._arrowDebounceTimer = setTimeout(() => {
+                        this._arrowDebounceTimer = null;
+                        this.pushHistory();
+                    }, 600);
 
                     if (key === 'logo' && this.logoPosition) {
                         this.logoPosition.x = Math.max(0, Math.min(this.logoPosition.x + dx, 850 - this.logoPosition.width));
@@ -800,16 +836,26 @@
                     const self = this;
 
                     document.addEventListener('keydown', function(e) {
-                        if (!self.selectedField) return;
-                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) === -1) {
-                            if (e.key === 'Escape') {
-                                self.deselectField();
+                        const inInput = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
+
+                        // Ctrl+Z / Cmd+Z — undo (global, works even without a selection)
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                            if (!inInput) {
+                                e.preventDefault();
+                                self.undo();
+                                return;
                             }
+                        }
+
+                        if (!self.selectedField) return;
+
+                        if (e.key === 'Escape') {
+                            self.deselectField();
                             return;
                         }
 
-                        // Only intercept arrow keys when not typing in an input/textarea
-                        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) return;
+                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) === -1) return;
+                        if (inInput) return;
 
                         e.preventDefault();
                         const step = e.shiftKey ? 10 : 1;
@@ -850,6 +896,7 @@
                                 },
                                 end(event) {
                                     event.target.style.zIndex = '';
+                                    self.pushHistory();
                                 }
                             }
                         })
@@ -870,7 +917,8 @@
                                         self.logoPosition.width = Math.round(event.rect.width / scale);
                                         self.logoPosition.height = Math.round(event.rect.height / scale);
                                     }
-                                }
+                                },
+                                end() { self.pushHistory(); }
                             }
                         });
 
@@ -904,6 +952,7 @@
                                     target.style.opacity = '';
                                     target.style.boxShadow = '';
                                     target.classList.remove('ring-2', 'ring-blue-500');
+                                    self.pushHistory();
                                 }
                             }
                         })
@@ -936,7 +985,8 @@
                                         self.placedFields[fieldKey].width = Math.round(event.rect.width / scale);
                                         self.placedFields[fieldKey].height = Math.round(event.rect.height / scale);
                                     }
-                                }
+                                },
+                                end() { self.pushHistory(); }
                             }
                         });
 
@@ -957,6 +1007,7 @@
                 },
 
                 openFieldEditor(fieldKey) {
+                    this.pushHistory();
                     this.editingField = fieldKey;
                     this.selectedField = null;
                     console.log('Editing field:', fieldKey);
@@ -973,6 +1024,7 @@
                         return;
                     }
 
+                    this.pushHistory();
                     // Random position within canvas (avoiding edges)
                     const canvasWidth = 850; // A4 width at 100%
                     const canvasHeight = 1200; // A4 height at 100%
@@ -1058,6 +1110,8 @@
                     const text = this.newTextLabel.trim();
                     if (!text) return;
 
+                    this.pushHistory();
+
                     // Unieke key zodat meerdere tekstvelden mogelijk zijn
                     const key = 'static_text_' + Date.now();
                     const canvasWidth = 850, canvasHeight = 1200;
@@ -1083,6 +1137,7 @@
                 },
 
                 addColorRect() {
+                    this.pushHistory();
                     // Unieke key zodat meerdere kleurvlakken mogelijk zijn
                     const key = 'static_rect_' + Date.now();
 
@@ -1127,6 +1182,7 @@
 
                 removeField(fieldKey) {
                     if (confirm(`Veld "${this.placedFields[fieldKey].label}" verwijderen?`)) {
+                        this.pushHistory();
                         // Create new object without the field (proper reactivity)
                         const newFields = {};
                         for (const [key, value] of Object.entries(this.placedFields)) {
@@ -1141,6 +1197,7 @@
 
                 removeLogo() {
                     if (confirm('Logo van canvas verwijderen? (De upload blijft bewaard)')) {
+                        this.pushHistory();
                         this.logoPosition = null;
                         console.log('Logo removed from canvas');
                     }
@@ -1173,6 +1230,7 @@
 
                 clearAll() {
                     if (confirm('Alle velden van canvas verwijderen? Dit leegt de hele template.')) {
+                        this.pushHistory();
                         this.placedFields = {};
                         this.logoPosition = null;
                         console.log('Cleared all fields');
