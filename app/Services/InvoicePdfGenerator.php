@@ -220,7 +220,7 @@ body { font-family:Arial,sans-serif; }
             if ($isLast && $reverseCharged && !empty($data['reverse_charge_note'])) {
                 $html .= sprintf(
                     '<div class="abs" style="left:%smm;top:%smm;width:%smm;font-size:%spt;font-family:Arial;font-weight:bold;color:#78350f;border:1px solid #f59e0b;background-color:#fffbeb;padding:4px 8px;">%s</div>',
-                    $this->x(50), $this->y(862), $this->x(750), $this->pt(13),
+                    $this->x(50), $this->y(862), $this->x(734), $this->pt(13),
                     htmlspecialchars($data['reverse_charge_note'])
                 );
             }
