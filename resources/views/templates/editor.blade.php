@@ -241,12 +241,18 @@
                             <div class="flex justify-center">
                                 <div id="canvas"
                                      class="relative bg-white border-2 border-gray-400 shadow-2xl"
-                                     :style="canvasBackgroundStyle()">
+                                     :style="canvasBackgroundStyle()"
+                                     @click="deselectField()">
 
                                     {{-- Logo Preview (draggable + resizable) --}}
                                     <template x-if="logoUrl && logoPosition">
-                                        <div class="absolute logo-draggable border-2 border-dashed border-orange-500 bg-orange-50 bg-opacity-30 cursor-move hover:bg-orange-100 transition group"
+                                        <div class="absolute logo-draggable border-2 cursor-move transition group"
+                                             :class="{
+                                                'border-solid border-blue-600 bg-blue-50 bg-opacity-40 ring-2 ring-blue-400 ring-offset-1': selectedField === 'logo',
+                                                'border-dashed border-orange-500 bg-orange-50 bg-opacity-30 hover:bg-orange-100': selectedField !== 'logo'
+                                             }"
                                              data-field-key="logo"
+                                             @click.stop="selectField('logo')"
                                              :style="`left: ${logoPosition.x}px; top: ${logoPosition.y}px; width: ${logoPosition.width}px; height: ${logoPosition.height}px;`">
                                             <img :src="logoUrl"
                                                  alt="Logo"
@@ -259,18 +265,27 @@
                                                 </button>
                                             </div>
                                             <span class="absolute bottom-0 left-0 text-xs font-semibold text-orange-700 bg-white bg-opacity-75 px-1">Logo</span>
+                                            <template x-if="selectedField === 'logo'">
+                                                <div class="absolute pointer-events-none select-none"
+                                                     style="bottom:-18px;left:0;font-size:10px;white-space:nowrap;background:rgba(37,99,235,0.85);color:#fff;padding:1px 5px;border-radius:3px;z-index:200;">
+                                                    <span x-text="`x: ${logoPosition.x}  y: ${logoPosition.y}  b: ${logoPosition.width}  h: ${logoPosition.height}`"></span>
+                                                </div>
+                                            </template>
                                         </div>
                                     </template>
 
                                     {{-- Placed Fields on Canvas --}}
                                     <template x-for="(field, key) in placedFields" :key="key">
-                                        <div class="absolute draggable-placed border-2 border-dashed border-indigo-500 bg-indigo-50 bg-opacity-60 cursor-move flex items-center hover:bg-indigo-100 hover:border-indigo-600 transition group"
+                                        <div class="absolute draggable-placed border-2 cursor-move flex items-center transition group"
                                              :class="{
                                                 'justify-start': (field.align || 'left') === 'left',
                                                 'justify-center': field.align === 'center',
-                                                'justify-end': field.align === 'right'
+                                                'justify-end': field.align === 'right',
+                                                'border-solid border-blue-600 bg-blue-50 bg-opacity-70 ring-2 ring-blue-400 ring-offset-1': selectedField === key,
+                                                'border-dashed border-indigo-500 bg-indigo-50 bg-opacity-60 hover:bg-indigo-100 hover:border-indigo-600': selectedField !== key
                                              }"
                                              :data-field-key="key"
+                                             @click.stop="selectField(key)"
                                              :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'}; font-weight: ${field.fontWeight || 'normal'}; color: ${field.color || 'inherit'}; ${field.backgroundColor ? 'background-color:' + field.backgroundColor + ';' : ''}`">
                                             {{-- Artikelen tabel: toon voorbeeldtabel --}}
                                             <template x-if="key === 'items_table'">
@@ -325,6 +340,14 @@
                                                         class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
                                                         title="Veld verwijderen">✕</button>
                                             </div>
+
+                                            {{-- Positie-readout bij selectie (pijltjestoetsen) --}}
+                                            <template x-if="selectedField === key">
+                                                <div class="absolute pointer-events-none select-none"
+                                                     style="bottom:-18px;left:0;font-size:10px;white-space:nowrap;background:rgba(37,99,235,0.85);color:#fff;padding:1px 5px;border-radius:3px;z-index:200;">
+                                                    <span x-text="`x: ${field.x}  y: ${field.y}  b: ${field.width}  h: ${field.height}`"></span>
+                                                </div>
+                                            </template>
 
                                             {{-- Resize handles: alleen in de 4 hoeken (8x8px), zodat midden altijd sleepbaar blijft --}}
                                             <div class="resize-tl absolute bg-white border border-indigo-400 rounded-sm opacity-0 group-hover:opacity-100 transition"
@@ -629,6 +652,7 @@
                 placedFields: {},
                 logoPosition: null,
                 editingField: null,
+                selectedField: null,
                 newTextLabel: '',
                 logoUploading: false,
                 logoUploadError: null,
@@ -680,6 +704,7 @@
                     this.initializePlacedFields();
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
+                        this.setupCanvasKeyboard();
                     });
                 },
 
@@ -743,6 +768,56 @@
                     const allFields = [...this.companyFields, ...this.clientFields, ...this.invoiceFields, ...this.specialFields];
                     const field = allFields.find(f => f.id === fieldId);
                     return field ? field.label : fieldId;
+                },
+
+                selectField(key) {
+                    this.selectedField = key;
+                },
+
+                deselectField() {
+                    this.selectedField = null;
+                },
+
+                moveSelectedField(dx, dy) {
+                    const key = this.selectedField;
+                    if (!key) return;
+
+                    if (key === 'logo' && this.logoPosition) {
+                        this.logoPosition.x = Math.max(0, Math.min(this.logoPosition.x + dx, 850 - this.logoPosition.width));
+                        this.logoPosition.y = Math.max(0, Math.min(this.logoPosition.y + dy, 1200 - this.logoPosition.height));
+                    } else if (this.placedFields[key]) {
+                        this.placedFields[key].x = Math.max(0, Math.min(this.placedFields[key].x + dx, 850 - this.placedFields[key].width));
+                        this.placedFields[key].y = Math.max(0, Math.min(this.placedFields[key].y + dy, 1200 - this.placedFields[key].height));
+                    }
+                },
+
+                setupCanvasKeyboard() {
+                    const canvasEl = document.getElementById('canvas');
+                    if (!canvasEl) return;
+
+                    // Make the canvas wrapper focusable so it can receive keyboard events
+                    const wrapper = canvasEl.closest('[tabindex]') || canvasEl.parentElement.parentElement;
+                    const self = this;
+
+                    document.addEventListener('keydown', function(e) {
+                        if (!self.selectedField) return;
+                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) === -1) {
+                            if (e.key === 'Escape') {
+                                self.deselectField();
+                            }
+                            return;
+                        }
+
+                        // Only intercept arrow keys when not typing in an input/textarea
+                        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) return;
+
+                        e.preventDefault();
+                        const step = e.shiftKey ? 10 : 1;
+                        if (e.key === 'ArrowUp')    self.moveSelectedField(0, -step);
+                        if (e.key === 'ArrowDown')  self.moveSelectedField(0,  step);
+                        if (e.key === 'ArrowLeft')  self.moveSelectedField(-step, 0);
+                        if (e.key === 'ArrowRight') self.moveSelectedField( step, 0);
+                    });
                 },
 
                 setupDragAndDrop() {
@@ -883,6 +958,7 @@
 
                 openFieldEditor(fieldKey) {
                     this.editingField = fieldKey;
+                    this.selectedField = null;
                     console.log('Editing field:', fieldKey);
                 },
 
