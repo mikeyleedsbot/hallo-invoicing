@@ -979,91 +979,100 @@
                     if (!canvasEl) return;
                     const self = this;
 
-                    let startX, startY, selBox;
+                    let pendingStart = null;
+
+                    // Convert viewport clientX/Y to canvas content coords (inside border).
+                    function toCanvas(clientX, clientY) {
+                        const r = canvasEl.getBoundingClientRect();
+                        const bL = parseInt(getComputedStyle(canvasEl).borderLeftWidth) || 0;
+                        const bT = parseInt(getComputedStyle(canvasEl).borderTopWidth)  || 0;
+                        return { x: clientX - r.left - bL, y: clientY - r.top - bT };
+                    }
+
+                    function hitTest(selX, selY, selW, selH) {
+                        const matched = [];
+                        for (const [key, field] of Object.entries(self.placedFields)) {
+                            if (
+                                field.x              < selX + selW &&
+                                field.x + field.width  > selX &&
+                                field.y              < selY + selH &&
+                                field.y + field.height > selY
+                            ) matched.push(key);
+                        }
+                        if (self.logoPosition) {
+                            const l = self.logoPosition;
+                            if (
+                                l.x            < selX + selW &&
+                                l.x + l.width  > selX &&
+                                l.y            < selY + selH &&
+                                l.y + l.height > selY
+                            ) matched.push('logo');
+                        }
+                        return matched;
+                    }
 
                     canvasEl.addEventListener('mousedown', function(e) {
-                        // Only trigger rubber-band on the canvas background itself
                         if (e.target !== canvasEl) return;
                         if (e.button !== 0) return;
-
-                        const rect = canvasEl.getBoundingClientRect();
-                        startX = e.clientX - rect.left;
-                        startY = e.clientY - rect.top;
-
-                        selBox = document.createElement('div');
-                        selBox.id = 'rubber-band-box';
-                        selBox.style.cssText = 'position:absolute;border:1.5px dashed #3b82f6;background:rgba(59,130,246,0.08);pointer-events:none;z-index:9999;';
-                        selBox.style.left   = startX + 'px';
-                        selBox.style.top    = startY + 'px';
-                        selBox.style.width  = '0px';
-                        selBox.style.height = '0px';
-                        canvasEl.appendChild(selBox);
-
-                        self._selectionBox = { startX, startY, el: selBox };
+                        pendingStart = toCanvas(e.clientX, e.clientY);
                     });
 
                     document.addEventListener('mousemove', function(e) {
+                        if (!pendingStart && !self._selectionBox) return;
+
+                        const cur = toCanvas(e.clientX, e.clientY);
+
+                        // Promote to active selBox once dragged ≥5px
+                        if (pendingStart && !self._selectionBox) {
+                            if (Math.abs(cur.x - pendingStart.x) < 5 && Math.abs(cur.y - pendingStart.y) < 5) return;
+                            const selBox = document.createElement('div');
+                            selBox.id = 'rubber-band-box';
+                            selBox.style.cssText = 'position:absolute;border:1.5px dashed #3b82f6;background:rgba(59,130,246,0.08);pointer-events:none;z-index:9999;';
+                            canvasEl.appendChild(selBox);
+                            self._selectionBox = { startX: pendingStart.x, startY: pendingStart.y, el: selBox };
+                            pendingStart = null;
+                        }
+
                         if (!self._selectionBox) return;
-                        const rect = canvasEl.getBoundingClientRect();
-                        const curX = e.clientX - rect.left;
-                        const curY = e.clientY - rect.top;
                         const { startX, startY, el } = self._selectionBox;
-                        const x = Math.min(curX, startX);
-                        const y = Math.min(curY, startY);
-                        const w = Math.abs(curX - startX);
-                        const h = Math.abs(curY - startY);
+                        const x = Math.min(cur.x, startX);
+                        const y = Math.min(cur.y, startY);
+                        const w = Math.abs(cur.x - startX);
+                        const h = Math.abs(cur.y - startY);
                         el.style.left   = x + 'px';
                         el.style.top    = y + 'px';
                         el.style.width  = w + 'px';
                         el.style.height = h + 'px';
+
+                        // Live selection highlight while dragging
+                        const matched = hitTest(x, y, w, h);
+                        self.selectedFields = matched;
+                        self.selectedField  = matched.length ? matched[matched.length - 1] : null;
                     });
 
                     document.addEventListener('mouseup', function(e) {
+                        pendingStart = null;
                         if (!self._selectionBox) return;
-                        const rect = canvasEl.getBoundingClientRect();
-                        const curX = e.clientX - rect.left;
-                        const curY = e.clientY - rect.top;
+
+                        const cur = toCanvas(e.clientX, e.clientY);
                         const { startX, startY, el } = self._selectionBox;
-                        const selX = Math.min(curX, startX);
-                        const selY = Math.min(curY, startY);
-                        const selW = Math.abs(curX - startX);
-                        const selH = Math.abs(curY - startY);
+                        const selX = Math.min(cur.x, startX);
+                        const selY = Math.min(cur.y, startY);
+                        const selW = Math.abs(cur.x - startX);
+                        const selH = Math.abs(cur.y - startY);
 
                         el.remove();
                         self._selectionBox = null;
 
-                        // Only act as rubber-band if the user dragged at least 5px
-                        if (selW < 5 && selH < 5) return;
-
-                        const matched = [];
-                        for (const [key, field] of Object.entries(self.placedFields)) {
-                            // Check overlap (not just containment)
-                            if (
-                                field.x < selX + selW &&
-                                field.x + field.width > selX &&
-                                field.y < selY + selH &&
-                                field.y + field.height > selY
-                            ) {
-                                matched.push(key);
-                            }
-                        }
-                        // Also check logo
-                        if (self.logoPosition) {
-                            const l = self.logoPosition;
-                            if (
-                                l.x < selX + selW &&
-                                l.x + l.width > selX &&
-                                l.y < selY + selH &&
-                                l.y + l.height > selY
-                            ) {
-                                matched.push('logo');
-                            }
+                        if (selW < 5 && selH < 5) {
+                            self.selectedFields = [];
+                            self.selectedField  = null;
+                            return;
                         }
 
-                        if (matched.length > 0) {
-                            self.selectedFields = matched;
-                            self.selectedField = matched[matched.length - 1];
-                        }
+                        const matched = hitTest(selX, selY, selW, selH);
+                        self.selectedFields = matched;
+                        self.selectedField  = matched.length ? matched[matched.length - 1] : null;
                     });
                 },
 
