@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Quote') . ' ' . $quote->quote_number)
     <div class="space-y-6" x-data="{
         showSentModal: false,
         sentDate: '{{ now()->format('Y-m-d') }}'

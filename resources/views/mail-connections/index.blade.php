@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Mail Connections'))
     <div class="space-y-6"
          x-data="{
              showGoogleSetup: {{ $googleConfigured ? 'false' : 'true' }},

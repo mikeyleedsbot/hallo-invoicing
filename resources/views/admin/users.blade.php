@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Company Management'))
     <div class="space-y-6"
          x-data="{
              showModal: false,

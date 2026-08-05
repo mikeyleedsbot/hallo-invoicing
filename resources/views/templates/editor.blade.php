@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Template Editor') . ': ' . $template->name)
     <div x-data="templateEditor()" x-init="init()">
 
         {{-- Mobiele waarschuwing --}}

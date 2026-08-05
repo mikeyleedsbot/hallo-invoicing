@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('New Quote'))
     <div class="space-y-6" x-data="quoteForm()">
         {{-- Header --}}
         <div class="flex items-center justify-between">

@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Products'))
     <script>
         window.productsData = @json($products->items());
     </script>

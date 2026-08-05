@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Settings'))
     <div class="space-y-6">
         
             {{-- Header --}}

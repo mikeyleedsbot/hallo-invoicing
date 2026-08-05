@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Templates'))
     <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">

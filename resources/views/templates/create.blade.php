@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('New Template'))
     <div class="max-w-3xl mx-auto space-y-6">
         <!-- Header -->
         <div class="mb-8">

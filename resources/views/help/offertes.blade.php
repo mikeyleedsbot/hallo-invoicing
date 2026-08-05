@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Help: Quotes'))
     <div class="space-y-8" x-data="{ openModal: null }">
         <!-- Breadcrumb + titel -->
         <div>

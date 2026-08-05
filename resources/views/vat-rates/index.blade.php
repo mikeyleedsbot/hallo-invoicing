@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('VAT Rates'))
     <div class="space-y-6" x-data="{ showModal: false, editMode: false, current: null,
         openCreate() { this.editMode = false; this.current = null; this.showModal = true; },
         openEdit(item) { this.editMode = true; this.current = item; this.showModal = true; }

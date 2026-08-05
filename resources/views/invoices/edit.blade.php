@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Invoice') . ' ' . $invoice->invoice_number)
     <div class="space-y-6" x-data="invoiceForm()">
         {{-- Header --}}
         @if(session('success'))
