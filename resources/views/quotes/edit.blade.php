@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Edit Quote'))
     <div class="space-y-6" x-data="quoteForm()">
         {{-- Header --}}
         @if(session('success'))

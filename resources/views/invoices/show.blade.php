@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Invoice') . ' ' . $invoice->invoice_number)
     @php
         $company     = \App\Models\CompanySetting::get();
         $customer    = $invoice->customer;

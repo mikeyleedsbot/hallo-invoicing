@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Template Editor') . ': ' . $template->name)
     <div x-data="templateEditor()" x-init="init()">
 
         {{-- Mobiele waarschuwing --}}
@@ -96,6 +97,8 @@
                                 <li>📏 Sleep randen om grootte aan te passen</li>
                                 <li>✎ Klik blauw potlood voor font/grootte</li>
                                 <li>❌ Klik rode X om te verwijderen</li>
+                                <li>🔲 Sleep over canvas voor groepsselectie</li>
+                                <li>⇧ Shift+klik om aan selectie toe te voegen</li>
                                 <li>💾 Klik "Posities Opslaan" wanneer klaar</li>
                             </ul>
                         </div>
@@ -248,11 +251,11 @@
                                     <template x-if="logoUrl && logoPosition">
                                         <div class="absolute logo-draggable border-2 cursor-move transition group"
                                              :class="{
-                                                'border-solid border-blue-600 bg-blue-50 bg-opacity-40 ring-2 ring-blue-400 ring-offset-1': selectedField === 'logo',
-                                                'border-dashed border-orange-500 bg-orange-50 bg-opacity-30 hover:bg-orange-100': selectedField !== 'logo'
+                                                'border-solid border-blue-600 bg-blue-50 bg-opacity-40 ring-2 ring-blue-400 ring-offset-1': isSelected('logo'),
+                                                'border-dashed border-orange-500 bg-orange-50 bg-opacity-30 hover:bg-orange-100': !isSelected('logo')
                                              }"
                                              data-field-key="logo"
-                                             @click.stop="selectField('logo')"
+                                             @click.stop="selectField('logo', $event.shiftKey)"
                                              :style="`left: ${logoPosition.x}px; top: ${logoPosition.y}px; width: ${logoPosition.width}px; height: ${logoPosition.height}px;`">
                                             <img :src="logoUrl"
                                                  alt="Logo"
@@ -265,10 +268,16 @@
                                                 </button>
                                             </div>
                                             <span class="absolute bottom-0 left-0 text-xs font-semibold text-orange-700 bg-white bg-opacity-75 px-1">Logo</span>
-                                            <template x-if="selectedField === 'logo'">
+                                            <template x-if="isSelected('logo') && selectedFields.length === 1">
                                                 <div class="absolute pointer-events-none select-none"
                                                      style="bottom:-18px;left:0;font-size:10px;white-space:nowrap;background:rgba(37,99,235,0.85);color:#fff;padding:1px 5px;border-radius:3px;z-index:200;">
                                                     <span x-text="`x: ${logoPosition.x}  y: ${logoPosition.y}  b: ${logoPosition.width}  h: ${logoPosition.height}`"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="isSelected('logo') && selectedFields.length > 1">
+                                                <div class="absolute pointer-events-none select-none"
+                                                     style="bottom:-18px;left:0;font-size:10px;white-space:nowrap;background:rgba(37,99,235,0.85);color:#fff;padding:1px 5px;border-radius:3px;z-index:200;">
+                                                    <span x-text="`${selectedFields.length} geselecteerd`"></span>
                                                 </div>
                                             </template>
                                         </div>
@@ -281,11 +290,11 @@
                                                 'justify-start': (field.align || 'left') === 'left',
                                                 'justify-center': field.align === 'center',
                                                 'justify-end': field.align === 'right',
-                                                'border-solid border-blue-600 bg-blue-50 bg-opacity-70 ring-2 ring-blue-400 ring-offset-1': selectedField === key,
-                                                'border-dashed border-indigo-500 bg-indigo-50 bg-opacity-60 hover:bg-indigo-100 hover:border-indigo-600': selectedField !== key
+                                                'border-solid border-blue-600 bg-blue-50 bg-opacity-70 ring-2 ring-blue-400 ring-offset-1': isSelected(key),
+                                                'border-dashed border-indigo-500 bg-indigo-50 bg-opacity-60 hover:bg-indigo-100 hover:border-indigo-600': !isSelected(key)
                                              }"
                                              :data-field-key="key"
-                                             @click.stop="selectField(key)"
+                                             @click.stop="selectField(key, $event.shiftKey)"
                                              :style="`left: ${field.x}px; top: ${field.y}px; width: ${field.width}px; height: ${field.height}px; font-size: ${field.fontSize || 12}px; font-family: ${field.fontFamily || 'inherit'}; text-align: ${field.align || 'left'}; font-weight: ${field.fontWeight || 'normal'}; color: ${field.color || 'inherit'}; ${field.backgroundColor ? 'background-color:' + field.backgroundColor + ';' : ''}`">
                                             {{-- Artikelen tabel: toon voorbeeldtabel --}}
                                             <template x-if="key === 'items_table'">
@@ -342,10 +351,16 @@
                                             </div>
 
                                             {{-- Positie-readout bij selectie (pijltjestoetsen) --}}
-                                            <template x-if="selectedField === key">
+                                            <template x-if="isSelected(key) && selectedFields.length === 1">
                                                 <div class="absolute pointer-events-none select-none"
                                                      style="bottom:-18px;left:0;font-size:10px;white-space:nowrap;background:rgba(37,99,235,0.85);color:#fff;padding:1px 5px;border-radius:3px;z-index:200;">
                                                     <span x-text="`x: ${field.x}  y: ${field.y}  b: ${field.width}  h: ${field.height}`"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="isSelected(key) && selectedFields.length > 1 && selectedField === key">
+                                                <div class="absolute pointer-events-none select-none"
+                                                     style="bottom:-18px;left:0;font-size:10px;white-space:nowrap;background:rgba(37,99,235,0.85);color:#fff;padding:1px 5px;border-radius:3px;z-index:200;">
+                                                    <span x-text="`${selectedFields.length} geselecteerd`"></span>
                                                 </div>
                                             </template>
 
@@ -360,6 +375,14 @@
                                                  style="width:8px;height:8px;bottom:-3px;right:-3px;cursor:se-resize;"></div>
                                         </div>
                                     </template>
+
+                                    {{-- Ghost: verlegde BTW vermelding (vaste positie, niet verplaatsbaar) --}}
+                                    {{-- Coördinaten spiegelen InvoicePdfGenerator: left=50, top=862, width=750, fontSize=13px --}}
+                                    <div class="absolute pointer-events-none select-none"
+                                         style="left:50px;top:862px;width:750px;font-size:13px;font-family:Arial,sans-serif;font-weight:bold;color:#92400e;border:1px dashed #f59e0b;background-color:rgba(255,251,235,0.55);padding:4px 8px;box-sizing:border-box;opacity:0.65;z-index:5;line-height:1.4;">
+                                        BTW verlegd — De BTW is verlegd naar de afnemer.
+                                        <span style="position:absolute;top:-14px;left:0;font-size:8px;font-weight:normal;color:#92400e;background:rgba(255,251,235,0.9);padding:1px 4px;border:1px dashed #f59e0b;border-bottom:none;white-space:nowrap;">Vaste BTW verlegd melding (indien van toepassing)</span>
+                                    </div>
 
                                     {{-- Empty State --}}
                                     <template x-if="Object.keys(placedFields).length === 0">
@@ -712,6 +735,8 @@
                 logoPosition: null,
                 editingField: null,
                 selectedField: null,
+                selectedFields: [],   // multi-select set (array of keys)
+                _selectionBox: null,  // rubber-band state
                 history: [],
                 historyIndex: -1,
                 _arrowDebounceTimer: null,
@@ -767,6 +792,7 @@
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
                         this.setupCanvasKeyboard();
+                        this.setupRubberBand();
                         this.pushHistory(); // baseline snapshot
                     });
                 },
@@ -852,20 +878,41 @@
                     const snapshot = this.history[this.historyIndex];
                     this.placedFields = JSON.parse(JSON.stringify(snapshot.placedFields));
                     this.logoPosition = snapshot.logoPosition ? JSON.parse(JSON.stringify(snapshot.logoPosition)) : null;
+                    this.selectedField = null;
+                    this.selectedFields = [];
                     this.$nextTick(() => this.setupDragAndDrop());
                 },
 
-                selectField(key) {
-                    this.selectedField = key;
+                selectField(key, addToGroup) {
+                    if (addToGroup) {
+                        // Shift+click: toggle membership in multi-select
+                        const idx = this.selectedFields.indexOf(key);
+                        if (idx === -1) {
+                            this.selectedFields = [...this.selectedFields, key];
+                        } else {
+                            this.selectedFields = this.selectedFields.filter(k => k !== key);
+                        }
+                        // Keep selectedField pointing at the last toggled item for tooltip
+                        this.selectedField = key;
+                    } else {
+                        // Plain click: replace selection
+                        this.selectedField = key;
+                        this.selectedFields = [key];
+                    }
                 },
 
                 deselectField() {
                     this.selectedField = null;
+                    this.selectedFields = [];
+                },
+
+                isSelected(key) {
+                    return this.selectedFields.indexOf(key) !== -1;
                 },
 
                 moveSelectedField(dx, dy) {
-                    const key = this.selectedField;
-                    if (!key) return;
+                    const keys = this.selectedFields.length ? this.selectedFields : (this.selectedField ? [this.selectedField] : []);
+                    if (!keys.length) return;
 
                     // Push history before the first keypress in a burst, then debounce
                     if (!this._arrowDebounceTimer) {
@@ -877,12 +924,14 @@
                         this.pushHistory();
                     }, 600);
 
-                    if (key === 'logo' && this.logoPosition) {
-                        this.logoPosition.x = Math.max(0, Math.min(this.logoPosition.x + dx, 850 - this.logoPosition.width));
-                        this.logoPosition.y = Math.max(0, Math.min(this.logoPosition.y + dy, 1200 - this.logoPosition.height));
-                    } else if (this.placedFields[key]) {
-                        this.placedFields[key].x = Math.max(0, Math.min(this.placedFields[key].x + dx, 850 - this.placedFields[key].width));
-                        this.placedFields[key].y = Math.max(0, Math.min(this.placedFields[key].y + dy, 1200 - this.placedFields[key].height));
+                    for (const key of keys) {
+                        if (key === 'logo' && this.logoPosition) {
+                            this.logoPosition.x = Math.max(0, Math.min(this.logoPosition.x + dx, 850 - this.logoPosition.width));
+                            this.logoPosition.y = Math.max(0, Math.min(this.logoPosition.y + dy, 1200 - this.logoPosition.height));
+                        } else if (this.placedFields[key]) {
+                            this.placedFields[key].x = Math.max(0, Math.min(this.placedFields[key].x + dx, 850 - this.placedFields[key].width));
+                            this.placedFields[key].y = Math.max(0, Math.min(this.placedFields[key].y + dy, 1200 - this.placedFields[key].height));
+                        }
                     }
                 },
 
@@ -925,6 +974,99 @@
                     });
                 },
 
+                setupRubberBand() {
+                    const canvasEl = document.getElementById('canvas');
+                    if (!canvasEl) return;
+                    const self = this;
+
+                    let startX, startY, selBox;
+
+                    canvasEl.addEventListener('mousedown', function(e) {
+                        // Only trigger rubber-band on the canvas background itself
+                        if (e.target !== canvasEl) return;
+                        if (e.button !== 0) return;
+
+                        const rect = canvasEl.getBoundingClientRect();
+                        startX = e.clientX - rect.left;
+                        startY = e.clientY - rect.top;
+
+                        selBox = document.createElement('div');
+                        selBox.id = 'rubber-band-box';
+                        selBox.style.cssText = 'position:absolute;border:1.5px dashed #3b82f6;background:rgba(59,130,246,0.08);pointer-events:none;z-index:9999;';
+                        selBox.style.left   = startX + 'px';
+                        selBox.style.top    = startY + 'px';
+                        selBox.style.width  = '0px';
+                        selBox.style.height = '0px';
+                        canvasEl.appendChild(selBox);
+
+                        self._selectionBox = { startX, startY, el: selBox };
+                    });
+
+                    document.addEventListener('mousemove', function(e) {
+                        if (!self._selectionBox) return;
+                        const rect = canvasEl.getBoundingClientRect();
+                        const curX = e.clientX - rect.left;
+                        const curY = e.clientY - rect.top;
+                        const { startX, startY, el } = self._selectionBox;
+                        const x = Math.min(curX, startX);
+                        const y = Math.min(curY, startY);
+                        const w = Math.abs(curX - startX);
+                        const h = Math.abs(curY - startY);
+                        el.style.left   = x + 'px';
+                        el.style.top    = y + 'px';
+                        el.style.width  = w + 'px';
+                        el.style.height = h + 'px';
+                    });
+
+                    document.addEventListener('mouseup', function(e) {
+                        if (!self._selectionBox) return;
+                        const rect = canvasEl.getBoundingClientRect();
+                        const curX = e.clientX - rect.left;
+                        const curY = e.clientY - rect.top;
+                        const { startX, startY, el } = self._selectionBox;
+                        const selX = Math.min(curX, startX);
+                        const selY = Math.min(curY, startY);
+                        const selW = Math.abs(curX - startX);
+                        const selH = Math.abs(curY - startY);
+
+                        el.remove();
+                        self._selectionBox = null;
+
+                        // Only act as rubber-band if the user dragged at least 5px
+                        if (selW < 5 && selH < 5) return;
+
+                        const matched = [];
+                        for (const [key, field] of Object.entries(self.placedFields)) {
+                            // Check overlap (not just containment)
+                            if (
+                                field.x < selX + selW &&
+                                field.x + field.width > selX &&
+                                field.y < selY + selH &&
+                                field.y + field.height > selY
+                            ) {
+                                matched.push(key);
+                            }
+                        }
+                        // Also check logo
+                        if (self.logoPosition) {
+                            const l = self.logoPosition;
+                            if (
+                                l.x < selX + selW &&
+                                l.x + l.width > selX &&
+                                l.y < selY + selH &&
+                                l.y + l.height > selY
+                            ) {
+                                matched.push('logo');
+                            }
+                        }
+
+                        if (matched.length > 0) {
+                            self.selectedFields = matched;
+                            self.selectedField = matched[matched.length - 1];
+                        }
+                    });
+                },
+
                 setupDragAndDrop() {
                     const self = this;
                     const scale = 1.0; // Canvas scale (100%)
@@ -945,12 +1087,19 @@
                                     event.target.style.zIndex = '100';
                                 },
                                 move(event) {
-                                    if (self.logoPosition) {
-                                        self.logoPosition.x = Math.round(self.logoPosition.x + (event.dx / scale));
-                                        self.logoPosition.y = Math.round(self.logoPosition.y + (event.dy / scale));
-                                        // Clamp binnen canvas
-                                        self.logoPosition.x = Math.max(0, Math.min(self.logoPosition.x, 850 - self.logoPosition.width));
-                                        self.logoPosition.y = Math.max(0, Math.min(self.logoPosition.y, 1200 - self.logoPosition.height));
+                                    const dx = event.dx / scale;
+                                    const dy = event.dy / scale;
+                                    const isGroupDrag = self.selectedFields.length > 1 && self.selectedFields.indexOf('logo') !== -1;
+                                    const keys = isGroupDrag ? self.selectedFields : ['logo'];
+
+                                    for (const key of keys) {
+                                        if (key === 'logo' && self.logoPosition) {
+                                            self.logoPosition.x = Math.max(0, Math.min(Math.round(self.logoPosition.x + dx), 850 - self.logoPosition.width));
+                                            self.logoPosition.y = Math.max(0, Math.min(Math.round(self.logoPosition.y + dy), 1200 - self.logoPosition.height));
+                                        } else if (self.placedFields[key]) {
+                                            self.placedFields[key].x = Math.max(0, Math.min(Math.round(self.placedFields[key].x + dx), 850 - self.placedFields[key].width));
+                                            self.placedFields[key].y = Math.max(0, Math.min(Math.round(self.placedFields[key].y + dy), 1200 - self.placedFields[key].height));
+                                        }
                                     }
                                 },
                                 end(event) {
@@ -998,11 +1147,21 @@
                                 },
                                 move(event) {
                                     const fieldKey = event.target.dataset.fieldKey;
-                                    if (self.placedFields[fieldKey]) {
-                                        self.placedFields[fieldKey].x = Math.round(self.placedFields[fieldKey].x + (event.dx / scale));
-                                        self.placedFields[fieldKey].y = Math.round(self.placedFields[fieldKey].y + (event.dy / scale));
-                                        self.placedFields[fieldKey].x = Math.max(0, Math.min(self.placedFields[fieldKey].x, 850 - self.placedFields[fieldKey].width));
-                                        self.placedFields[fieldKey].y = Math.max(0, Math.min(self.placedFields[fieldKey].y, 1200 - self.placedFields[fieldKey].height));
+                                    const dx = event.dx / scale;
+                                    const dy = event.dy / scale;
+
+                                    // If dragging a field that belongs to a multi-selection, move the whole group
+                                    const isGroupDrag = self.selectedFields.length > 1 && self.selectedFields.indexOf(fieldKey) !== -1;
+                                    const keys = isGroupDrag ? self.selectedFields : [fieldKey];
+
+                                    for (const key of keys) {
+                                        if (key === 'logo' && self.logoPosition) {
+                                            self.logoPosition.x = Math.max(0, Math.min(Math.round(self.logoPosition.x + dx), 850 - self.logoPosition.width));
+                                            self.logoPosition.y = Math.max(0, Math.min(Math.round(self.logoPosition.y + dy), 1200 - self.logoPosition.height));
+                                        } else if (self.placedFields[key]) {
+                                            self.placedFields[key].x = Math.max(0, Math.min(Math.round(self.placedFields[key].x + dx), 850 - self.placedFields[key].width));
+                                            self.placedFields[key].y = Math.max(0, Math.min(Math.round(self.placedFields[key].y + dy), 1200 - self.placedFields[key].height));
+                                        }
                                     }
                                 },
                                 end(event) {

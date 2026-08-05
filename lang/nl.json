@@ -42,6 +42,31 @@
 
     "Template Editor": "Sjablooneditor",
 
+    "Invoices": "Facturen",
+    "New Invoice": "Nieuwe Factuur",
+    "Invoice": "Factuur",
+    "Quotes": "Offertes",
+    "New Quote": "Nieuwe Offerte",
+    "Edit Quote": "Offerte Bewerken",
+    "Quote": "Offerte",
+    "Customers": "Klanten",
+    "Products": "Producten",
+    "Company Details": "Bedrijfsgegevens",
+    "Settings": "Instellingen",
+    "Templates": "Templates",
+    "New Template": "Nieuw Template",
+    "Edit Template": "Template Bewerken",
+    "VAT Rates": "BTW Tarieven",
+    "Mail Connections": "E-mailverbindingen",
+    "Email Settings": "E-mailinstellingen",
+    "Company Management": "Bedrijvenbeheer",
+    "Help & Instructions": "Help & Instructies",
+    "Help: Dashboard": "Help: Dashboard",
+    "Help: Invoices": "Help: Facturen",
+    "Help: VAT Rates": "Help: BTW Tarieven",
+    "Help: Customers": "Help: Klanten",
+    "Help: Quotes": "Help: Offertes",
+
     "Profiel": "Profiel",
     "Uitloggen": "Uitloggen"
 }

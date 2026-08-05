@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Invoices'))
     <div class="space-y-6" x-data="{
         selectedIds: [],
         showEmailModal: false,

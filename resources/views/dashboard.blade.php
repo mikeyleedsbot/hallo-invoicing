@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('Dashboard'))
     <div class="space-y-6">
         <!-- Welcome Header -->
         <div class="mb-8">

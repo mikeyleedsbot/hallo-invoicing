@@ -1,4 +1,5 @@
 <x-app-layout>
+@section('title', __('New Invoice'))
     <div class="space-y-6" x-data="invoiceForm()">
         {{-- Header --}}
         <div class="flex items-center justify-between">
