@@ -430,202 +430,261 @@
              @click.self="closeFieldEditor()"
              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
              style="display: none;">
-            <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-                <h3 class="text-xl font-bold mb-4">✎ Veld Bewerken</h3>
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" x-data="{ editorTab: 'instellingen' }">
+                <div class="p-6 pb-0">
+                    <h3 class="text-xl font-bold mb-4">✎ Veld Bewerken</h3>
+
+                    {{-- Tabs --}}
+                    <div class="flex border-b border-gray-200 mb-4">
+                        <button @click="editorTab = 'instellingen'"
+                                :class="editorTab === 'instellingen' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 py-2 text-sm transition">
+                            Instellingen
+                        </button>
+                        <button @click="editorTab = 'plaatsing'"
+                                :class="editorTab === 'plaatsing' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 py-2 text-sm transition">
+                            Plaatsing
+                        </button>
+                    </div>
+                </div>
 
                 <template x-if="editingField && placedFields[editingField]">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Veld Naam</label>
-                            <input type="text"
-                                   :value="placedFields[editingField]?.label"
-                                   disabled
-                                   class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-600">
-                        </div>
+                    <div class="px-6 pb-6">
 
-                        {{-- Tekst inhoud: alleen voor vrije tekstvelden --}}
-                        <div x-show="placedFields[editingField]?.staticText !== undefined && !isRect(editingField)">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekst inhoud</label>
-                            <input type="text"
-                                   x-model="placedFields[editingField].staticText"
-                                   placeholder="Typ hier je tekst..."
-                                   class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
-                        </div>
-
-                        {{-- Tekstkleur --}}
-                        <div x-show="editingField !== 'items_table' && !isRect(editingField)">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
-                            <div class="flex items-center gap-2">
-                                <input type="color"
-                                       :value="placedFields[editingField]?.color || '#111827'"
-                                       @input="placedFields[editingField].color = $event.target.value"
-                                       class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
-                                <button @click="placedFields[editingField].color = ''"
-                                        class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
-                                    ↺ Standaard
-                                </button>
+                        {{-- TAB: Instellingen --}}
+                        <div x-show="editorTab === 'instellingen'" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Veld Naam</label>
+                                <input type="text"
+                                       :value="placedFields[editingField]?.label"
+                                       disabled
+                                       class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-600">
                             </div>
-                        </div>
 
-                        {{-- Vlak-/achtergrondkleur --}}
-                        <div x-show="editingField !== 'items_table'">
-                            <label class="block text-sm font-medium text-gray-700 mb-1"
-                                   x-text="isRect(editingField) ? 'Vlakkleur' : 'Achtergrondkleur'"></label>
-                            <div class="flex items-center gap-2">
-                                <input type="color"
-                                       :value="placedFields[editingField]?.backgroundColor || '#ffffff'"
-                                       @input="placedFields[editingField].backgroundColor = $event.target.value"
-                                       class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.backgroundColor || 'transparant'"></span>
-                                <button x-show="!isRect(editingField)"
-                                        @click="placedFields[editingField].backgroundColor = ''"
-                                        class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
-                                    ↺ Transparant
-                                </button>
+                            {{-- Tekst inhoud: alleen voor vrije tekstvelden --}}
+                            <div x-show="placedFields[editingField]?.staticText !== undefined && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekst inhoud</label>
+                                <input type="text"
+                                       x-model="placedFields[editingField].staticText"
+                                       placeholder="Typ hier je tekst..."
+                                       class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
                             </div>
-                        </div>
 
-                        {{-- Tabelstijl: alleen voor artikelen tabel --}}
-                        <template x-if="editingField === 'items_table'">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kopregel achtergrond</label>
-                                    <div class="flex items-center gap-2">
-                                        <input type="color"
-                                               :value="placedFields[editingField]?.headerBg || '#f0f0f0'"
-                                               @input="placedFields[editingField].headerBg = $event.target.value"
-                                               class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                        <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.headerBg || '#f0f0f0'"></span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kopregel tekstkleur</label>
-                                    <div class="flex items-center gap-2">
-                                        <input type="color"
-                                               :value="placedFields[editingField]?.headerColor || '#000000'"
-                                               @input="placedFields[editingField].headerColor = $event.target.value"
-                                               class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                        <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.headerColor || '#000000'"></span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Randen</label>
-                                    <div class="grid grid-cols-3 gap-1">
-                                        <button @click="placedFields[editingField].borderStyle = 'full'"
-                                                :class="(!placedFields[editingField]?.borderStyle || placedFields[editingField]?.borderStyle === 'full') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                                class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
-                                            ▦ Volledig
-                                        </button>
-                                        <button @click="placedFields[editingField].borderStyle = 'horizontal'"
-                                                :class="placedFields[editingField]?.borderStyle === 'horizontal' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                                class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
-                                            ☰ Horizontaal
-                                        </button>
-                                        <button @click="placedFields[editingField].borderStyle = 'minimal'"
-                                                :class="placedFields[editingField]?.borderStyle === 'minimal' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                                class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
-                                            — Minimaal
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Om-en-om rijkleur</label>
-                                    <button @click="placedFields[editingField].zebra = !(placedFields[editingField]?.zebra ?? true)"
-                                            :class="(placedFields[editingField]?.zebra ?? true) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-4 rounded text-sm font-medium hover:bg-blue-500 hover:text-white transition"
-                                            x-text="(placedFields[editingField]?.zebra ?? true) ? '✓ Zebra aan' : 'Zebra uit'">
+                            {{-- Tekstkleur --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color"
+                                           :value="placedFields[editingField]?.color || '#111827'"
+                                           @input="placedFields[editingField].color = $event.target.value"
+                                           class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                    <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
+                                    <button @click="placedFields[editingField].color = ''"
+                                            class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
+                                        ↺ Standaard
                                     </button>
                                 </div>
                             </div>
-                        </template>
 
-                        {{-- Lettertype --}}
-                        <div x-show="!isRect(editingField)">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
-                            <select x-model="placedFields[editingField].fontFamily"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
-                                <option value="inherit">Standaard</option>
-                                <option value="Arial, sans-serif">Arial</option>
-                                <option value="Helvetica, sans-serif">Helvetica</option>
-                                <option value="'Times New Roman', serif">Times New Roman</option>
-                                <option value="Georgia, serif">Georgia</option>
-                                <option value="'Courier New', monospace">Courier New</option>
-                                <option value="Verdana, sans-serif">Verdana</option>
-                            </select>
-                        </div>
+                            {{-- Vlak-/achtergrondkleur --}}
+                            <div x-show="editingField !== 'items_table'">
+                                <label class="block text-sm font-medium text-gray-700 mb-1"
+                                       x-text="isRect(editingField) ? 'Vlakkleur' : 'Achtergrondkleur'"></label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color"
+                                           :value="placedFields[editingField]?.backgroundColor || '#ffffff'"
+                                           @input="placedFields[editingField].backgroundColor = $event.target.value"
+                                           class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                    <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.backgroundColor || 'transparant'"></span>
+                                    <button x-show="!isRect(editingField)"
+                                            @click="placedFields[editingField].backgroundColor = ''"
+                                            class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
+                                        ↺ Transparant
+                                    </button>
+                                </div>
+                            </div>
 
-                        <div x-show="!isRect(editingField)">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Lettergrootte: <span x-text="placedFields[editingField]?.fontSize || 12"></span>px
-                            </label>
-                            <input type="range"
-                                   x-model.number="placedFields[editingField].fontSize"
-                                   min="6"
-                                   max="48"
-                                   step="1"
-                                   class="w-full">
-                            <div class="flex justify-between text-xs text-gray-500">
-                                <span>6px</span>
-                                <span>48px</span>
+                            {{-- Tabelstijl: alleen voor artikelen tabel --}}
+                            <template x-if="editingField === 'items_table'">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Kopregel achtergrond</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="color"
+                                                   :value="placedFields[editingField]?.headerBg || '#f0f0f0'"
+                                                   @input="placedFields[editingField].headerBg = $event.target.value"
+                                                   class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                            <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.headerBg || '#f0f0f0'"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Kopregel tekstkleur</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="color"
+                                                   :value="placedFields[editingField]?.headerColor || '#000000'"
+                                                   @input="placedFields[editingField].headerColor = $event.target.value"
+                                                   class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                            <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.headerColor || '#000000'"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Randen</label>
+                                        <div class="grid grid-cols-3 gap-1">
+                                            <button @click="placedFields[editingField].borderStyle = 'full'"
+                                                    :class="(!placedFields[editingField]?.borderStyle || placedFields[editingField]?.borderStyle === 'full') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                    class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
+                                                ▦ Volledig
+                                            </button>
+                                            <button @click="placedFields[editingField].borderStyle = 'horizontal'"
+                                                    :class="placedFields[editingField]?.borderStyle === 'horizontal' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                    class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
+                                                ☰ Horizontaal
+                                            </button>
+                                            <button @click="placedFields[editingField].borderStyle = 'minimal'"
+                                                    :class="placedFields[editingField]?.borderStyle === 'minimal' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                    class="py-2 px-2 rounded text-xs font-medium hover:bg-blue-500 hover:text-white transition">
+                                                — Minimaal
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Om-en-om rijkleur</label>
+                                        <button @click="placedFields[editingField].zebra = !(placedFields[editingField]?.zebra ?? true)"
+                                                :class="(placedFields[editingField]?.zebra ?? true) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                                class="py-2 px-4 rounded text-sm font-medium hover:bg-blue-500 hover:text-white transition"
+                                                x-text="(placedFields[editingField]?.zebra ?? true) ? '✓ Zebra aan' : 'Zebra uit'">
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- Lettertype --}}
+                            <div x-show="!isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
+                                <select x-model="placedFields[editingField].fontFamily"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                    <option value="inherit">Standaard</option>
+                                    <option value="Arial, sans-serif">Arial</option>
+                                    <option value="Helvetica, sans-serif">Helvetica</option>
+                                    <option value="'Times New Roman', serif">Times New Roman</option>
+                                    <option value="Georgia, serif">Georgia</option>
+                                    <option value="'Courier New', monospace">Courier New</option>
+                                    <option value="Verdana, sans-serif">Verdana</option>
+                                </select>
+                            </div>
+
+                            <div x-show="!isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Lettergrootte: <span x-text="placedFields[editingField]?.fontSize || 12"></span>px
+                                </label>
+                                <input type="range"
+                                       x-model.number="placedFields[editingField].fontSize"
+                                       min="6"
+                                       max="48"
+                                       step="1"
+                                       class="w-full">
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>6px</span>
+                                    <span>48px</span>
+                                </div>
+                            </div>
+
+                            {{-- Dikgedrukt toggle --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekststijl</label>
+                                <button @click="placedFields[editingField].fontWeight = (placedFields[editingField]?.fontWeight === 'bold') ? 'normal' : 'bold'"
+                                        :class="placedFields[editingField]?.fontWeight === 'bold' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                        class="py-2 px-4 rounded font-bold hover:bg-blue-500 hover:text-white transition">
+                                    B Dikgedrukt
+                                </button>
+                            </div>
+
+                            {{-- Uitlijning: verbergen voor artikelen tabel en kleurvlakken --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Uitlijning</label>
+                                <div class="flex gap-2">
+                                    <button @click="placedFields[editingField].align = 'left'"
+                                            :class="(placedFields[editingField]?.align || 'left') === 'left' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ← Links
+                                    </button>
+                                    <button @click="placedFields[editingField].align = 'center'"
+                                            :class="placedFields[editingField]?.align === 'center' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↔ Midden
+                                    </button>
+                                    <button @click="placedFields[editingField].align = 'right'"
+                                            :class="placedFields[editingField]?.align === 'right' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        → Rechts
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Pagina zichtbaarheid --}}
+                            <div x-show="editingField !== 'items_table'">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <button @click="placedFields[editingField].pageVisibility = 'all'"
+                                            :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        📄 Alle
+                                    </button>
+                                    <button @click="placedFields[editingField].pageVisibility = 'first'"
+                                            :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        1️⃣ Eerste
+                                    </button>
+                                    <button @click="placedFields[editingField].pageVisibility = 'last'"
+                                            :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        🔚 Laatste
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    "Alle" = herhaalt op elke pagina bij lange facturen
+                                </p>
                             </div>
                         </div>
 
-                        {{-- Dikgedrukt toggle --}}
-                        <div x-show="editingField !== 'items_table' && !isRect(editingField)">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekststijl</label>
-                            <button @click="placedFields[editingField].fontWeight = (placedFields[editingField]?.fontWeight === 'bold') ? 'normal' : 'bold'"
-                                    :class="placedFields[editingField]?.fontWeight === 'bold' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                    class="py-2 px-4 rounded font-bold hover:bg-blue-500 hover:text-white transition">
-                                B Dikgedrukt
-                            </button>
-                        </div>
-
-                        {{-- Uitlijning: verbergen voor artikelen tabel en kleurvlakken --}}
-                        <div x-show="editingField !== 'items_table' && !isRect(editingField)">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Uitlijning</label>
-                            <div class="flex gap-2">
-                                <button @click="placedFields[editingField].align = 'left'"
-                                        :class="(placedFields[editingField]?.align || 'left') === 'left' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                        class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
-                                    ← Links
-                                </button>
-                                <button @click="placedFields[editingField].align = 'center'"
-                                        :class="placedFields[editingField]?.align === 'center' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                        class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
-                                    ↔ Midden
-                                </button>
-                                <button @click="placedFields[editingField].align = 'right'"
-                                        :class="placedFields[editingField]?.align === 'right' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                        class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
-                                    → Rechts
-                                </button>
+                        {{-- TAB: Plaatsing --}}
+                        <div x-show="editorTab === 'plaatsing'" class="space-y-4">
+                            <p class="text-xs text-gray-500">Canvas is 850 × 1200 px (A4 op 100%).</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">X (links)</label>
+                                    <input type="number"
+                                           x-model.number="placedFields[editingField].x"
+                                           @change="placedFields[editingField].x = Math.max(0, Math.min(placedFields[editingField].x, 850 - placedFields[editingField].width))"
+                                           min="0" max="850" step="1"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Y (top)</label>
+                                    <input type="number"
+                                           x-model.number="placedFields[editingField].y"
+                                           @change="placedFields[editingField].y = Math.max(0, Math.min(placedFields[editingField].y, 1200 - placedFields[editingField].height))"
+                                           min="0" max="1200" step="1"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Breedte</label>
+                                    <input type="number"
+                                           x-model.number="placedFields[editingField].width"
+                                           @change="placedFields[editingField].width = Math.max(10, Math.min(placedFields[editingField].width, 850))"
+                                           min="10" max="850" step="1"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hoogte</label>
+                                    <input type="number"
+                                           x-model.number="placedFields[editingField].height"
+                                           @change="placedFields[editingField].height = Math.max(2, Math.min(placedFields[editingField].height, 1200))"
+                                           min="2" max="1200" step="1"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
                             </div>
-                        </div>
-
-                        {{-- Pagina zichtbaarheid --}}
-                        <div x-show="editingField !== 'items_table'">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
-                            <div class="grid grid-cols-3 gap-1">
-                                <button @click="placedFields[editingField].pageVisibility = 'all'"
-                                        :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                        class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                    📄 Alle
-                                </button>
-                                <button @click="placedFields[editingField].pageVisibility = 'first'"
-                                        :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                        class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                    1️⃣ Eerste
-                                </button>
-                                <button @click="placedFields[editingField].pageVisibility = 'last'"
-                                        :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                        class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                    🔚 Laatste
-                                </button>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">
-                                "Alle" = herhaalt op elke pagina bij lange facturen
-                            </p>
                         </div>
 
                         <div class="pt-4 flex gap-2">
@@ -653,6 +712,9 @@
                 logoPosition: null,
                 editingField: null,
                 selectedField: null,
+                history: [],
+                historyIndex: -1,
+                _arrowDebounceTimer: null,
                 newTextLabel: '',
                 logoUploading: false,
                 logoUploadError: null,
@@ -705,6 +767,7 @@
                     this.$nextTick(() => {
                         this.setupDragAndDrop();
                         this.setupCanvasKeyboard();
+                        this.pushHistory(); // baseline snapshot
                     });
                 },
 
@@ -752,6 +815,7 @@
                     const preset = TEMPLATE_PRESETS[key];
                     if (!preset) return;
 
+                    this.pushHistory();
                     const positions = JSON.parse(JSON.stringify(preset.positions));
                     const placed = {};
                     for (const [fieldKey, position] of Object.entries(positions)) {
@@ -770,6 +834,27 @@
                     return field ? field.label : fieldId;
                 },
 
+                pushHistory() {
+                    const snapshot = {
+                        placedFields: JSON.parse(JSON.stringify(this.placedFields)),
+                        logoPosition: this.logoPosition ? JSON.parse(JSON.stringify(this.logoPosition)) : null,
+                    };
+                    // Drop any redo-future when a new action is taken
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                    this.history.push(snapshot);
+                    if (this.history.length > 50) this.history.shift();
+                    this.historyIndex = this.history.length - 1;
+                },
+
+                undo() {
+                    if (this.historyIndex <= 0) return;
+                    this.historyIndex--;
+                    const snapshot = this.history[this.historyIndex];
+                    this.placedFields = JSON.parse(JSON.stringify(snapshot.placedFields));
+                    this.logoPosition = snapshot.logoPosition ? JSON.parse(JSON.stringify(snapshot.logoPosition)) : null;
+                    this.$nextTick(() => this.setupDragAndDrop());
+                },
+
                 selectField(key) {
                     this.selectedField = key;
                 },
@@ -781,6 +866,16 @@
                 moveSelectedField(dx, dy) {
                     const key = this.selectedField;
                     if (!key) return;
+
+                    // Push history before the first keypress in a burst, then debounce
+                    if (!this._arrowDebounceTimer) {
+                        this.pushHistory();
+                    }
+                    clearTimeout(this._arrowDebounceTimer);
+                    this._arrowDebounceTimer = setTimeout(() => {
+                        this._arrowDebounceTimer = null;
+                        this.pushHistory();
+                    }, 600);
 
                     if (key === 'logo' && this.logoPosition) {
                         this.logoPosition.x = Math.max(0, Math.min(this.logoPosition.x + dx, 850 - this.logoPosition.width));
@@ -800,16 +895,26 @@
                     const self = this;
 
                     document.addEventListener('keydown', function(e) {
-                        if (!self.selectedField) return;
-                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) === -1) {
-                            if (e.key === 'Escape') {
-                                self.deselectField();
+                        const inInput = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
+
+                        // Ctrl+Z / Cmd+Z — undo (global, works even without a selection)
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                            if (!inInput) {
+                                e.preventDefault();
+                                self.undo();
+                                return;
                             }
+                        }
+
+                        if (!self.selectedField) return;
+
+                        if (e.key === 'Escape') {
+                            self.deselectField();
                             return;
                         }
 
-                        // Only intercept arrow keys when not typing in an input/textarea
-                        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) return;
+                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) === -1) return;
+                        if (inInput) return;
 
                         e.preventDefault();
                         const step = e.shiftKey ? 10 : 1;
@@ -850,6 +955,7 @@
                                 },
                                 end(event) {
                                     event.target.style.zIndex = '';
+                                    self.pushHistory();
                                 }
                             }
                         })
@@ -870,7 +976,8 @@
                                         self.logoPosition.width = Math.round(event.rect.width / scale);
                                         self.logoPosition.height = Math.round(event.rect.height / scale);
                                     }
-                                }
+                                },
+                                end() { self.pushHistory(); }
                             }
                         });
 
@@ -904,6 +1011,7 @@
                                     target.style.opacity = '';
                                     target.style.boxShadow = '';
                                     target.classList.remove('ring-2', 'ring-blue-500');
+                                    self.pushHistory();
                                 }
                             }
                         })
@@ -936,7 +1044,8 @@
                                         self.placedFields[fieldKey].width = Math.round(event.rect.width / scale);
                                         self.placedFields[fieldKey].height = Math.round(event.rect.height / scale);
                                     }
-                                }
+                                },
+                                end() { self.pushHistory(); }
                             }
                         });
 
@@ -957,6 +1066,7 @@
                 },
 
                 openFieldEditor(fieldKey) {
+                    this.pushHistory();
                     this.editingField = fieldKey;
                     this.selectedField = null;
                     console.log('Editing field:', fieldKey);
@@ -973,6 +1083,7 @@
                         return;
                     }
 
+                    this.pushHistory();
                     // Random position within canvas (avoiding edges)
                     const canvasWidth = 850; // A4 width at 100%
                     const canvasHeight = 1200; // A4 height at 100%
@@ -1058,6 +1169,8 @@
                     const text = this.newTextLabel.trim();
                     if (!text) return;
 
+                    this.pushHistory();
+
                     // Unieke key zodat meerdere tekstvelden mogelijk zijn
                     const key = 'static_text_' + Date.now();
                     const canvasWidth = 850, canvasHeight = 1200;
@@ -1083,6 +1196,7 @@
                 },
 
                 addColorRect() {
+                    this.pushHistory();
                     // Unieke key zodat meerdere kleurvlakken mogelijk zijn
                     const key = 'static_rect_' + Date.now();
 
@@ -1127,6 +1241,7 @@
 
                 removeField(fieldKey) {
                     if (confirm(`Veld "${this.placedFields[fieldKey].label}" verwijderen?`)) {
+                        this.pushHistory();
                         // Create new object without the field (proper reactivity)
                         const newFields = {};
                         for (const [key, value] of Object.entries(this.placedFields)) {
@@ -1141,6 +1256,7 @@
 
                 removeLogo() {
                     if (confirm('Logo van canvas verwijderen? (De upload blijft bewaard)')) {
+                        this.pushHistory();
                         this.logoPosition = null;
                         console.log('Logo removed from canvas');
                     }
@@ -1173,6 +1289,7 @@
 
                 clearAll() {
                     if (confirm('Alle velden van canvas verwijderen? Dit leegt de hele template.')) {
+                        this.pushHistory();
                         this.placedFields = {};
                         this.logoPosition = null;
                         console.log('Cleared all fields');
