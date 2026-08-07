@@ -61,6 +61,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
         Route::put('/gebruikers/{user}',                       [UserManagementController::class, 'update'])->name('users.update');
         Route::delete('/gebruikers/{user}',                    [UserManagementController::class, 'destroy'])->name('users.destroy');
         Route::post('/gebruikers/{user}/reset-mfa',            [UserManagementController::class, 'resetMfa'])->name('users.reset-mfa');
+        Route::post('/gebruikers/{user}/wachtwoord',           [UserManagementController::class, 'setPassword'])->name('users.set-password');
         Route::post('/gebruikers/{user}/resend-invite',        [UserManagementController::class, 'resendInvite'])->name('users.resend-invite');
         Route::post('/gebruikers/{user}/approve',              [UserManagementController::class, 'approve'])->name('users.approve');
         Route::post('/gebruikers/{user}/reject',               [UserManagementController::class, 'reject'])->name('users.reject');

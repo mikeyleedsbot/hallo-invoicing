@@ -184,6 +184,14 @@
                                                     </button>
                                                 </form>
                                             </li>
+                                            <li>
+                                                <button type="button"
+                                                        onclick="closeAllMenus(); openPasswordModal({{ $u->id }}, @js($u->name), @js($u->email))"
+                                                        class="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 text-emerald-600 dark:text-emerald-400">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                                    Wachtwoord instellen
+                                                </button>
+                                            </li>
                                             @if($u->mfa_enabled)
                                             <li>
                                                 <form method="POST" action="{{ route('users.reset-mfa', $u) }}"
@@ -401,6 +409,66 @@
     </div>
 
     {{-- Afwijzen-modal --}}
+    {{-- Wachtwoord instellen (voor als de resetmail niet aankomt) --}}
+    <div id="passwordModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closePasswordModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <form method="POST" id="passwordForm" class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+                @csrf
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Wachtwoord instellen</h3>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Je stelt een nieuw wachtwoord in voor <strong id="passwordUserName"></strong>
+                        (<span id="passwordUserEmail"></span>). Geef het daarna zelf aan de klant door —
+                        er wordt geen e-mail verstuurd.
+                    </p>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label for="new_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nieuw wachtwoord</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="password" id="new_password" required autocomplete="new-password"
+                                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <button type="button" onclick="generatePassword()"
+                                    class="shrink-0 px-3 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                                    title="Genereer een sterk wachtwoord">
+                                Genereer
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Het wachtwoord is zichtbaar zodat je het kunt kopiëren en doorgeven.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="new_password_confirmation" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Herhaal wachtwoord</label>
+                        <input type="text" name="password_confirmation" id="new_password_confirmation" required autocomplete="new-password"
+                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+
+                    <div class="p-3 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
+                        <p class="text-xs text-amber-900 dark:text-amber-100">
+                            Actieve sessies van deze gebruiker worden beëindigd; er moet opnieuw ingelogd worden.
+                            Een eventuele MFA-instelling blijft gewoon staan.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="closePasswordModal()"
+                            class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                        Annuleren
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                        Wachtwoord instellen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="rejectModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
         <div class="fixed inset-0 bg-black bg-opacity-50"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -439,6 +507,45 @@ function openApproveModal(userId, userName, userEmail) {
 }
 function closeApproveModal() {
     document.getElementById('approveModal').classList.add('hidden');
+}
+
+function openPasswordModal(userId, userName, userEmail) {
+    document.getElementById('passwordUserName').textContent = userName;
+    document.getElementById('passwordUserEmail').textContent = userEmail;
+    document.getElementById('passwordForm').action = '/gebruikers/' + userId + '/wachtwoord';
+    document.getElementById('new_password').value = '';
+    document.getElementById('new_password_confirmation').value = '';
+    document.getElementById('passwordModal').classList.remove('hidden');
+}
+function closePasswordModal() {
+    document.getElementById('passwordModal').classList.add('hidden');
+}
+
+// Genereert een wachtwoord dat voldoet aan de eisen (hoofd- en kleine letters,
+// cijfer en leesteken). Verwarrende tekens als O/0 en l/1 blijven weg.
+function generatePassword() {
+    const groups = [
+        'ABCDEFGHJKLMNPQRSTUVWXYZ',
+        'abcdefghijkmnpqrstuvwxyz',
+        '23456789',
+        '!@#$%&*?'
+    ];
+    const all = groups.join('');
+    const pick = (set) => set[crypto.getRandomValues(new Uint32Array(1))[0] % set.length];
+
+    // Eerst één teken uit elke groep, daarna aanvullen tot 16
+    let chars = groups.map(pick);
+    while (chars.length < 16) chars.push(pick(all));
+
+    // Shufflen zodat de eerste vier tekens niet altijd dezelfde soort zijn
+    for (let i = chars.length - 1; i > 0; i--) {
+        const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+        [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+
+    const password = chars.join('');
+    document.getElementById('new_password').value = password;
+    document.getElementById('new_password_confirmation').value = password;
 }
 
 function openRejectModal(userId, userName) {

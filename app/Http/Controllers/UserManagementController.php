@@ -193,4 +193,71 @@ class UserManagementController extends Controller
 
         return back()->with('success', 'MFA gereset voor ' . $user->name . '.');
     }
+
+    /**
+     * Direct een nieuw wachtwoord instellen voor een gebruiker.
+     *
+     * Bedoeld voor het geval de resetmail niet aankomt: de beheerder stelt
+     * het wachtwoord in en geeft het zelf door aan de klant.
+     */
+    public function setPassword(Request $request, User $user)
+    {
+        abort_unless(Auth::user()->is_admin, 403);
+
+        $validated = $request->validate([
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ], [], ['password' => 'wachtwoord']);
+
+        // De 'hashed' cast op het User-model doet het hashen
+        $user->password = $validated['password'];
+
+        // 'Onthoud mij'-cookies met het oude wachtwoord ongeldig maken
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        $endedSessions = $this->endSessionsFor($user);
+
+        // Wachtwoordwijziging door een ander dan de eigenaar: altijd vastleggen.
+        // Het wachtwoord zelf komt hier uiteraard niet in.
+        \Log::info('Wachtwoord door beheerder ingesteld', [
+            'admin_id'    => Auth::id(),
+            'admin_email' => Auth::user()->email,
+            'user_id'     => $user->id,
+            'user_email'  => $user->email,
+            'ip'          => $request->ip(),
+        ]);
+
+        $message = 'Nieuw wachtwoord ingesteld voor ' . $user->name . '.';
+        if ($endedSessions > 0) {
+            $message .= ' ' . $endedSessions . ' actieve sessie(s) beëindigd.';
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Beëindig lopende sessies van een gebruiker, zodat iemand die nog met
+     * het oude wachtwoord is ingelogd eruit gaat. De eigen sessie van de
+     * beheerder blijft staan (anders logt die zichzelf uit).
+     */
+    private function endSessionsFor(User $user): int
+    {
+        if (config('session.driver') !== 'database') {
+            return 0;
+        }
+
+        try {
+            return \DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->id)
+                ->where('id', '!=', session()->getId())
+                ->delete();
+        } catch (\Throwable $e) {
+            \Log::warning('Sessies opruimen mislukt', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
+    }
 }
