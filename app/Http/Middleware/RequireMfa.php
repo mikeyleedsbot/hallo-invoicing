@@ -20,6 +20,11 @@ class RequireMfa
             return $next($request);
         }
 
+        // Tijdens impersonatie heeft de admin zijn eigen MFA al doorlopen
+        if ($request->session()->has('impersonator_id')) {
+            return $next($request);
+        }
+
         $user = Auth::user();
 
         // MFA nog niet ingesteld → VERPLICHT instellen voordat je verder kunt
