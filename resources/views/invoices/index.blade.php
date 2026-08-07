@@ -215,91 +215,102 @@
                                             {{ $statusLabels[$invoice->status] ?? ucfirst($invoice->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            {{-- PDF Download --}}
-                                            <a href="{{ route('invoices.pdf', $invoice) }}"
-                                                class="text-purple-600 hover:text-purple-800 dark:text-purple-500 dark:hover:text-purple-400"
-                                                title="Download PDF">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-                                                </svg>
+                                    <td class="px-6 py-4 text-right" x-data="{ open: false, style: '', toggle($el) { var r = $el.getBoundingClientRect(); var dropH = 200; var right = window.innerWidth - r.right; if (r.bottom + dropH > window.innerHeight) { this.style = 'position:fixed; bottom:' + (window.innerHeight - r.top) + 'px; right:' + right + 'px;'; } else { this.style = 'position:fixed; top:' + r.bottom + 'px; right:' + right + 'px;'; } this.open = !this.open; } }">
+
+                                        {{-- Desktop: icon row --}}
+                                        <div class="hidden lg:flex justify-end gap-2">
+                                            <a href="{{ route('invoices.pdf', $invoice) }}" class="text-purple-600 hover:text-purple-800 dark:text-purple-500 dark:hover:text-purple-400" title="Download PDF">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
                                             </a>
-                                            
-                                            {{-- Print --}}
-                                            <a href="{{ route('invoices.print', $invoice) }}" target="_blank"
-                                                class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-                                                title="Afdrukken">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                                                </svg>
+                                            <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200" title="Afdrukken">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                             </a>
-                                            
-                                            {{-- Email versturen --}}
                                             @if($_hasEmail && $_mailAccount)
-                                            {{-- Direct versturen via de gekoppelde mailverbinding --}}
-                                            <form action="{{ route('invoices.send-email', $invoice) }}" method="POST" class="inline"
-                                                onsubmit="return confirm('Factuur {{ $invoice->invoice_number }} versturen naar {{ $_cust->email }} via {{ $_mailAccount->from_email }}?');">
+                                            <form action="{{ route('invoices.send-email', $invoice) }}" method="POST" class="inline" onsubmit="return confirm('Factuur {{ $invoice->invoice_number }} versturen naar {{ $_cust->email }} via {{ $_mailAccount->from_email }}?');">
                                                 @csrf
-                                                <button type="submit"
-                                                    class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400"
-                                                    title="Versturen naar {{ $_cust->email }} via {{ $_mailAccount->from_email }}">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                                    </svg>
+                                                <button type="submit" class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400" title="Versturen naar {{ $_cust->email }} via {{ $_mailAccount->from_email }}">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                                 </button>
                                             </form>
                                             @elseif($_hasEmail)
-                                            <button type="button"
-                                                @click="startEmailFlow(@js($_pdfUrl), @js($_mailtoHref), @js($_cust->email))"
-                                                class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400"
-                                                title="E-mail versturen naar {{ $_cust->email }}">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                                </svg>
+                                            <button type="button" @click="startEmailFlow(@js($_pdfUrl), @js($_mailtoHref), @js($_cust->email))" class="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400" title="E-mail versturen naar {{ $_cust->email }}">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                             </button>
                                             @else
-                                            <span class="text-gray-300 dark:text-gray-600 cursor-not-allowed"
-                                                title="Klant heeft geen e-mailadres">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                                </svg>
+                                            <span class="text-gray-300 dark:text-gray-600 cursor-not-allowed" title="Klant heeft geen e-mailadres">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                             </span>
                                             @endif
-
-                                            {{-- View --}}
-                                            <a href="{{ route('invoices.show', $invoice) }}"
-                                                class="text-blue-600 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400"
-                                                title="Bekijken">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                </svg>
+                                            <a href="{{ route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400" title="Bekijken">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             </a>
-                                            
-                                            {{-- Edit --}}
-                                            <a href="{{ route('invoices.edit', $invoice) }}"
-                                                class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
-                                                title="Bewerken">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                </svg>
+                                            <a href="{{ route('invoices.edit', $invoice) }}" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200" title="Bewerken">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                             </a>
-                                            
-                                            {{-- Delete --}}
-                                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="inline"
-                                                onsubmit="return confirm('Weet je zeker dat je deze factuur wilt verwijderen?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400"
-                                                    title="Verwijderen">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                    </svg>
+                                            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="inline" onsubmit="return confirm('Weet je zeker dat je deze factuur wilt verwijderen?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400" title="Verwijderen">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             </form>
                                         </div>
+
+                                        {{-- Mobile: kebab dropdown --}}
+                                        <div class="lg:hidden flex justify-end">
+                                            <button @click="toggle($el)"
+                                                class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>
+                                            </button>
+                                            <template x-teleport="body">
+                                                <div x-show="open" x-transition @click.outside="open = false" @scroll.window="open = false"
+                                                    :style="style"
+                                                    class="z-50 w-44 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 text-sm text-left">
+                                                    <a href="{{ route('invoices.pdf', $invoice) }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+                                                        Download PDF
+                                                    </a>
+                                                    <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                        Afdrukken
+                                                    </a>
+                                                    @if($_hasEmail && $_mailAccount)
+                                                    <form action="{{ route('invoices.send-email', $invoice) }}" method="POST" onsubmit="return confirm('Factuur {{ $invoice->invoice_number }} versturen naar {{ $_cust->email }}?');">
+                                                        @csrf
+                                                        <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                            E-mail versturen
+                                                        </button>
+                                                    </form>
+                                                    @elseif($_hasEmail)
+                                                    <button type="button" @click="open = false; startEmailFlow(@js($_pdfUrl), @js($_mailtoHref), @js($_cust->email))" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                        E-mail versturen
+                                                    </button>
+                                                    @else
+                                                    <span class="flex items-center gap-2 px-4 py-2 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                        Geen e-mailadres
+                                                    </span>
+                                                    @endif
+                                                    <a href="{{ route('invoices.show', $invoice) }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                        Bekijken
+                                                    </a>
+                                                    <a href="{{ route('invoices.edit', $invoice) }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                        Bewerken
+                                                    </a>
+                                                    <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je deze factuur wilt verwijderen?');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                            Verwijderen
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </template>
+                                        </div>
+
                                     </td>
                                 </tr>
                                 @endforeach
