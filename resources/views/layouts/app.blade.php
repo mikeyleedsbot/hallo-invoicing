@@ -1,5 +1,18 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<script>
+    (function() {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+        if (localStorage.getItem('sidebar') === 'closed') {
+            document.documentElement.classList.add('sidebar-closed');
+        }
+    })();
+</script>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +26,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 dark:bg-gray-900">
-    <div x-data="{ sidebarOpen: true, darkMode: true }" class="antialiased">
+    <div x-data="{ sidebarOpen: localStorage.getItem('sidebar') !== 'closed', darkMode: localStorage.getItem('theme') !== 'light' }" class="antialiased">
 
         <!-- Top Navbar -->
         <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
@@ -21,7 +34,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
                         <!-- Sidebar Toggle Button -->
-                        <button @click="sidebarOpen = !sidebarOpen"
+                        <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebar', sidebarOpen ? 'open' : 'closed'); document.documentElement.classList.toggle('sidebar-closed', !sidebarOpen)"
                                 type="button"
                                 class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <span class="sr-only">Open sidebar</span>
@@ -44,7 +57,7 @@
                     <!-- Right Side: Dark Mode Toggle + User Dropdown -->
                     <div class="flex items-center gap-3">
                         <!-- Dark Mode Toggle -->
-                        <button @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark')"
+                        <button @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', darkMode ? 'dark' : 'light')"
                                 type="button"
                                 class="p-2 text-gray-500 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700">
                             <svg x-show="!darkMode" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -105,10 +118,14 @@
             </div>
         </nav>
 
+        <!-- Sidebar + Main flex wrapper -->
+        <div class="flex mt-14 min-h-[calc(100vh-3.5rem)]">
+
         <!-- Sidebar -->
-        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-               class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" style="transition: transform 0.3s ease;">
-            <div class="h-full px-3 pb-4 overflow-y-auto">
+        <aside id="app-sidebar"
+               :style="'width: ' + (sidebarOpen ? '16rem' : '0')"
+               class="flex-shrink-0 overflow-hidden bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" style="transition: width 0.3s ease;">
+            <div class="h-full px-3 py-4 overflow-y-auto w-64">
                 <ul class="space-y-2 font-medium">
                     <!-- Dashboard -->
                     <li>
@@ -281,10 +298,11 @@
         </aside>
 
         <!-- Main Content -->
-        <div :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-0'"
-             class="p-6 mt-14" style="transition: margin 0.3s ease;">
+        <main class="flex-1 min-w-0 p-6 overflow-auto">
             {{ $slot }}
-        </div>
+        </main>
+
+        </div><!-- end flex wrapper -->
 
         <!-- Impersonatie-balk: zichtbaar zolang een admin meekijkt als andere gebruiker -->
         @if(session('impersonator_id'))

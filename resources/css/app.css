@@ -5,6 +5,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Sidebar width set before Alpine loads, driven by inline script on <html> */
+html:not(.sidebar-closed) #app-sidebar { width: 16rem; }
+html.sidebar-closed #app-sidebar { width: 0; }
+
 /* Alpine.js x-cloak */
 [x-cloak] {
     display: none !important;
