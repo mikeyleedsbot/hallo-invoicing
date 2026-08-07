@@ -223,6 +223,42 @@ class TemplateDefaultsTest extends TestCase
         $this->assertTrue($b->fresh()->is_default_quote);
     }
 
+    /**
+     * De templatekeuze in de formulieren markeert de standaard van het juiste
+     * soort. Verwees eerder naar de weggehaalde kolom is_default.
+     */
+    public function test_formulieren_markeren_de_juiste_standaardtemplate(): void
+    {
+        $invoiceTpl = $this->makeTemplate('Factuursjabloon', ['is_default_invoice' => true]);
+        $quoteTpl   = $this->makeTemplate('Offertesjabloon', ['is_default_quote' => true]);
+
+        foreach ([route('invoices.create'), route('quotes.create')] as $url) {
+            $this->as($this->user)->get($url)->assertOk()->assertSee('(standaard)');
+        }
+
+        // Op het factuurformulier hoort de markering bij de factuurstandaard
+        $html = $this->as($this->user)->get(route('invoices.create'))->getContent();
+        $this->assertMatchesRegularExpression(
+            '/' . preg_quote($invoiceTpl->name, '/') . '\s*\(standaard\)/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/' . preg_quote($quoteTpl->name, '/') . '\s*\(standaard\)/',
+            $html
+        );
+
+        // En op het offerteformulier bij de offertestandaard
+        $html = $this->as($this->user)->get(route('quotes.create'))->getContent();
+        $this->assertMatchesRegularExpression(
+            '/' . preg_quote($quoteTpl->name, '/') . '\s*\(standaard\)/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/' . preg_quote($invoiceTpl->name, '/') . '\s*\(standaard\)/',
+            $html
+        );
+    }
+
     public function test_overzicht_toont_beide_badges(): void
     {
         $this->makeTemplate('Facturen-sjabloon', ['is_default_invoice' => true]);

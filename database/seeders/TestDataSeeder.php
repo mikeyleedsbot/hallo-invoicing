@@ -297,7 +297,7 @@ class TestDataSeeder extends Seeder
 
         $templateId = DB::table('invoice_templates')
             ->where('user_id', $user->id)
-            ->where('is_default', true)
+            ->where('is_default_invoice', true)
             ->value('id');
 
         $products = DB::table('products')->whereIn('id', $productIds)->get()->keyBy('id');
@@ -405,7 +405,7 @@ class TestDataSeeder extends Seeder
 
         $templateId = DB::table('invoice_templates')
             ->where('user_id', $user->id)
-            ->where('is_default', true)
+            ->where('is_default_quote', true)
             ->value('id');
 
         $products = DB::table('products')->whereIn('id', $productIds)->get()->keyBy('id');

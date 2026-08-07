@@ -113,8 +113,8 @@
                         <select name="template_id" x-tom-select="{placeholder: 'Selecteer template...'}"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             @foreach($templates as $template)
-                                <option value="{{ $template->id }}" {{ $quote->template_id == $template->id || (!$quote->template_id && $template->is_default) ? 'selected' : '' }}>
-                                    {{ $template->name }}@if($template->is_default) (standaard)@endif
+                                <option value="{{ $template->id }}" {{ $quote->template_id == $template->id || (!$quote->template_id && $template->is_default_quote) ? 'selected' : '' }}>
+                                    {{ $template->name }}@if($template->is_default_quote) (standaard)@endif
                                 </option>
                             @endforeach
                         </select>
