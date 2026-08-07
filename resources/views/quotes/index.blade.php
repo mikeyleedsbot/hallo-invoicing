@@ -18,7 +18,7 @@
             this.showEmailModal = false;
         }
     }">
-        
+
             {{-- Header --}}
             <div class="mb-6 flex justify-between items-start">
                 <div>
@@ -174,19 +174,43 @@
                                         <input type="checkbox" value="{{ $quote->id }}" x-model="selectedIds"
                                                class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
                                     </td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                                         {{ $quote->quote_number }}
                                     </td>
-                                    <td class="px-6 py-4">
-                                        {{ $quote->customer->name }}
+                                    <td class="px-6 py-4 whitespace-nowrap max-w-[12rem]"
+                                        x-data="{ tip: false, tx: 0, ty: 0, show($el) { var spans = $el.querySelectorAll('span'); var overflow = Array.from(spans).some(s => s.scrollWidth > s.clientWidth); if (!overflow) return; var r = $el.getBoundingClientRect(); this.tx = r.left; this.ty = r.bottom + 4; this.tip = true; } }"
+                                        @mouseenter="show($el)"
+                                        @mouseleave="tip = false"
+                                        @click="tip ? (tip = false) : show($el)"
+                                        @click.outside="tip = false">
+                                        <span class="block truncate font-medium text-gray-900 dark:text-white">{{ $quote->customer->name }}</span>
+                                        @if($quote->customer->company_name)
+                                            <span class="block truncate text-xs text-gray-500 dark:text-gray-400">{{ $quote->customer->company_name }}</span>
+                                        @endif
+                                        <template x-teleport="body">
+                                            <span x-show="tip"
+                                                  x-transition:enter="transition ease-out duration-100"
+                                                  x-transition:enter-start="opacity-0 scale-95"
+                                                  x-transition:enter-end="opacity-100 scale-100"
+                                                  x-transition:leave="transition ease-in duration-75"
+                                                  x-transition:leave-start="opacity-100 scale-100"
+                                                  x-transition:leave-end="opacity-0 scale-95"
+                                                  :style="`position:fixed; left:${tx}px; top:${ty}px;`"
+                                                  class="z-50 w-max max-w-xs rounded bg-gray-900 px-2.5 py-1.5 text-xs text-white shadow-lg dark:bg-gray-700">
+                                                <span class="block font-medium">{{ $quote->customer->name }}</span>
+                                                @if($quote->customer->company_name)
+                                                    <span class="block text-gray-300 dark:text-gray-400">{{ $quote->customer->company_name }}</span>
+                                                @endif
+                                            </span>
+                                        </template>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         {{ \Carbon\Carbon::parse($quote->quote_date)->format('d-m-Y') }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         {{ \Carbon\Carbon::parse($quote->valid_until)->format('d-m-Y') }}
                                     </td>
-                                    <td class="px-6 py-4 font-medium">
+                                    <td class="px-6 py-4 font-medium whitespace-nowrap">
                                         € {{ number_format($quote->total, 2, ',', '.') }}
                                         <span class="block text-xs font-normal text-gray-500 dark:text-gray-400">
                                             incl. BTW
