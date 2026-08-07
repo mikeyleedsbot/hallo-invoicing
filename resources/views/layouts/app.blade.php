@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<head>
 <script>
     (function() {
         var theme = localStorage.getItem('theme');
@@ -8,12 +9,10 @@
         } else {
             document.documentElement.classList.add('dark');
         }
-        if (localStorage.getItem('sidebar') === 'closed') {
-            document.documentElement.classList.add('sidebar-closed');
-        }
+        var sidebar = localStorage.getItem('sidebar');
+        document.documentElement.dataset.sidebar = (sidebar === 'closed' || sidebar === 'icons') ? sidebar : 'open';
     })();
 </script>
-<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -26,7 +25,20 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 dark:bg-gray-900">
-    <div x-data="{ sidebarOpen: localStorage.getItem('sidebar') !== 'closed', darkMode: localStorage.getItem('theme') !== 'light' }" class="antialiased">
+    <div x-data="{
+            sidebar: (function(){ var s = localStorage.getItem('sidebar'); return (s === 'closed' || s === 'icons') ? s : 'open'; })(),
+            darkMode: localStorage.getItem('theme') !== 'light',
+            toggleSidebar() {
+                var isLg = window.innerWidth >= 1024;
+                if (this.sidebar === 'open') {
+                    this.sidebar = isLg ? 'icons' : 'closed';
+                } else {
+                    this.sidebar = 'open';
+                }
+                localStorage.setItem('sidebar', this.sidebar);
+                document.documentElement.dataset.sidebar = this.sidebar;
+            }
+         }" class="antialiased">
 
         <!-- Top Navbar -->
         <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
@@ -34,7 +46,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
                         <!-- Sidebar Toggle Button -->
-                        <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebar', sidebarOpen ? 'open' : 'closed'); document.documentElement.classList.toggle('sidebar-closed', !sidebarOpen)"
+                        <button @click="toggleSidebar()"
                                 type="button"
                                 class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <span class="sr-only">Open sidebar</span>
@@ -118,14 +130,20 @@
             </div>
         </nav>
 
+        <!-- Mobile backdrop (small screens only) -->
+        <div id="sidebar-backdrop"
+             @click="toggleSidebar()"
+             class="fixed inset-0 z-30 bg-black/40 lg:hidden"
+             style="top: 3.5rem;"
+             :class="sidebar === 'open' ? 'block' : 'hidden'"></div>
+
         <!-- Sidebar + Main flex wrapper -->
         <div class="flex mt-14 min-h-[calc(100vh-3.5rem)]">
 
         <!-- Sidebar -->
         <aside id="app-sidebar"
-               :style="'width: ' + (sidebarOpen ? '16rem' : '0')"
                class="flex-shrink-0 overflow-hidden bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" style="transition: width 0.3s ease;">
-            <div class="h-full px-3 py-4 overflow-y-auto w-64">
+            <div class="h-full py-4 overflow-y-auto w-full" id="sidebar-inner">
                 <ul class="space-y-2 font-medium">
                     <!-- Dashboard -->
                     <li>
@@ -136,7 +154,7 @@
                                 <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
                                 <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
                             </svg>
-                            <span class="ms-3">Dashboard</span>
+                            <span class="ms-3 sidebar-label">Dashboard</span>
                         </a>
                     </li>
 
@@ -149,7 +167,7 @@
                                 <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L13 1.586A2 2 0 0011.586 1H9zm3 4a1 1 0 10-2 0v1H9a1 1 0 100 2h1v1a1 1 0 102 0V9h1a1 1 0 100-2h-1V6z"/>
                                 <path d="M3 8a1 1 0 011-1h1v10H4a1 1 0 01-1-1V8z"/>
                             </svg>
-                            <span class="ms-3">Facturen</span>
+                            <span class="ms-3 sidebar-label">Facturen</span>
                         </a>
                     </li>
 
@@ -161,7 +179,7 @@
                                  fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="ms-3">Offertes</span>
+                            <span class="ms-3 sidebar-label">Offertes</span>
                         </a>
                     </li>
 
@@ -173,7 +191,7 @@
                                  fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                             </svg>
-                            <span class="ms-3">Klanten</span>
+                            <span class="ms-3 sidebar-label">Klanten</span>
                         </a>
                     </li>
 
@@ -185,13 +203,13 @@
                                  fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="ms-3">Producten</span>
+                            <span class="ms-3 sidebar-label">Producten</span>
                         </a>
                     </li>
 
                     <!-- Divider -->
                     <li class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                        <span class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500">Instellingen</span>
+                        <span class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500 sidebar-section-label">Instellingen</span>
                     </li>
 
                     <!-- Bedrijfsgegevens -->
@@ -202,7 +220,7 @@
                                  fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="ms-3">Bedrijfsgegevens</span>
+                            <span class="ms-3 sidebar-label">Bedrijfsgegevens</span>
                         </a>
                     </li>
 
@@ -215,7 +233,7 @@
                                 <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
                                 <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="ms-3">Templates</span>
+                            <span class="ms-3 sidebar-label">Templates</span>
                         </a>
                     </li>
 
@@ -227,7 +245,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                             </svg>
-                            <span class="ms-3">BTW Tarieven</span>
+                            <span class="ms-3 sidebar-label">BTW Tarieven</span>
                         </a>
                     </li>
 
@@ -239,7 +257,7 @@
                                  fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="ms-3">Instellingen</span>
+                            <span class="ms-3 sidebar-label">Instellingen</span>
                         </a>
                     </li>
 
@@ -251,7 +269,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8l-8.5 5.5L4 8m16 10H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v9a2 2 0 01-2 2z"/>
                             </svg>
-                            <span class="ms-3">E-mailverbindingen</span>
+                            <span class="ms-3 sidebar-label">E-mailverbindingen</span>
                         </a>
                     </li>
 
@@ -263,14 +281,14 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <span class="ms-3">Help & Instructies</span>
+                            <span class="ms-3 sidebar-label">Help & Instructies</span>
                         </a>
                     </li>
 
                     @if(Auth::user()->is_admin)
                     <!-- Admin sectie -->
                     <li class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                        <span class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500">Admin beheer</span>
+                        <span class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500 sidebar-section-label">Admin beheer</span>
                     </li>
                     <li>
                         <a href="{{ route('email-settings.edit') }}"
@@ -279,7 +297,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
-                            <span class="ms-3">E-mailinstellingen</span>
+                            <span class="ms-3 sidebar-label">E-mailinstellingen</span>
                         </a>
                     </li>
                     <li>
@@ -289,7 +307,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            <span class="ms-3">Bedrijvenbeheer</span>
+                            <span class="ms-3 sidebar-label">Bedrijvenbeheer</span>
                         </a>
                     </li>
                     @endif

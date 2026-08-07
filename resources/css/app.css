@@ -5,9 +5,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sidebar width set before Alpine loads, driven by inline script on <html> */
-html:not(.sidebar-closed) #app-sidebar { width: 16rem; }
-html.sidebar-closed #app-sidebar { width: 0; }
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+
+/* Large screens (≥1024px): sidebar is a flex child that pushes content */
+@media (min-width: 1024px) {
+    html[data-sidebar="open"]   #app-sidebar { width: 16rem; }
+    html[data-sidebar="icons"]  #app-sidebar { width: 3.75rem; }
+    html[data-sidebar="closed"] #app-sidebar { width: 0; }
+}
+
+/* Small screens (<1024px): sidebar overlays — fixed, full height, zero flex impact */
+@media (max-width: 1023px) {
+    #app-sidebar {
+        position: fixed;
+        top: 3.5rem; /* below navbar */
+        left: 0;
+        height: calc(100vh - 3.5rem);
+        z-index: 40;
+        /* flex-shrink-0 still set in HTML but the aside is out of flow */
+        width: 0 !important; /* closed by default, overridden below */
+    }
+    html[data-sidebar="open"] #app-sidebar { width: 16rem !important; }
+}
+
+/* Open state: add side padding to the inner container */
+html[data-sidebar="open"] #sidebar-inner { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+/* Prevent labels from wrapping during width transition */
+#sidebar-inner .sidebar-label,
+#sidebar-inner .sidebar-section-label { white-space: nowrap; }
+
+/* Icon-only mode: center icons, hide labels and section headings */
+html[data-sidebar="icons"] #sidebar-inner .sidebar-label,
+html[data-sidebar="icons"] #sidebar-inner .sidebar-section-label { display: none; }
+html[data-sidebar="icons"] #sidebar-inner a,
+html[data-sidebar="icons"] #sidebar-inner li > a { justify-content: center; }
 
 /* Alpine.js x-cloak */
 [x-cloak] {
