@@ -68,7 +68,7 @@
                             <th scope="col" class="px-6 py-4"><x-sort-header column="company_name" label="Bedrijf" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><x-sort-header column="email" label="Email" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><x-sort-header column="phone" label="Telefoon" :sort="$sort" :direction="$direction" /></th>
-                            <th scope="col" class="px-6 py-4"><x-sort-header column="city" label="Plaats" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="address" label="Adres" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><x-sort-header column="invoices_count" label="Facturen" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><x-sort-header column="created_at" label="Aangemaakt op" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4">
@@ -85,7 +85,14 @@
                                 <td class="px-6 py-4">{{ $customer->company_name ?: '-' }}</td>
                                 <td class="px-6 py-4">{{ $customer->email ?: '-' }}</td>
                                 <td class="px-6 py-4">{{ $customer->phone ?: '-' }}</td>
-                                <td class="px-6 py-4">{{ $customer->city ?: '-' }}</td>
+                                <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                                    @if($customer->address || $customer->city)
+                                        @if($customer->address)<span class="block">{{ $customer->address }}</span>@endif
+                                        @if($customer->postal_code || $customer->city)<span class="block">{{ trim($customer->postal_code . ' ' . $customer->city) }}</span>@endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4">
                                     @if($customer->invoices_count > 0)
                                         <button @click='openInvoicesModal(@json($customer))'
@@ -112,7 +119,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12">
+                                <td colspan="8" class="px-6 py-12">
                                     <div class="text-center">
                                         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                                             <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -10,13 +10,20 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         // Sorteerbare kolommen
-        $allowedSorts = ['name', 'company_name', 'email', 'phone', 'city', 'created_at', 'invoices_count'];
+        $allowedSorts = ['name', 'company_name', 'email', 'phone', 'address', 'created_at', 'invoices_count'];
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'created_at';
         $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
 
         $search = trim((string) $request->query('search', ''));
 
-        $query = Customer::query()->orderBy($sort, $direction);
+        $query = Customer::query()
+            ->where(function ($query) {
+                $query->whereNotNull('name')->where('name', '!=', '')
+                    ->orWhere(function ($q) {
+                        $q->whereNotNull('company_name')->where('company_name', '!=', '');
+                    });
+            })
+            ->orderBy($sort, $direction);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -24,6 +31,8 @@ class CustomerController extends Controller
                   ->orWhere('company_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('postal_code', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%");
             });
         }
