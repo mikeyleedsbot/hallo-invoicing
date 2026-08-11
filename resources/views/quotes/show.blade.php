@@ -94,25 +94,9 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</label>
-                                @php
-                                    $statusColors = [
-                                        'draft' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                                        'sent' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                                        'accepted' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                                        'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                                        'expired' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
-                                    ];
-                                    $statusLabels = [
-                                        'draft' => 'Concept',
-                                        'sent' => 'Verzonden',
-                                        'accepted' => 'Geaccepteerd',
-                                        'rejected' => 'Afgewezen',
-                                        'expired' => 'Verlopen'
-                                    ];
-                                @endphp
                                 <div class="mt-1">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColors[$quote->status] ?? '' }}">
-                                        {{ $statusLabels[$quote->status] ?? ucfirst($quote->status) }}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $quote->status_color }}">
+                                        {{ $quote->status_label }}
                                     </span>
                                 </div>
                             </div>

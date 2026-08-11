@@ -27,6 +27,10 @@ class Customer extends Model
         'active' => 'boolean',
     ];
 
+    protected $withCount = [
+        'invoices',
+    ];
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class);

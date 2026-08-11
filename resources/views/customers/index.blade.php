@@ -1,9 +1,13 @@
 <x-app-layout>
 @section('title', __('Customers'))
-    <div class="space-y-6" x-data="{ 
-        showModal: false, 
-        editMode: false, 
+    <div class="space-y-6" x-data="{
+        showModal: false,
+        editMode: false,
         currentCustomer: null,
+        showInvoicesModal: false,
+        invoicesCustomer: null,
+        invoices: [],
+        invoicesLoading: false,
         openCreateModal() {
             this.editMode = false;
             this.currentCustomer = null;
@@ -13,6 +17,18 @@
             this.editMode = true;
             this.currentCustomer = customer;
             this.showModal = true;
+        },
+        openInvoicesModal(customer) {
+            this.invoicesCustomer = customer;
+            this.invoices = [];
+            this.invoicesLoading = true;
+            this.showInvoicesModal = true;
+            fetch(`/customers/${customer.id}/invoices`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => { this.invoices = data; this.invoicesLoading = false; })
+            .catch(() => { this.invoicesLoading = false; });
         }
     }">
         <!-- Header -->
@@ -21,7 +37,7 @@
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Klanten</h1>
                 <p class="mt-2 text-gray-600 dark:text-gray-400">Beheer je klantrelaties</p>
             </div>
-            <button @click="openCreateModal()" 
+            <button @click="openCreateModal()"
                     class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -53,6 +69,8 @@
                             <th scope="col" class="px-6 py-4"><x-sort-header column="email" label="Email" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><x-sort-header column="phone" label="Telefoon" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><x-sort-header column="city" label="Plaats" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="invoices_count" label="Facturen" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="created_at" label="Aangemaakt op" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4">
                                 <span class="sr-only">Acties</span>
                             </th>
@@ -68,8 +86,22 @@
                                 <td class="px-6 py-4">{{ $customer->email ?: '-' }}</td>
                                 <td class="px-6 py-4">{{ $customer->phone ?: '-' }}</td>
                                 <td class="px-6 py-4">{{ $customer->city ?: '-' }}</td>
+                                <td class="px-6 py-4">
+                                    @if($customer->invoices_count > 0)
+                                        <button @click='openInvoicesModal(@json($customer))'
+                                                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
+                                            {{ $customer->invoices_count }}
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">0</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">{{ $customer->created_at->isoFormat('D-M-YYYY') }}</td>
                                 <td class="px-6 py-4 text-right">
-                                    <button @click='openEditModal(@json($customer))' 
+                                    <button @click='openEditModal(@json($customer))'
                                             class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-3">Bewerken</button>
                                     <form method="POST" action="{{ route('customers.destroy', $customer) }}" class="inline" onsubmit="return confirm('Weet je zeker dat je deze klant wilt verwijderen?')">
                                         @csrf
@@ -111,7 +143,7 @@
         </div>
 
         <!-- Create/Edit Modal -->
-        <div x-show="showModal" 
+        <div x-show="showModal"
              @click.away="showModal = false"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0"
@@ -119,15 +151,15 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 overflow-y-auto" 
+             class="fixed inset-0 z-50 overflow-y-auto"
              style="display: none;">
-            
+
             <!-- Backdrop -->
             <div class="fixed inset-0 bg-black bg-opacity-50" style="backdrop-filter: blur(4px);"></div>
-            
+
             <!-- Modal -->
             <div class="flex items-center justify-center min-h-screen p-4">
-                <div @click.stop 
+                <div @click.stop
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 scale-95"
                      x-transition:enter-end="opacity-100 scale-100"
@@ -135,7 +167,7 @@
                      x-transition:leave-start="opacity-100 scale-100"
                      x-transition:leave-end="opacity-0 scale-95"
                      class="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl dark:bg-gray-800">
-                    
+
                     <!-- Header -->
                     <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white" x-text="editMode ? 'Klant Bewerken' : 'Nieuwe Klant'"></h3>
@@ -228,6 +260,97 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        <!-- Facturen Modal -->
+        <div x-show="showInvoicesModal"
+             @click.away="showInvoicesModal = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 overflow-y-auto"
+             style="display: none;">
+
+            <div class="fixed inset-0 bg-black bg-opacity-50" style="backdrop-filter: blur(4px);"></div>
+
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div @click.stop
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl dark:bg-gray-800">
+
+                    <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Facturen</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                <span x-text="invoicesCustomer?.name"></span>
+                                <span x-show="invoicesCustomer && invoicesCustomer.invoices_count > 10" class="ml-1">
+                                    - laatste 10 van <span x-text="invoicesCustomer?.invoices_count"></span>
+                                </span>
+                            </p>
+                        </div>
+                        <button @click="showInvoicesModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="p-6 max-h-[70vh] overflow-y-auto">
+                        <div x-show="invoicesLoading" class="flex justify-center py-8">
+                            <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                            </svg>
+                        </div>
+
+                        <div x-show="!invoicesLoading">
+                            <template x-if="invoices.length === 0">
+                                <p class="text-center text-gray-500 dark:text-gray-400 py-8">Geen facturen gevonden.</p>
+                            </template>
+                            <template x-if="invoices.length > 0">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                        <tr>
+                                            <th class="px-4 py-3">Nummer</th>
+                                            <th class="px-4 py-3">Datum</th>
+                                            <th class="px-4 py-3">Vervaldatum</th>
+                                            <th class="px-4 py-3">Bedrag</th>
+                                            <th class="px-4 py-3">Status</th>
+                                            <th class="px-4 py-3"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="invoice in invoices" :key="invoice.id">
+                                            <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white" x-text="invoice.invoice_number"></td>
+                                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400" x-text="invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString('nl-NL') : '-'"></td>
+                                                <td class="px-4 py-3 text-gray-600 dark:text-gray-400" x-text="invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('nl-NL') : '-'"></td>
+                                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white" x-text="'€ ' + parseFloat(invoice.total).toFixed(2).replace('.', ',')"></td>
+                                                <td class="px-4 py-3">
+                                                    <span :class="invoice.status_color" class="px-2 py-0.5 rounded-full text-xs font-medium" x-text="invoice.status_label"></span>
+                                                </td>
+                                                <td class="px-4 py-3 text-right">
+                                                    <a :href="`/invoices/${invoice.id}`"
+                                                       class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-xs">
+                                                        Bekijken →
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

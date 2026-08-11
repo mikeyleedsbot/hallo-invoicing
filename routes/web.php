@@ -35,6 +35,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
 
     // Customers
     Route::resource('customers', App\Http\Controllers\CustomerController::class)->except(['show', 'create', 'edit']);
+    Route::get('/customers/{customer}/invoices', [App\Http\Controllers\CustomerController::class, 'invoices'])->name('customers.invoices');
 
     // Products
     Route::resource('products', App\Http\Controllers\ProductController::class)->except(['show', 'create', 'edit']);

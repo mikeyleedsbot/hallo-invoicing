@@ -219,24 +219,8 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        @php
-                                            $statusColors = [
-                                                'draft' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                                                'sent' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                                                'paid' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                                                'overdue' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                                                'cancelled' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                                            ];
-                                            $statusLabels = [
-                                                'draft' => 'Concept',
-                                                'sent' => 'Verzonden',
-                                                'paid' => 'Betaald',
-                                                'overdue' => 'Verlopen',
-                                                'cancelled' => 'Geannuleerd'
-                                            ];
-                                        @endphp
-                                        <span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $statusColors[$invoice->status] ?? '' }}">
-                                            {{ $statusLabels[$invoice->status] ?? ucfirst($invoice->status) }}
+                                        <span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $invoice->status_color }}">
+                                            {{ $invoice->status_label }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right" x-data="{ open: false, style: '', toggle($el) { var r = $el.getBoundingClientRect(); var dropH = 200; var right = window.innerWidth - r.right; if (r.bottom + dropH > window.innerHeight) { this.style = 'position:fixed; bottom:' + (window.innerHeight - r.top) + 'px; right:' + right + 'px;'; } else { this.style = 'position:fixed; top:' + r.bottom + 'px; right:' + right + 'px;'; } this.open = !this.open; } }">

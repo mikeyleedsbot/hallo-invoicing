@@ -68,5 +68,14 @@
     "Help: Quotes": "Help: Offertes",
 
     "Profiel": "Profiel",
-    "Uitloggen": "Uitloggen"
+    "Uitloggen": "Uitloggen",
+
+    "status.draft": "Concept",
+    "status.sent": "Verzonden",
+    "status.paid": "Betaald",
+    "status.overdue": "Verlopen",
+    "status.cancelled": "Geannuleerd",
+    "status.accepted": "Geaccepteerd",
+    "status.rejected": "Afgewezen",
+    "status.expired": "Verlopen"
 }

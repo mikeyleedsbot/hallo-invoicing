@@ -10,13 +10,13 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         // Sorteerbare kolommen
-        $allowedSorts = ['name', 'company_name', 'email', 'phone', 'city'];
+        $allowedSorts = ['name', 'company_name', 'email', 'phone', 'city', 'created_at', 'invoices_count'];
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'created_at';
         $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
 
         $search = trim((string) $request->query('search', ''));
 
-        $query = Customer::orderBy($sort, $direction);
+        $query = Customer::query()->orderBy($sort, $direction);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -69,6 +69,20 @@ class CustomerController extends Controller
         $customer->update($validated);
 
         return redirect()->route('customers.index')->with('success', 'Klant succesvol bijgewerkt!');
+    }
+
+    public function invoices(Customer $customer)
+    {
+        $invoices = $customer->invoices()
+            ->orderBy('invoice_date', 'desc')
+            ->take(10)
+            ->get(['id', 'invoice_number', 'invoice_date', 'due_date', 'total', 'status'])
+            ->map(fn ($i) => array_merge($i->toArray(), [
+                'status_label' => $i->status_label,
+                'status_color' => $i->status_color,
+            ]));
+
+        return response()->json($invoices);
     }
 
     public function destroy(Customer $customer)
