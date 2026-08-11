@@ -14,7 +14,6 @@ Alpine.directive('tom-select', (el, { expression }, { evaluate }) => {
     
     const defaultConfig = {
         plugins: ['clear_button'],
-        allowEmptyOption: true,
         ...config
     };
     
