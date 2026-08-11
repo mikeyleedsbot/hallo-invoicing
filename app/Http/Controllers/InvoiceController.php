@@ -132,7 +132,14 @@ class InvoiceController extends Controller
 
     public function create()
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::orderBy('name')
+            ->where(function ($query) {
+                $query->whereNotNull('name')->where('name', '!=', '')
+                      ->orWhere(function ($q) {
+                          $q->whereNotNull('company_name')->where('company_name', '!=', '');
+                      });
+            })
+            ->get();
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default_invoice', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::getDefaultForInvoices();
@@ -239,7 +246,14 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice)
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::orderBy('name')
+            ->where(function ($query) {
+                $query->whereNotNull('name')->where('name', '!=', '')
+                    ->orWhere(function ($q) {
+                        $q->whereNotNull('company_name')->where('company_name', '!=', '');
+                    });
+            })
+            ->get();
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default_invoice', 'desc')->orderBy('name')->get();
         $invoice->load('lines');

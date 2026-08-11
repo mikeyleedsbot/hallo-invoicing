@@ -123,7 +123,14 @@ class QuoteController extends Controller
 
     public function create()
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::orderBy('name')
+            ->where(function ($query) {
+                $query->whereNotNull('name')->where('name', '!=', '')
+                    ->orWhere(function ($q) {
+                        $q->whereNotNull('company_name')->where('company_name', '!=', '');
+                    });
+            })
+            ->get();
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default_quote', 'desc')->orderBy('name')->get();
         $defaultTemplate = InvoiceTemplate::getDefaultForQuotes();
@@ -207,7 +214,14 @@ class QuoteController extends Controller
 
     public function edit(Quote $quote)
     {
-        $customers = Customer::orderBy('name')->get();
+        $customers = Customer::orderBy('name')
+            ->where(function ($query) {
+                $query->whereNotNull('name')->where('name', '!=', '')
+                    ->orWhere(function ($q) {
+                        $q->whereNotNull('company_name')->where('company_name', '!=', '');
+                    });
+            })
+            ->get();
         $products = Product::orderBy('name')->get();
         $templates = InvoiceTemplate::orderBy('is_default_quote', 'desc')->orderBy('name')->get();
         $quote->load('lines');
