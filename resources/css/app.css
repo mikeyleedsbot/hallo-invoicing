@@ -58,6 +58,9 @@ html[data-sidebar="icons"] #sidebar-inner li > a { justify-content: center; }
     color: rgb(17 24 39); /* gray-900 */
     box-shadow: none;
     min-height: 42px; /* Match standard input height */
+    max-height: 42px;
+    overflow: hidden;
+    flex-wrap: nowrap;
 }
 
 .ts-wrapper .ts-control input {
@@ -135,14 +138,33 @@ html[data-sidebar="icons"] #sidebar-inner li > a { justify-content: center; }
     color: rgb(147 197 253); /* blue-300 */
 }
 
-/* Tom Select - Clear button styling */
+/* Tom Select - Clear button: pinned right, never overlaps text */
 .ts-wrapper .ts-control .clear-button {
+    position: absolute;
+    right: 2rem; /* left of the caret */
+    top: 50%;
+    transform: translateY(-50%);
     opacity: 0.5;
     transition: opacity 0.2s;
+    background: transparent;
+    z-index: 1;
 }
 
 .ts-wrapper .ts-control .clear-button:hover {
     opacity: 1;
+}
+
+/* Tom Select - Truncate selected value to one line */
+.ts-wrapper.single .ts-control {
+    position: relative;
+    padding-right: 4rem; /* room for clear + caret */
+}
+
+.ts-wrapper.single .ts-control .item {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 /* Tom Select - Placeholder */

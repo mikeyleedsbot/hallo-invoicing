@@ -66,7 +66,7 @@
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value=""></option>
                             @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}@if($customer->company_name) ({{ $customer->company_name }})@endif @if($customer->address || $customer->city) | @if($customer->address){{ $customer->address }}, @endif{{ $customer->city }}@endif</option>
+                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }} data-postal="{{ $customer->postal_code }}">{{ $customer->name }}@if($customer->company_name) ({{ $customer->company_name }})@endif @if($customer->address || $customer->city) | @if($customer->address){{ $customer->address }}, @endif{{ $customer->city }}@endif</option>
                             @endforeach
                         </select>
                         @error('customer_id')

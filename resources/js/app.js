@@ -11,12 +11,13 @@ window.interact = interact; // Make interact globally available
 // Tom Select directive for Alpine.js
 Alpine.directive('tom-select', (el, { expression }, { evaluate }) => {
     const config = expression ? evaluate(expression) : {};
-    
+
     const defaultConfig = {
-        plugins: ['clear_button'],
+        plugins: ['clear_button', 'dropdown_input'],
+        searchField: ['text', 'postal'],
         ...config
     };
-    
+
     new TomSelect(el, defaultConfig);
 });
 
