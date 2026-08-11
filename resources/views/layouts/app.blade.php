@@ -142,7 +142,8 @@
 
         <!-- Sidebar -->
         <aside id="app-sidebar"
-               class="flex-shrink-0 overflow-hidden bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" style="transition: width 0.3s ease;">
+               class="flex-shrink-0 overflow-hidden bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" style="transition: width 0.3s ease;"
+               @click="if(window.innerWidth < 1024 && $event.target.closest('a')) toggleSidebar()">
             <div class="h-full py-4 overflow-y-auto w-full" id="sidebar-inner">
                 <ul class="space-y-2 font-medium">
                     <!-- Dashboard -->
