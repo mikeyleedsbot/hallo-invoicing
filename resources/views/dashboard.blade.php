@@ -114,7 +114,7 @@
                 </svg>
                 Snelle Acties
             </h2>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <a href="{{ route('invoices.create') }}" class="group relative flex items-center gap-4 px-6 py-5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all shadow-sm hover:shadow-md">
                     <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/20">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
