@@ -15,7 +15,11 @@ class Quote extends Model
     {
         // Offerteteller in de instellingen automatisch doorschuiven
         static::created(function (Quote $quote) {
-            AppSetting::advanceCounter('quote_number_start', $quote->quote_number, $quote->user_id);
+            $prefix = AppSetting::withoutGlobalScope('belongs_to_user')
+                ->where('user_id', $quote->user_id)
+                ->value('quote_prefix') ?? 'OFF';
+
+            AppSetting::advanceCounter('quote_number_start', $quote->quote_number, $quote->user_id, $prefix);
         });
     }
 

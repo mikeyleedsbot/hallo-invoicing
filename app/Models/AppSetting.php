@@ -144,17 +144,27 @@ class AppSetting extends Model
     /**
      * Teller doorschuiven naar (gebruikt nummer + 1). Wordt aangeroepen
      * vanuit de created-hooks van Invoice en Quote.
+     *
+     * Let op: het nummer wordt losgeknipt op basis van de prefix-lengte,
+     * niet met een losse "laatste cijfers"-regex. Anders vreet een prefix
+     * die zelf op cijfers eindigt (bv. "2026-" of "F2026") zijn eigen
+     * cijfers mee het tellerveld in, waardoor de prefix dubbel in het
+     * volgende nummer terechtkomt.
      */
-    public static function advanceCounter(string $column, string $usedNumber, int $userId): void
+    public static function advanceCounter(string $column, string $usedNumber, int $userId, string $prefix = ''): void
     {
-        if (!preg_match('/(\d+)\s*$/', $usedNumber, $m)) {
+        $tail = $prefix !== '' && str_starts_with($usedNumber, $prefix)
+            ? substr($usedNumber, strlen($prefix))
+            : $usedNumber;
+
+        if (!preg_match('/^\d+$/', $tail)) {
             return;
         }
 
         static::withoutGlobalScope('belongs_to_user')
             ->where('user_id', $userId)
-            ->where($column, '<=', (int) $m[1])
-            ->update([$column => (int) $m[1] + 1]);
+            ->where($column, '<=', (int) $tail)
+            ->update([$column => (int) $tail + 1]);
     }
 
     // Per-user singleton: elke gebruiker heeft eigen app-instellingen
