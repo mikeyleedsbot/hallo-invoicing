@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Services\InvoicePdfGenerator;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -10,28 +9,31 @@ use Illuminate\Database\Seeder;
 class InvoiceTemplateSeeder extends Seeder
 {
     /**
-     * Seed default templates + BTW-tarieven voor alle users die ze nog niet hebben.
+     * Seed default templates + BTW-tarieven voor alle teams die ze nog niet hebben.
+     * WithoutModelEvents staat aan, dus dit is een expliciete aanvulling op
+     * TeamObserver (die dit al automatisch doet bij het aanmaken van een team).
      */
     public function run(): void
     {
-        $users = User::all();
+        $teams = \App\Models\Team::with('owner')->get();
 
-        foreach ($users as $user) {
-            $this->seedTemplatesForUser($user);
-            $this->seedVatRatesForUser($user);
+        foreach ($teams as $team) {
+            $this->seedTemplatesForTeam($team);
+            $this->seedVatRatesForTeam($team);
         }
     }
 
-    private function seedTemplatesForUser(User $user): void
+    private function seedTemplatesForTeam(\App\Models\Team $team): void
     {
-        // Skip als user al templates heeft
-        if (\DB::table('invoice_templates')->where('user_id', $user->id)->exists()) {
+        // Skip als team al templates heeft
+        if (\DB::table('invoice_templates')->where('team_id', $team->id)->exists()) {
             return;
         }
 
         // Standaard template — posities uit InvoicePdfGenerator zodat het altijd in sync is
         \DB::table('invoice_templates')->insert([
-            'user_id' => $user->id,
+            'team_id' => $team->id,
+            'user_id' => $team->owner_id,
             'name' => 'Standaard Template',
             'is_default_invoice' => true,
             'is_default_quote' => true,
@@ -45,7 +47,8 @@ class InvoiceTemplateSeeder extends Seeder
 
         // Modern template
         \DB::table('invoice_templates')->insert([
-            'user_id' => $user->id,
+            'team_id' => $team->id,
+            'user_id' => $team->owner_id,
             'name' => 'Modern Template',
             'is_default_invoice' => false,
             'is_default_quote' => false,
@@ -76,10 +79,10 @@ class InvoiceTemplateSeeder extends Seeder
         ]);
     }
 
-    private function seedVatRatesForUser(User $user): void
+    private function seedVatRatesForTeam(\App\Models\Team $team): void
     {
-        // Skip als user al BTW-tarieven heeft
-        if (\DB::table('vat_rates')->where('user_id', $user->id)->exists()) {
+        // Skip als team al BTW-tarieven heeft
+        if (\DB::table('vat_rates')->where('team_id', $team->id)->exists()) {
             return;
         }
 
@@ -91,7 +94,8 @@ class InvoiceTemplateSeeder extends Seeder
 
         foreach ($rates as $rate) {
             \DB::table('vat_rates')->insert(array_merge($rate, [
-                'user_id' => $user->id,
+                'team_id' => $team->id,
+                'user_id' => $team->owner_id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

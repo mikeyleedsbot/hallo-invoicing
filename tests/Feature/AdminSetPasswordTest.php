@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -29,7 +30,7 @@ class AdminSetPasswordTest extends TestCase
 
     private function makeUser(string $email, array $attributes = []): User
     {
-        return User::create(array_merge([
+        $user = User::create(array_merge([
             'name'              => 'Gebruiker ' . $email,
             'email'             => $email,
             'password'          => bcrypt('oud-wachtwoord'),
@@ -38,6 +39,10 @@ class AdminSetPasswordTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ], $attributes));
+
+        (new TeamService())->createForOwner($user);
+
+        return $user;
     }
 
     private function as(User $user)

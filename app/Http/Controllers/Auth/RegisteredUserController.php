@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\MailService;
+use App\Services\TeamService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -46,6 +47,9 @@ class RegisteredUserController extends Controller
             'status'       => User::STATUS_PENDING,
             'is_admin'     => false,
         ]);
+
+        // Elke zelfregistratie start een eigen, nieuw team met de aanvrager als eigenaar.
+        (new TeamService())->createForOwner($user);
 
         // Notificeer alle admins dat er een nieuwe aanvraag is.
         $this->notifyAdmins($user);

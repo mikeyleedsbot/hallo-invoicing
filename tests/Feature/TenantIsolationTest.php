@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\User;
 use App\Models\VatRate;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -37,7 +38,7 @@ class TenantIsolationTest extends TestCase
 
     private function makeUser(string $email): User
     {
-        return User::create([
+        $user = User::create([
             'name'              => 'User ' . $email,
             'email'             => $email,
             'password'          => bcrypt('password'),
@@ -46,6 +47,10 @@ class TenantIsolationTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ]);
+
+        (new TeamService())->createForOwner($user);
+
+        return $user;
     }
 
     /** Geef een request-builder die als $user ingelogd is én MFA gepasseerd heeft. */

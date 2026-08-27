@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'mfa'   => \App\Http\Middleware\RequireMfa::class,
             'admin' => \App\Http\Middleware\RequireAdmin::class,
+            'team'  => \App\Http\Middleware\EnsureTeamContext::class,
         ]);
 
         $middleware->web(append: [

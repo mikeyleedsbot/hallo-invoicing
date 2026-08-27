@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\MailService;
+use App\Services\TeamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -112,6 +113,9 @@ class UserManagementController extends Controller
             'invite_token' => $token,
             'invite_sent_at' => now(),
         ]);
+
+        // Ook een admin-aangemaakt account krijgt een eigen team (eigenaar).
+        (new TeamService())->createForOwner($user);
 
         // Stuur uitnodigingsmail
         $inviteUrl = route('invite.accept', ['token' => $token]);

@@ -156,9 +156,9 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', auth()->id())],
-            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('user_id', auth()->id())],
-            'invoice_number' => ['required', Rule::unique('invoices')->where('user_id', auth()->id())],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'invoice_number' => ['required', Rule::unique('invoices')->where('team_id', auth()->user()->currentTeam->id)],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',
@@ -267,8 +267,8 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         $validated = $request->validate([
-            'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', auth()->id())],
-            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('user_id', auth()->id())],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('team_id', auth()->user()->currentTeam->id)],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',

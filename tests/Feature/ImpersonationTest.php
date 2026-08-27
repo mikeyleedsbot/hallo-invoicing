@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,7 +24,7 @@ class ImpersonationTest extends TestCase
 
     private function makeUser(string $email, bool $isAdmin = false): User
     {
-        return User::create([
+        $user = User::create([
             'name'              => 'User ' . $email,
             'email'             => $email,
             'password'          => bcrypt('password'),
@@ -33,6 +34,10 @@ class ImpersonationTest extends TestCase
             'mfa_confirmed_at'  => now(),
             'is_admin'          => $isAdmin,
         ]);
+
+        (new TeamService())->createForOwner($user);
+
+        return $user;
     }
 
     private function as(User $user)

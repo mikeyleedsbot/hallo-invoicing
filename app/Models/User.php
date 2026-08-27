@@ -3,13 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Observers\UserObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[ObservedBy(UserObserver::class)]
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -23,6 +22,32 @@ class User extends Authenticatable
     public function invoices()
     {
         return $this->hasMany(\App\Models\Invoice::class);
+    }
+
+    /**
+     * Het team waar deze gebruiker momenteel in werkt — bepaalt welke
+     * klanten/facturen/instellingen zichtbaar zijn (zie BelongsToTeam).
+     */
+    public function currentTeam(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'current_team_id');
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function ownedTeams()
+    {
+        return $this->hasMany(Team::class, 'owner_id');
+    }
+
+    public function isOwnerOfCurrentTeam(): bool
+    {
+        return $this->currentTeam && $this->currentTeam->owner_id === $this->id;
     }
 
     public function mailAccounts()
@@ -70,6 +95,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'current_team_id',
         'company_name',
         'phone',
         'address',

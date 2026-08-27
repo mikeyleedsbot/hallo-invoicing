@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 
 class Product extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     protected $fillable = [
         'user_id',
+        'team_id',
         'name',
         'description',
         'price',

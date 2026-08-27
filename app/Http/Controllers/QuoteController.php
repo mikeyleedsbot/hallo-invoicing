@@ -147,9 +147,9 @@ class QuoteController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', auth()->id())],
-            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('user_id', auth()->id())],
-            'quote_number' => ['required', Rule::unique('quotes')->where('user_id', auth()->id())],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'quote_number' => ['required', Rule::unique('quotes')->where('team_id', auth()->user()->currentTeam->id)],
             'quote_date' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:quote_date',
             'valid_days' => 'nullable|integer',
@@ -235,9 +235,9 @@ class QuoteController extends Controller
     public function update(Request $request, Quote $quote)
     {
         $validated = $request->validate([
-            'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', auth()->id())],
-            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('user_id', auth()->id())],
-            'quote_number' => ['required', Rule::unique('quotes')->where('user_id', auth()->id())->ignore($quote->id)],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'quote_number' => ['required', Rule::unique('quotes')->where('team_id', auth()->user()->currentTeam->id)->ignore($quote->id)],
             'quote_date' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:quote_date',
             'valid_days' => 'nullable|integer',

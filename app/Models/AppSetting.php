@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 
 class AppSetting extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     protected $fillable = [
         'user_id',
+        'team_id',
         'default_vat_rate',
         'default_payment_terms',
         'quote_valid_days',
@@ -151,7 +152,7 @@ class AppSetting extends Model
      * cijfers mee het tellerveld in, waardoor de prefix dubbel in het
      * volgende nummer terechtkomt.
      */
-    public static function advanceCounter(string $column, string $usedNumber, int $userId, string $prefix = ''): void
+    public static function advanceCounter(string $column, string $usedNumber, int $teamId, string $prefix = ''): void
     {
         $tail = $prefix !== '' && str_starts_with($usedNumber, $prefix)
             ? substr($usedNumber, strlen($prefix))
@@ -161,21 +162,21 @@ class AppSetting extends Model
             return;
         }
 
-        static::withoutGlobalScope('belongs_to_user')
-            ->where('user_id', $userId)
+        static::withoutGlobalScope('belongs_to_team')
+            ->where('team_id', $teamId)
             ->where($column, '<=', (int) $tail)
             ->update([$column => (int) $tail + 1]);
     }
 
-    // Per-user singleton: elke gebruiker heeft eigen app-instellingen
+    // Per-team singleton: elk team heeft eigen app-instellingen
     public static function get()
     {
-        $userId = auth()->id();
+        $team = auth()->check() ? auth()->user()->currentTeam : null;
 
-        if (!$userId) {
-            return static::withoutGlobalScope('belongs_to_user')->firstOrCreate(['id' => 1]);
+        if (!$team) {
+            return static::withoutGlobalScope('belongs_to_team')->firstOrCreate(['id' => 1]);
         }
 
-        return static::firstOrCreate(['user_id' => $userId]);
+        return static::firstOrCreate(['team_id' => $team->id]);
     }
 }

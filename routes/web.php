@@ -7,6 +7,8 @@ use App\Http\Controllers\HelpController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\MfaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\VatRateController;
 use Illuminate\Support\Facades\Route;
@@ -16,7 +18,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'mfa'])
+    ->middleware(['auth', 'verified', 'mfa', 'team'])
     ->name('dashboard');
 
 // MFA routes (auth vereist, maar nog geen mfa check)
@@ -28,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/mfa/disable', [MfaController::class, 'disable'])->middleware('throttle:6,1')->name('mfa.disable');
 });
 
-Route::middleware(['auth', 'mfa'])->group(function () {
+Route::middleware(['auth', 'mfa', 'team'])->group(function () {
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -47,6 +49,12 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     // App Settings
     Route::get('/settings',  [AppSettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings',  [AppSettingController::class, 'update'])->name('settings.update');
+
+    // Team (meerdere gebruikers per bedrijfsaccount)
+    Route::get('/team',                            [TeamController::class, 'show'])->name('team.show');
+    Route::post('/team/uitnodigen',                [TeamController::class, 'invite'])->name('team.invite');
+    Route::delete('/team/uitnodigingen/{invitation}', [TeamController::class, 'cancelInvite'])->name('team.cancel-invite');
+    Route::delete('/team/leden/{user}',             [TeamController::class, 'removeMember'])->name('team.remove-member');
 
     // BTW Tarieven
     Route::get('/btw-tarieven',                    [VatRateController::class, 'index'])->name('vat-rates.index');
@@ -128,5 +136,9 @@ Route::middleware(['auth', 'mfa'])->group(function () {
 // Uitnodiging accepteren (publiek, geen auth — throttled tegen token-brute-force)
 Route::get('/uitnodiging/{token}',   [InviteController::class, 'accept'])->middleware('throttle:20,1')->name('invite.accept');
 Route::post('/uitnodiging/{token}',  [InviteController::class, 'activate'])->middleware('throttle:10,1')->name('invite.activate');
+
+// Team-uitnodiging accepteren (publiek, geen auth — throttled tegen token-brute-force)
+Route::get('/team-uitnodiging/{token}',   [TeamInvitationController::class, 'accept'])->middleware('throttle:20,1')->name('team-invitations.accept');
+Route::post('/team-uitnodiging/{token}',  [TeamInvitationController::class, 'activate'])->middleware('throttle:10,1')->name('team-invitations.activate');
 
 require __DIR__.'/auth.php';
