@@ -45,9 +45,13 @@ class TeamInvitationController extends Controller
 
         if ($existingUser) {
             // Bestaand account: koppelt direct aan het team, geen nieuw wachtwoord nodig.
-            $this->joinTeam($existingUser, $invitation);
+            $switched = $this->joinTeam($existingUser, $invitation);
 
-            return redirect()->route('login')->with('success', 'Je bent toegevoegd aan het team. Log in om verder te gaan.');
+            $message = $switched
+                ? 'Je bent toegevoegd aan het team. Log in om verder te gaan.'
+                : 'Je bent toegevoegd aan het team. Je huidige team blijft actief — wissel via het menu rechtsboven zodra je bent ingelogd.';
+
+            return redirect()->route('login')->with('success', $message);
         }
 
         $request->validate([
@@ -71,7 +75,16 @@ class TeamInvitationController extends Controller
         return redirect()->route('mfa.setup')->with('success', 'Account geactiveerd! Stel nu tweestapsverificatie in.');
     }
 
-    private function joinTeam(User $user, TeamInvitation $invitation): void
+    /**
+     * Voegt de user toe aan het team van de uitnodiging. Als de user nog
+     * geen actief team heeft (nieuw account, of een teamloos account),
+     * wordt dit meteen het actieve team; anders blijft het huidige team
+     * actief en moet de user zelf wisselen (zie TeamSwitchController) —
+     * zo verdwijnt iemands werk nooit stilzwijgend uit beeld.
+     *
+     * @return bool of het nieuwe team meteen actief is gezet.
+     */
+    private function joinTeam(User $user, TeamInvitation $invitation): bool
     {
         $team = Team::findOrFail($invitation->team_id);
 
@@ -79,10 +92,16 @@ class TeamInvitationController extends Controller
             $team->members()->attach($user->id, ['role' => $invitation->role]);
         }
 
-        $user->current_team_id = $team->id;
-        $user->save();
+        $switched = false;
+        if (!$user->current_team_id) {
+            $user->current_team_id = $team->id;
+            $user->save();
+            $switched = true;
+        }
 
         $invitation->accepted_at = now();
         $invitation->save();
+
+        return $switched;
     }
 }

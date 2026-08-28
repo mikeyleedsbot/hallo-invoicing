@@ -103,11 +103,38 @@
                                  x-transition:leave="transition ease-in duration-75"
                                  x-transition:leave-start="opacity-100 scale-100"
                                  x-transition:leave-end="opacity-0 scale-95"
-                                 class="absolute right-0 z-50 mt-2 w-48 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600">
+                                 class="absolute right-0 z-50 mt-2 w-[16rem] text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600">
                                 <div class="px-4 py-3">
                                     <p class="text-sm text-gray-900 dark:text-white">{{ Auth::user()->name }}</p>
                                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ Auth::user()->email }}</p>
                                 </div>
+
+                                @php($myTeams = Auth::user()->teams()->orderBy('teams.name')->get())
+                                @if($myTeams->count() > 1)
+                                <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-600">
+                                    <p class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500">Werkt in</p>
+                                </div>
+                                <ul class="py-1 border-b border-gray-100 dark:border-gray-600">
+                                    @foreach($myTeams as $myTeam)
+                                    <li>
+                                        @if($myTeam->id === Auth::user()->current_team_id)
+                                        <span class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                            {{ $myTeam->name }}
+                                        </span>
+                                        @else
+                                        <form method="POST" action="{{ route('team.switch', $myTeam) }}">
+                                            @csrf
+                                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                {{ $myTeam->name }}
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </li>
+                                    @endforeach
+                                </ul>
+                                @endif
+
                                 <ul class="py-1">
                                     <li>
                                         <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">

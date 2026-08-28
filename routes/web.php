@@ -9,6 +9,7 @@ use App\Http\Controllers\MfaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamInvitationController;
+use App\Http\Controllers\TeamSwitchController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\VatRateController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'mfa', 'team'])->group(function () {
     Route::post('/team/uitnodigen',                [TeamController::class, 'invite'])->name('team.invite');
     Route::delete('/team/uitnodigingen/{invitation}', [TeamController::class, 'cancelInvite'])->name('team.cancel-invite');
     Route::delete('/team/leden/{user}',             [TeamController::class, 'removeMember'])->name('team.remove-member');
+    Route::post('/team/wisselen/{team}',            [TeamSwitchController::class, 'switch'])->name('team.switch');
 
     // BTW Tarieven
     Route::get('/btw-tarieven',                    [VatRateController::class, 'index'])->name('vat-rates.index');
