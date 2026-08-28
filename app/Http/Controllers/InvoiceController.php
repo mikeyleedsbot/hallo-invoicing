@@ -51,9 +51,11 @@ class InvoiceController extends Controller
         if ($sort === 'customer_name') {
             $query->join('customers', 'invoices.customer_id', '=', 'customers.id')
                   ->orderBy('customers.name', $direction)
+                  ->orderBy('invoices.id', $direction)
                   ->select('invoices.*');
         } else {
-            $query->orderBy($sort, $direction);
+            $query->orderBy($sort, $direction)
+                  ->orderBy('invoices.id', $direction);
         }
 
         if ($filters['search'] !== '') {

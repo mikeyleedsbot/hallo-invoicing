@@ -53,7 +53,8 @@ class DashboardController extends Controller
 
         // Recente facturen (laatste 5)
         $recenteFacturen = Invoice::with('customer')
-            ->latest('invoice_date')
+            ->orderBy('invoice_date', 'desc')
+            ->orderBy('id', 'desc')
             ->take(5)
             ->get();
 
