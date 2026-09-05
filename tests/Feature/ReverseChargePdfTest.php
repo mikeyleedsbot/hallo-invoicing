@@ -160,6 +160,35 @@ class ReverseChargePdfTest extends TestCase
         $this->assertStringNotContainsString('#fffbeb', $html);
     }
 
+    public function test_editor_heeft_geen_vaste_verlegd_melding_meer(): void
+    {
+        $template = InvoiceTemplate::getDefaultForInvoices();
+
+        $html = $this->as($this->user)
+            ->get(route('templates.editor', $template))
+            ->assertOk()
+            ->getContent();
+
+        // De oude, niet-verplaatsbare weergave mag niet terugkomen
+        $this->assertStringNotContainsString('Vaste BTW verlegd melding', $html);
+        $this->assertStringNotContainsString('Ghost: verlegde BTW', $html);
+
+        // Het veld is er wel als gewoon, beschermd veld
+        $this->assertStringContainsString('BTW verlegd-vermelding', $html);
+        $this->assertStringContainsString("protectedFields: ['reverse_charge_note']", $html);
+    }
+
+    public function test_nieuwe_template_bevat_het_veld_op_de_oude_plek(): void
+    {
+        // Standaardtemplate die bij een nieuwe gebruiker wordt aangemaakt
+        $positions = InvoiceTemplate::getDefaultForInvoices()->field_positions
+            ?: InvoicePdfGenerator::getDefaultPositions();
+
+        $this->assertArrayHasKey('reverse_charge_note', $positions);
+        $this->assertSame(50, $positions['reverse_charge_note']['x']);
+        $this->assertSame(862, $positions['reverse_charge_note']['y']);
+    }
+
     public function test_gewone_factuur_houdt_alle_velden(): void
     {
         $html = $this->pdfHtmlFor([]);

@@ -377,14 +377,6 @@
                                         </div>
                                     </template>
 
-                                    {{-- Ghost: verlegde BTW vermelding (vaste positie, niet verplaatsbaar) --}}
-                                    {{-- Coördinaten spiegelen InvoicePdfGenerator: left=50, top=862, width=750, fontSize=13px --}}
-                                    <div class="absolute pointer-events-none select-none"
-                                         style="left:50px;top:862px;width:750px;font-size:13px;font-family:Arial,sans-serif;font-weight:bold;color:#92400e;border:1px dashed #f59e0b;background-color:rgba(255,251,235,0.55);padding:4px 8px;box-sizing:border-box;opacity:0.65;z-index:5;line-height:1.4;">
-                                        BTW verlegd — De BTW is verlegd naar de afnemer.
-                                        <span style="position:absolute;top:-14px;left:0;font-size:8px;font-weight:normal;color:#92400e;background:rgba(255,251,235,0.9);padding:1px 4px;border:1px dashed #f59e0b;border-bottom:none;white-space:nowrap;">Vaste BTW verlegd melding (indien van toepassing)</span>
-                                    </div>
-
                                     {{-- Empty State --}}
                                     <template x-if="Object.keys(placedFields).length === 0">
                                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
