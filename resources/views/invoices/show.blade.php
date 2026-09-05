@@ -261,10 +261,12 @@
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-sm border border-blue-200 dark:border-gray-600 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Totalen</h3>
                         <div class="space-y-3">
+                            @unless($invoice->vat_reverse_charged)
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-700 dark:text-gray-300">Subtotaal (excl. BTW)</span>
                                 <span class="font-medium text-gray-900 dark:text-white">€ {{ number_format($invoice->subtotal, 2, ',', '.') }}</span>
                             </div>
+                            @endunless
                             @unless($invoice->vat_reverse_charged)
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-700 dark:text-gray-300">BTW</span>

@@ -83,17 +83,39 @@ class InvoicePdfGenerator
         // áchter de tekstvelden renderen.
         $pos = $this->rectsFirst($pos);
 
-        // BTW verlegd: geen BTW-bedrag/-label tonen en "Totaal incl. BTW" wordt
-        // gewoon "Totaal" (alle bedragen zijn immers excl. BTW).
+        // BTW verlegd: er wordt geen BTW berekend, dus subtotaal en totaal zijn
+        // hetzelfde bedrag. Alleen het totaal blijft staan; "Totaal excl. BTW"
+        // en het BTW-bedrag (met hun labels) vervallen en "Totaal incl. BTW"
+        // wordt gewoon "Totaal".
+        //
+        // Let op: dit hangt uitsluitend aan vat_reverse_charged. Een regel met
+        // 0% BTW is iets wezenlijk anders en laat de velden dus gewoon staan.
         $reverseCharged = (bool) ($data['vat_reverse_charged'] ?? false);
         if ($reverseCharged) {
-            unset($pos['static_text_lbl_tax'], $pos['tax'], $pos['vat_amount']);
+            unset(
+                $pos['static_text_lbl_tax'], $pos['tax'], $pos['vat_amount'],
+                $pos['static_text_lbl_subtotal'], $pos['subtotal']
+            );
             foreach (['static_text_lbl_total' => 'Totaal:'] as $id => $txt) {
                 if (isset($pos[$id])) {
                     $pos[$id]['staticText'] = $txt;
                     $pos[$id]['label']      = $txt;
                 }
             }
+
+            // De verplichte vermelding is een gewoon, verplaatsbaar veld. Templates
+            // van voor deze wijziging kennen het nog niet; die krijgen de
+            // standaardpositie, zodat de vermelding blijft staan waar hij stond en
+            // nooit van een factuur kan verdwijnen.
+            if (! isset($pos['reverse_charge_note'])) {
+                $default = self::getDefaultPositions()['reverse_charge_note'] ?? null;
+                if ($default) {
+                    $pos['reverse_charge_note'] = $default;
+                }
+            }
+        } else {
+            // Zonder verlegging hoort de vermelding er niet op
+            unset($pos['reverse_charge_note']);
         }
 
         $firstOnlyFields = [];  // alleen pagina 1
@@ -213,16 +235,6 @@ body { font-family:Arial,sans-serif; }
                     if ($value === null) continue;
                     $html .= $this->renderAbs($p, $value);
                 }
-            }
-
-            // Verplichte vermelding bij verlegde BTW — altijd op de laatste pagina,
-            // los van het notities-veld (dat niet elke template rendert).
-            if ($isLast && $reverseCharged && !empty($data['reverse_charge_note'])) {
-                $html .= sprintf(
-                    '<div class="abs" style="left:%smm;top:%smm;width:%smm;font-size:%spt;font-family:Arial;font-weight:bold;color:#78350f;border:1px solid #f59e0b;background-color:#fffbeb;padding:4px 8px;">%s</div>',
-                    $this->x(50), $this->y(862), $this->x(734), $this->pt(13),
-                    htmlspecialchars($data['reverse_charge_note'])
-                );
             }
 
             // Tabelblok met rijen van deze pagina

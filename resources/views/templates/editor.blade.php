@@ -346,6 +346,7 @@
                                                         class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 shadow-lg"
                                                         title="Veld bewerken">✎</button>
                                                 <button @click.stop="removeField(key)"
+                                                        x-show="!isProtectedField(key)"
                                                         class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
                                                         title="Veld verwijderen">✕</button>
                                             </div>
@@ -785,7 +786,17 @@
                     { id: 'total', align: 'left', label: 'Totaal' },
                     { id: 'payment_terms', align: 'left', label: 'Betalingsvoorwaarden' },
                     { id: 'notes', align: 'left', label: 'Opmerkingen' },
+                    { id: 'reverse_charge_note', align: 'left', label: 'BTW verlegd-vermelding' },
                 ],
+
+                // Velden die niet verwijderd mogen worden. De verlegd-vermelding
+                // is wettelijk verplicht op een factuur met verlegde BTW; hij mag
+                // wel verplaatst en opgemaakt worden, net als elk ander veld.
+                protectedFields: ['reverse_charge_note'],
+
+                isProtectedField(key) {
+                    return this.protectedFields.includes(key);
+                },
 
                 init() {
                     this.initializePlacedFields();
@@ -1408,6 +1419,10 @@
                 },
 
                 removeField(fieldKey) {
+                    if (this.isProtectedField(fieldKey)) {
+                        alert('De BTW verlegd-vermelding is verplicht op een factuur met verlegde BTW en kan niet worden verwijderd. Je kunt hem wel verplaatsen en opmaken.');
+                        return;
+                    }
                     if (confirm(`Veld "${this.placedFields[fieldKey].label}" verwijderen?`)) {
                         this.pushHistory();
                         // Create new object without the field (proper reactivity)
@@ -1458,9 +1473,15 @@
                 clearAll() {
                     if (confirm('Alle velden van canvas verwijderen? Dit leegt de hele template.')) {
                         this.pushHistory();
-                        this.placedFields = {};
+                        // Beschermde velden (zoals de verplichte verlegd-vermelding)
+                        // blijven staan
+                        const kept = {};
+                        for (const [key, value] of Object.entries(this.placedFields)) {
+                            if (this.isProtectedField(key)) kept[key] = value;
+                        }
+                        this.placedFields = kept;
                         this.logoPosition = null;
-                        console.log('Cleared all fields');
+                        console.log('Cleared all fields, kept:', Object.keys(kept));
                     }
                 },
 

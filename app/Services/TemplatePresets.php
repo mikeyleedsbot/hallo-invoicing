@@ -75,6 +75,12 @@ class TemplatePresets
             'tax'                 => ['x' => 605, 'y' => 793, 'width' => 195, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'right'],
             'total'               => ['x' => 605, 'y' => 824, 'width' => 195, 'height' => 30,  'fontSize' => 18, 'fontFamily' => 'inherit', 'align' => 'right', 'fontWeight' => 'bold'],
 
+            // Verplichte vermelding bij verlegde BTW. Verschijnt alleen op facturen
+            // met BTW verlegd, maar is net als elk ander veld te verplaatsen en
+            // op te maken. Positie komt overeen met waar de vermelding voorheen
+            // vast stond, tussen het totaal en de betalingsvoorwaarden.
+            'reverse_charge_note' => ['x' => 50,  'y' => 862, 'width' => 734, 'height' => 30,  'fontSize' => 13, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold', 'color' => '#78350f', 'backgroundColor' => '#fffbeb', 'pageVisibility' => 'last', 'label' => 'BTW verlegd-vermelding'],
+
             'payment_terms'       => ['x' => 50,  'y' => 900, 'width' => 750, 'height' => 90,  'fontSize' => 14, 'fontFamily' => 'inherit', 'align' => 'left'],
         ];
     }
