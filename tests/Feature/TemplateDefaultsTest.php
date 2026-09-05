@@ -280,6 +280,45 @@ class TemplateDefaultsTest extends TestCase
         $this->assertStringContainsString("'items-center': field.verticalAlign === 'middle'", $html);
     }
 
+    /**
+     * Het bewerkpaneel werd zo hoog dat de onderste opties wegvielen. De
+     * tekstopmaak zit daarom in een eigen tabblad.
+     */
+    public function test_bewerkpaneel_heeft_een_apart_tabblad_voor_tekstopmaak(): void
+    {
+        $template = $this->makeTemplate('Sjabloon met tabs');
+
+        $html = $this->as($this->user)
+            ->get(route('templates.editor', $template))
+            ->assertOk()
+            ->assertSee('Tekstopmaak')
+            ->getContent();
+
+        $instellingen = strpos($html, "editorTab === 'instellingen'\" class=\"space-y-4");
+        $tekst        = strpos($html, "editorTab === 'tekst'\" class=\"space-y-4");
+        $plaatsing    = strpos($html, "editorTab === 'plaatsing'\" class=\"space-y-4");
+
+        $this->assertNotFalse($instellingen, 'tabblad Instellingen ontbreekt');
+        $this->assertNotFalse($tekst, 'tabblad Tekstopmaak ontbreekt');
+        $this->assertNotFalse($plaatsing, 'tabblad Plaatsing ontbreekt');
+        $this->assertLessThan($tekst, $instellingen);
+        $this->assertLessThan($plaatsing, $tekst);
+
+        // Tekstopmaak: alles wat de tekst zelf betreft
+        foreach (['.fontFamily', '.fontSize', '.fontWeight', '.align = ', '.verticalAlign = ', '.color = '] as $needle) {
+            $at = strpos($html, $needle, $tekst);
+            $this->assertNotFalse($at, "'{$needle}' niet gevonden");
+            $this->assertLessThan($plaatsing, $at, "'{$needle}' hoort in Tekstopmaak");
+        }
+
+        // Instellingen: veldeigenschappen die niets met opmaak te maken hebben
+        foreach (['.staticText', '.backgroundColor', '.pageVisibility'] as $needle) {
+            $at = strpos($html, $needle, $instellingen);
+            $this->assertNotFalse($at, "'{$needle}' niet gevonden");
+            $this->assertLessThan($tekst, $at, "'{$needle}' hoort in Instellingen");
+        }
+    }
+
     public function test_overzicht_toont_beide_badges(): void
     {
         $this->makeTemplate('Facturen-sjabloon', ['is_default_invoice' => true]);

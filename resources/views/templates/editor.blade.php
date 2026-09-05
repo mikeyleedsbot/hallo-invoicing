@@ -449,7 +449,8 @@
              @click.self="closeFieldEditor()"
              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
              style="display: none;">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" x-data="{ editorTab: 'instellingen' }">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" x-data="{ editorTab: 'instellingen' }"
+                 x-effect="if (editorTab === 'tekst' && isRect(editingField)) editorTab = 'instellingen'">
                 <div class="p-6 pb-0">
                     <h3 class="text-xl font-bold mb-4">✎ Veld Bewerken</h3>
 
@@ -459,6 +460,12 @@
                                 :class="editorTab === 'instellingen' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
                                 class="px-4 py-2 text-sm transition">
                             Instellingen
+                        </button>
+                        <button @click="editorTab = 'tekst'"
+                                x-show="!isRect(editingField)"
+                                :class="editorTab === 'tekst' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 py-2 text-sm transition">
+                            Tekstopmaak
                         </button>
                         <button @click="editorTab = 'plaatsing'"
                                 :class="editorTab === 'plaatsing' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
@@ -488,22 +495,6 @@
                                        x-model="placedFields[editingField].staticText"
                                        placeholder="Typ hier je tekst..."
                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
-                            </div>
-
-                            {{-- Tekstkleur --}}
-                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color"
-                                           :value="placedFields[editingField]?.color || '#111827'"
-                                           @input="placedFields[editingField].color = $event.target.value"
-                                           class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                    <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
-                                    <button @click="placedFields[editingField].color = ''"
-                                            class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
-                                        ↺ Standaard
-                                    </button>
-                                </div>
                             </div>
 
                             {{-- Vlak-/achtergrondkleur --}}
@@ -577,6 +568,50 @@
                                     </div>
                                 </div>
                             </template>
+
+                            {{-- Pagina zichtbaarheid --}}
+                            <div x-show="editingField !== 'items_table'">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <button @click="placedFields[editingField].pageVisibility = 'all'"
+                                            :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        📄 Alle
+                                    </button>
+                                    <button @click="placedFields[editingField].pageVisibility = 'first'"
+                                            :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        1️⃣ Eerste
+                                    </button>
+                                    <button @click="placedFields[editingField].pageVisibility = 'last'"
+                                            :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        🔚 Laatste
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    "Alle" = herhaalt op elke pagina bij lange facturen
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- TAB: Tekstopmaak --}}
+                        <div x-show="editorTab === 'tekst'" class="space-y-4">
+                            {{-- Tekstkleur --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color"
+                                           :value="placedFields[editingField]?.color || '#111827'"
+                                           @input="placedFields[editingField].color = $event.target.value"
+                                           class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                    <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
+                                    <button @click="placedFields[editingField].color = ''"
+                                            class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
+                                        ↺ Standaard
+                                    </button>
+                                </div>
+                            </div>
 
                             {{-- Lettertype --}}
                             <div x-show="!isRect(editingField)">
@@ -664,30 +699,6 @@
                                 <p class="mt-1 text-xs text-gray-500">Bepaalt waar de tekst binnen het veld staat. Zichtbaar zodra het veld hoger is dan de tekst.</p>
                             </div>
 
-                            {{-- Pagina zichtbaarheid --}}
-                            <div x-show="editingField !== 'items_table'">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
-                                <div class="grid grid-cols-3 gap-1">
-                                    <button @click="placedFields[editingField].pageVisibility = 'all'"
-                                            :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                        📄 Alle
-                                    </button>
-                                    <button @click="placedFields[editingField].pageVisibility = 'first'"
-                                            :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                        1️⃣ Eerste
-                                    </button>
-                                    <button @click="placedFields[editingField].pageVisibility = 'last'"
-                                            :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                        🔚 Laatste
-                                    </button>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1">
-                                    "Alle" = herhaalt op elke pagina bij lange facturen
-                                </p>
-                            </div>
                         </div>
 
                         {{-- TAB: Plaatsing --}}
