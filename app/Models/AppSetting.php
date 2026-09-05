@@ -21,6 +21,8 @@ class AppSetting extends Model
         'quote_prefix',
         'invoice_number_start',
         'quote_number_start',
+        'invoice_number_padding',
+        'quote_number_padding',
         'credit_surcharge_enabled',
         'credit_surcharge_percent',
         'invoice_email_subject',
@@ -114,9 +116,10 @@ class AppSetting extends Model
     {
         $prefix = $this->invoice_prefix ?? 'INV';
         $next = max(1, (int) ($this->invoice_number_start ?? 1));
+        $padding = $this->numberPadding('invoice_number_padding');
 
         do {
-            $number = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            $number = $prefix . str_pad($next, $padding, '0', STR_PAD_LEFT);
             $exists = Invoice::where('invoice_number', $number)->exists();
             $next++;
         } while ($exists);
@@ -131,9 +134,10 @@ class AppSetting extends Model
     {
         $prefix = $this->quote_prefix ?? 'OFF';
         $next = max(1, (int) ($this->quote_number_start ?? 1));
+        $padding = $this->numberPadding('quote_number_padding');
 
         do {
-            $number = $prefix . str_pad($next, 5, '0', STR_PAD_LEFT);
+            $number = $prefix . str_pad($next, $padding, '0', STR_PAD_LEFT);
             $exists = Quote::where('quote_number', $number)->exists();
             $next++;
         } while ($exists);
@@ -151,6 +155,29 @@ class AppSetting extends Model
      * cijfers mee het tellerveld in, waardoor de prefix dubbel in het
      * volgende nummer terechtkomt.
      */
+    /**
+     * Aantal cijfers waarmee de teller wordt opgebouwd. Bepaald door hoe de
+     * teller in de instellingen is ingevuld: "0006" geeft vier, "6" geeft een.
+     */
+    public function numberPadding(string $column): int
+    {
+        return max(1, min(10, (int) ($this->{$column} ?? 5)));
+    }
+
+    /**
+     * De teller zoals hij in het instellingenformulier hoort te staan, dus
+     * mét de voorloopnullen die de breedte bepalen.
+     */
+    public function formattedCounter(string $startColumn, string $paddingColumn): string
+    {
+        return str_pad(
+            (string) max(1, (int) ($this->{$startColumn} ?? 1)),
+            $this->numberPadding($paddingColumn),
+            '0',
+            STR_PAD_LEFT
+        );
+    }
+
     public static function advanceCounter(string $column, string $usedNumber, int $userId, string $prefix = ''): void
     {
         $tail = $prefix !== '' && str_starts_with($usedNumber, $prefix)
