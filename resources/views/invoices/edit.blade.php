@@ -27,6 +27,16 @@
             </a>
         </div>
 
+            {{-- Validatiefouten: zonder deze melding lijkt opslaan stil te mislukken --}}
+            @if($errors->any())
+            <div class="p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800">
+                <p class="font-medium mb-1">Opslaan is niet gelukt. Controleer de volgende velden:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                </ul>
+            </div>
+            @endif
+
         <form action="{{ route('invoices.update', $invoice) }}" method="POST" @submit="submitForm" class="space-y-6">
             @csrf
             @method('PUT')
@@ -59,7 +69,7 @@
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Factuurnummer <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="invoice_number" value="{{ $invoice->invoice_number }}" required
+                        <input type="text" name="invoice_number" value="{{ old('invoice_number', $invoice->invoice_number) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
 
@@ -81,7 +91,7 @@
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Factuurdatum <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="invoice_date" value="{{ $invoice->invoice_date->format('Y-m-d') }}" required
+                        <input type="date" name="invoice_date" value="{{ old('invoice_date', $invoice->invoice_date->format('Y-m-d')) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
 
@@ -89,7 +99,7 @@
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Vervaldatum <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="due_date" value="{{ $invoice->due_date->format('Y-m-d') }}" required
+                        <input type="date" name="due_date" value="{{ old('due_date', $invoice->due_date->format('Y-m-d')) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                 </div>

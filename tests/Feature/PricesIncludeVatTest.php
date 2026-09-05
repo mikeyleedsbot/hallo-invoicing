@@ -132,6 +132,7 @@ class PricesIncludeVatTest extends TestCase
         // Bewerken met dezelfde instelling: bedragen blijven hetzelfde betekenen
         $this->as($this->user)
             ->put(route('invoices.update', $invoice), [
+                'invoice_number'     => $invoice->invoice_number,
                 'customer_id'        => $this->customer->id,
                 'invoice_date'       => now()->format('Y-m-d'),
                 'due_date'           => now()->addDays(14)->format('Y-m-d'),
@@ -164,6 +165,7 @@ class PricesIncludeVatTest extends TestCase
         // Zelfde bedrag, maar nu als exclusief bedoeld: totaal wordt hoger
         $this->as($this->user)
             ->put(route('invoices.update', $invoice), [
+                'invoice_number' => $invoice->invoice_number,
                 'customer_id'   => $this->customer->id,
                 'invoice_date'  => now()->format('Y-m-d'),
                 'due_date'      => now()->addDays(14)->format('Y-m-d'),

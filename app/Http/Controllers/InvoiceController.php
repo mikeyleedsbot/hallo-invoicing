@@ -271,6 +271,7 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', auth()->id())],
             'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('user_id', auth()->id())],
+            'invoice_number' => ['required', Rule::unique('invoices')->where('user_id', auth()->id())->ignore($invoice->id)],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',
@@ -320,6 +321,7 @@ class InvoiceController extends Controller
             $invoice->update([
                 'customer_id' => $validated['customer_id'],
                 'template_id' => $validated['template_id'] ?? InvoiceTemplate::getDefaultForInvoices()?->id,
+                'invoice_number' => $validated['invoice_number'],
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
                 'payment_terms' => $validated['payment_terms'] ?? 14,
