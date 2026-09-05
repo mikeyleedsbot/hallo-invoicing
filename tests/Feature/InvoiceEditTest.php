@@ -91,11 +91,26 @@ class InvoiceEditTest extends TestCase
         $this->makeInvoice('202600018');
         $tweede = $this->makeInvoice('202600019');
 
-        $this->as($this->user)
-            ->put(route('invoices.update', $tweede), $this->updatePayload(['invoice_number' => '202600018']))
-            ->assertSessionHasErrors('invoice_number');
+        $response = $this->as($this->user)
+            ->from(route('invoices.edit', $tweede))
+            ->put(route('invoices.update', $tweede), $this->updatePayload(['invoice_number' => '202600018']));
+
+        $response->assertSessionHasErrors('invoice_number');
+
+        // Leesbare melding, geen ruwe sleutel als "validation.unique"
+        $this->assertSame(
+            'Factuurnummer is al in gebruik.',
+            session('errors')->first('invoice_number')
+        );
 
         $this->assertSame('202600019', $tweede->fresh()->invoice_number);
+
+        // En die tekst hoort ook echt op het scherm te staan
+        $this->as($this->user)
+            ->get(route('invoices.edit', $tweede))
+            ->assertOk()
+            ->assertSee('Factuurnummer is al in gebruik.')
+            ->assertDontSee('validation.');
     }
 
     public function test_eigen_nummer_ongewijzigd_laten_mag(): void
