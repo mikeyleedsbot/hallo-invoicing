@@ -259,6 +259,27 @@ class TemplateDefaultsTest extends TestCase
         );
     }
 
+    public function test_editor_biedt_verticale_uitlijning(): void
+    {
+        $template = $this->makeTemplate('Sjabloon met veld');
+
+        $html = $this->as($this->user)
+            ->get(route('templates.editor', $template))
+            ->assertOk()
+            ->assertSee('Verticale uitlijning')
+            ->getContent();
+
+        foreach (['top', 'middle', 'bottom'] as $value) {
+            $this->assertStringContainsString(
+                "placedFields[editingField].verticalAlign = '{$value}'",
+                $html
+            );
+        }
+
+        // Het canvas volgt de instelling in plaats van alles te centreren
+        $this->assertStringContainsString("'items-center': field.verticalAlign === 'middle'", $html);
+    }
+
     public function test_overzicht_toont_beide_badges(): void
     {
         $this->makeTemplate('Facturen-sjabloon', ['is_default_invoice' => true]);

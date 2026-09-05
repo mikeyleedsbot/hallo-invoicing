@@ -285,11 +285,14 @@
 
                                     {{-- Placed Fields on Canvas --}}
                                     <template x-for="(field, key) in placedFields" :key="key">
-                                        <div class="absolute draggable-placed border-2 cursor-move flex items-center transition group"
+                                        <div class="absolute draggable-placed border-2 cursor-move flex transition group"
                                              :class="{
                                                 'justify-start': (field.align || 'left') === 'left',
                                                 'justify-center': field.align === 'center',
                                                 'justify-end': field.align === 'right',
+                                                'items-start': (field.verticalAlign || 'top') === 'top',
+                                                'items-center': field.verticalAlign === 'middle',
+                                                'items-end': field.verticalAlign === 'bottom',
                                                 'border-solid border-blue-600 bg-blue-50 bg-opacity-70 ring-2 ring-blue-400 ring-offset-1': isSelected(key),
                                                 'border-dashed border-indigo-500 bg-indigo-50 bg-opacity-60 hover:bg-indigo-100 hover:border-indigo-600': !isSelected(key)
                                              }"
@@ -636,6 +639,29 @@
                                         → Rechts
                                     </button>
                                 </div>
+                            </div>
+
+                            {{-- Verticale uitlijning binnen het veld --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Verticale uitlijning</label>
+                                <div class="flex gap-2">
+                                    <button @click="placedFields[editingField].verticalAlign = 'top'"
+                                            :class="(placedFields[editingField]?.verticalAlign || 'top') === 'top' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↑ Boven
+                                    </button>
+                                    <button @click="placedFields[editingField].verticalAlign = 'middle'"
+                                            :class="placedFields[editingField]?.verticalAlign === 'middle' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↕ Midden
+                                    </button>
+                                    <button @click="placedFields[editingField].verticalAlign = 'bottom'"
+                                            :class="placedFields[editingField]?.verticalAlign === 'bottom' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↓ Onder
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Bepaalt waar de tekst binnen het veld staat. Zichtbaar zodra het veld hoger is dan de tekst.</p>
                             </div>
 
                             {{-- Pagina zichtbaarheid --}}

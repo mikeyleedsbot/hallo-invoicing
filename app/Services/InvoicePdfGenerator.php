@@ -297,18 +297,73 @@ body { font-family:Arial,sans-serif; }
             $extra .= "background-color:{$c};";
         }
 
+        $text     = trim((string) $value);
+        $heightMm = $this->y($p['height'] ?? 30);
+        $fontPt   = $this->pt($p['fontSize'] ?? 12);
+
+        // Verticale uitlijning via padding: dompdf negeert vertical-align op
+        // absoluut gepositioneerde blokken (ook via display:table-cell), maar
+        // honoreert padding wel. Zie verticalOffset() voor de compensatie.
+        [$paddingMm, $boxHeightMm] = $this->verticalOffset(
+            $heightMm,
+            $fontPt,
+            substr_count($text, "\n") + 1,
+            $this->safeVerticalAlign($p['verticalAlign'] ?? 'top')
+        );
+
+        if ($paddingMm > 0) {
+            $extra .= "padding-top:{$paddingMm}mm;";
+        }
+
         return sprintf(
             '<div class="abs" style="left:%smm;top:%smm;width:%smm;height:%smm;font-size:%spt;font-family:%s;text-align:%s;%s">%s</div>',
             $this->x($p['x']      ?? 0),
             $this->y($p['y']      ?? 0),
             $this->x($p['width']  ?? 200),
-            $this->y($p['height'] ?? 30),
-            $this->pt($p['fontSize'] ?? 12),
+            $boxHeightMm,
+            $fontPt,
             $this->safeFontFamily($p['fontFamily'] ?? 'Arial'),
             $this->safeAlign($p['align'] ?? 'left'),
             $extra,
-            nl2br(htmlspecialchars(trim((string)$value)))
+            nl2br(htmlspecialchars($text))
         );
+    }
+
+    /**
+     * Padding-top en gecorrigeerde blokhoogte voor verticale uitlijning.
+     *
+     * dompdf telt padding bij de opgegeven hoogte op (box-sizing wordt hier
+     * niet toegepast), dus de hoogte wordt met dezelfde waarde verlaagd. Zo
+     * blijft het veld even hoog als ingesteld en schuift alleen de tekst.
+     *
+     * De teksthoogte is een benadering op basis van het aantal regels; bij
+     * tekst die zelf afbreekt kan het middenpunt iets afwijken.
+     *
+     * @return array{0: float, 1: float}  [padding in mm, blokhoogte in mm]
+     */
+    private function verticalOffset(float $heightMm, float $fontPt, int $lines, string $verticalAlign): array
+    {
+        if ($verticalAlign === 'top' || $heightMm <= 0) {
+            return [0.0, $heightMm];
+        }
+
+        // 1pt = 0.3528mm, regelhoogte ≈ 1.2 × lettergrootte
+        $contentMm = max(1, $lines) * $fontPt * 1.2 * 0.3528;
+
+        $padding = $verticalAlign === 'middle'
+            ? ($heightMm - $contentMm) / 2
+            : $heightMm - $contentMm;
+
+        $padding = round(max(0.0, $padding), 3);
+
+        return [$padding, round(max(0.0, $heightMm - $padding), 3)];
+    }
+
+    private function safeVerticalAlign(mixed $verticalAlign): string
+    {
+        return in_array($verticalAlign, ['top', 'middle', 'bottom'], true)
+            ? $verticalAlign
+            : 'top';
     }
 
     /**
