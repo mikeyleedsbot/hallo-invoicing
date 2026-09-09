@@ -245,7 +245,7 @@
                                 <div id="canvas"
                                      class="relative bg-white border-2 border-gray-400 shadow-2xl"
                                      :style="canvasBackgroundStyle()"
-                                     @click="deselectField()">
+                                     @click="onCanvasClick()">
 
                                     {{-- Logo Preview (draggable + resizable) --}}
                                     <template x-if="logoUrl && logoPosition">
@@ -767,6 +767,12 @@
                 selectedField: null,
                 selectedFields: [],   // multi-select set (array of keys)
                 _selectionBox: null,  // rubber-band state
+                // Na een sleepactie stuurt de browser nog een click na. Die zou de
+                // zojuist gemaakte selectie meteen wissen (canvas) of terugbrengen
+                // tot een enkel veld (veld). Deze vlaggen slaan die click over.
+                _suppressCanvasClick: false,
+                _suppressFieldClick: false,
+                _didDrag: false,
                 history: [],
                 historyIndex: -1,
                 _arrowDebounceTimer: null,
@@ -923,7 +929,20 @@
                     this.$nextTick(() => this.setupDragAndDrop());
                 },
 
+                onCanvasClick() {
+                    if (this._suppressCanvasClick) {
+                        this._suppressCanvasClick = false;
+                        return;
+                    }
+                    this.deselectField();
+                },
+
                 selectField(key, addToGroup) {
+                    if (this._suppressFieldClick) {
+                        this._suppressFieldClick = false;
+                        return;
+                    }
+
                     if (addToGroup) {
                         // Shift+click: toggle membership in multi-select
                         const idx = this.selectedFields.indexOf(key);
@@ -1054,6 +1073,9 @@
                     canvasEl.addEventListener('mousedown', function(e) {
                         if (e.target !== canvasEl) return;
                         if (e.button !== 0) return;
+                        // Een vlag van een vorige sleep die buiten het canvas eindigde
+                        // mag deze klik niet opeten
+                        self._suppressCanvasClick = false;
                         pendingStart = toCanvas(e.clientX, e.clientY);
                     });
 
@@ -1113,6 +1135,10 @@
                         const matched = hitTest(selX, selY, selW, selH);
                         self.selectedFields = matched;
                         self.selectedField  = matched.length ? matched[matched.length - 1] : null;
+
+                        // Er is echt een kader getrokken: de click die hierna volgt
+                        // mag de selectie niet wissen
+                        self._suppressCanvasClick = true;
                     });
                 },
 
@@ -1138,6 +1164,7 @@
                                 move(event) {
                                     const dx = event.dx / scale;
                                     const dy = event.dy / scale;
+                                    self._didDrag = true;
                                     const isGroupDrag = self.selectedFields.length > 1 && self.selectedFields.indexOf('logo') !== -1;
                                     const keys = isGroupDrag ? self.selectedFields : ['logo'];
 
@@ -1153,6 +1180,8 @@
                                 },
                                 end(event) {
                                     event.target.style.zIndex = '';
+                                    self._suppressFieldClick = self._didDrag;
+                                    self._didDrag = false;
                                     self.pushHistory();
                                 }
                             }
@@ -1198,6 +1227,7 @@
                                     const fieldKey = event.target.dataset.fieldKey;
                                     const dx = event.dx / scale;
                                     const dy = event.dy / scale;
+                                    self._didDrag = true;
 
                                     // If dragging a field that belongs to a multi-selection, move the whole group
                                     const isGroupDrag = self.selectedFields.length > 1 && self.selectedFields.indexOf(fieldKey) !== -1;
@@ -1219,6 +1249,10 @@
                                     target.style.opacity = '';
                                     target.style.boxShadow = '';
                                     target.classList.remove('ring-2', 'ring-blue-500');
+                                    // Alleen na echt slepen de navolgende click overslaan,
+                                    // zodat een groepsselectie niet inklapt tot een veld
+                                    self._suppressFieldClick = self._didDrag;
+                                    self._didDrag = false;
                                     self.pushHistory();
                                 }
                             }
