@@ -658,4 +658,173 @@ class BankImportHttpTest extends TestCase
         $this->assertTrue($nieuwste < $middelste, 'nieuwste hoort boven middelste te staan');
         $this->assertTrue($middelste < $oudste, 'middelste hoort boven oudste te staan');
     }
+
+
+    public function test_koppelen_via_fetch_geeft_json_terug_zonder_omleiding(): void
+    {
+        $invoice = Invoice::create([
+            'invoice_number' => '20267001',
+            'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 500, 'vat_amount' => 0, 'total' => 500,
+            'status' => 'sent',
+        ]);
+
+        $session = BankImportSession::create([
+            'user_id' => $this->user->id,
+            'original_filename' => 'afschrift.csv',
+            'format' => 'csv',
+            'status' => BankImportSession::STATUS_OPEN,
+        ]);
+
+        $transaction = BankTransaction::create([
+            'user_id' => $this->user->id,
+            'bank_import_session_id' => $session->id,
+            'booking_date' => '2026-02-01',
+            'amount' => 500.00,
+            'currency' => 'EUR',
+            'counterparty_name' => 'Testklant B.V.',
+            'description' => 'overboeking',
+            'fingerprint' => hash('sha256', 'fetch-koppelen'),
+        ]);
+
+        $this->as($this->user)
+            ->postJson(route('bank.link', $transaction), [
+                'invoice_id' => $invoice->id,
+                'amount' => 500.00,
+            ])
+            ->assertOk()
+            ->assertJson(['message' => 'Transactie gekoppeld aan factuur 20267001.']);
+
+        $this->assertSame('paid', $invoice->refresh()->status);
+
+        // Ontkoppelen gaat langs dezelfde weg
+        $payment = InvoicePayment::firstOrFail();
+
+        $this->as($this->user)
+            ->deleteJson(route('bank.unlink', $payment))
+            ->assertOk()
+            ->assertJsonPath('message', 'Koppeling met factuur 20267001 ongedaan gemaakt.');
+
+        $this->assertSame('sent', $invoice->refresh()->status);
+    }
+
+    public function test_een_te_hoog_bedrag_via_fetch_geeft_een_nette_melding(): void
+    {
+        $session = BankImportSession::create([
+            'user_id' => $this->user->id,
+            'original_filename' => 'afschrift.csv',
+            'format' => 'csv',
+            'status' => BankImportSession::STATUS_OPEN,
+        ]);
+
+        $transaction = BankTransaction::create([
+            'user_id' => $this->user->id,
+            'bank_import_session_id' => $session->id,
+            'booking_date' => '2026-02-01',
+            'amount' => -50.00,
+            'currency' => 'EUR',
+            'counterparty_name' => 'Leverancier',
+            'description' => 'afschrijving',
+            'fingerprint' => hash('sha256', 'fetch-afschrijving'),
+        ]);
+
+        $invoice = Invoice::create([
+            'invoice_number' => '20267002',
+            'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 100, 'vat_amount' => 0, 'total' => 100,
+            'status' => 'sent',
+        ]);
+
+        $this->as($this->user)
+            ->postJson(route('bank.link', $transaction), [
+                'invoice_id' => $invoice->id,
+                'amount' => 50.00,
+            ])
+            ->assertStatus(422)
+            ->assertJsonStructure(['message']);
+
+        $this->assertSame(0, InvoicePayment::count());
+    }
+
+    public function test_gewoon_formulier_blijft_omleiden(): void
+    {
+        $session = BankImportSession::create([
+            'user_id' => $this->user->id,
+            'original_filename' => 'afschrift.csv',
+            'format' => 'csv',
+            'status' => BankImportSession::STATUS_OPEN,
+        ]);
+
+        $transaction = BankTransaction::create([
+            'user_id' => $this->user->id,
+            'bank_import_session_id' => $session->id,
+            'booking_date' => '2026-02-01',
+            'amount' => 100.00,
+            'currency' => 'EUR',
+            'counterparty_name' => 'Testklant B.V.',
+            'description' => 'overboeking',
+            'fingerprint' => hash('sha256', 'gewone-post'),
+        ]);
+
+        $invoice = Invoice::create([
+            'invoice_number' => '20267003',
+            'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 100, 'vat_amount' => 0, 'total' => 100,
+            'status' => 'sent',
+        ]);
+
+        $this->as($this->user)
+            ->post(route('bank.link', $transaction), [
+                'invoice_id' => $invoice->id,
+                'amount' => 100.00,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+    }
+
+
+    public function test_matchscherm_koppelt_zonder_de_pagina_te_herladen(): void
+    {
+        $session = BankImportSession::create([
+            'user_id' => $this->user->id,
+            'original_filename' => 'afschrift.csv',
+            'format' => 'csv',
+            'status' => BankImportSession::STATUS_OPEN,
+        ]);
+
+        $transaction = BankTransaction::create([
+            'user_id' => $this->user->id,
+            'bank_import_session_id' => $session->id,
+            'booking_date' => '2026-02-01',
+            'amount' => 100.00,
+            'currency' => 'EUR',
+            'counterparty_name' => 'Testklant B.V.',
+            'description' => 'overboeking',
+            'fingerprint' => hash('sha256', 'live-koppelen'),
+        ]);
+
+        $html = $this->as($this->user)
+            ->get(route('bank.show', $session))
+            ->assertOk()
+            ->getContent();
+
+        // De blokken die na een koppeling opnieuw opgehaald worden
+        foreach (['blok-gekoppeld', 'blok-eerder', 'blok-te-matchen'] as $id) {
+            $this->assertStringContainsString('id="' . $id . '"', $html);
+        }
+
+        // Het koppelformulier wordt onderschept in plaats van verstuurd
+        $this->assertStringContainsString('bankMatch()', $html);
+        $this->assertStringContainsString('data-live', $html);
+        $this->assertStringContainsString('data-transactie="' . $transaction->id . '"', $html);
+    }
 }

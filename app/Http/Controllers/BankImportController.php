@@ -120,22 +120,33 @@ class BankImportController extends Controller
         try {
             $this->service->link($transaction, $invoice, (float) $validated['amount']);
         } catch (BankImportException $e) {
-            return back()->withErrors(['amount' => $e->getMessage()]);
+            // Het matchscherm koppelt via fetch en blijft dan staan waar het staat
+            return $request->expectsJson()
+                ? response()->json(['message' => $e->getMessage()], 422)
+                : back()->withErrors(['amount' => $e->getMessage()]);
         }
 
-        return back()->with('success', 'Transactie gekoppeld aan factuur ' . $invoice->invoice_number . '.');
+        $melding = 'Transactie gekoppeld aan factuur ' . $invoice->invoice_number . '.';
+
+        return $request->expectsJson()
+            ? response()->json(['message' => $melding])
+            : back()->with('success', $melding);
     }
 
-    public function unlink(InvoicePayment $payment)
+    public function unlink(Request $request, InvoicePayment $payment)
     {
         $number = $payment->invoice?->invoice_number;
         $wasCash = $payment->isCash();
 
         $this->service->unlink($payment);
 
-        return back()->with('success', $wasCash
+        $melding = $wasCash
             ? 'Contante afronding van factuur ' . $number . ' teruggedraaid.'
-            : 'Koppeling met factuur ' . $number . ' ongedaan gemaakt.');
+            : 'Koppeling met factuur ' . $number . ' ongedaan gemaakt.';
+
+        return $request->expectsJson()
+            ? response()->json(['message' => $melding])
+            : back()->with('success', $melding);
     }
 
     /** Restant van een factuur buiten de bank om afronden. */

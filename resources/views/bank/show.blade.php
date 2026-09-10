@@ -1,6 +1,29 @@
 <x-app-layout>
 @section('title', 'Transacties matchen')
-    <div class="space-y-6">
+    {{-- Koppelen en ontkoppelen gaat via fetch: de pagina blijft staan waar hij
+         staat, alleen de blokken hieronder worden opnieuw opgehaald. --}}
+    <div class="space-y-6" x-data="bankMatch()"
+         @submit="if ($event.target.matches('[data-live]')) { $event.preventDefault(); verstuur($event.target); }">
+
+        {{-- Terugkoppeling zonder naar boven te springen --}}
+        <div class="fixed bottom-4 end-4 z-50 space-y-2" x-cloak>
+            <div x-show="melding" x-transition
+                 class="px-4 py-3 rounded-lg shadow-lg text-sm text-white bg-green-600" x-text="melding"></div>
+            <div x-show="foutmelding" x-transition
+                 class="px-4 py-3 rounded-lg shadow-lg text-sm text-white bg-red-600 flex items-center gap-3">
+                <span x-text="foutmelding"></span>
+                <button type="button" @click="foutmelding = ''" class="font-bold">&times;</button>
+            </div>
+            <div x-show="bezig" x-cloak
+                 class="px-4 py-3 rounded-lg shadow-lg text-sm text-white bg-gray-800 flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                Bezig met koppelen…
+            </div>
+        </div>
+
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <a href="{{ route('bank.index') }}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-500">&larr; Terug naar bankafschriften</a>
@@ -35,6 +58,7 @@
 
         {{-- Al gekoppeld. Standaard dicht: bij een groot afschrift zijn dit er
              al snel honderden en dan is de rest van de pagina niet te vinden. --}}
+        <div id="blok-gekoppeld" class="blok-live">
         <div x-data="{ open: false, alles: false }" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <button type="button" @click="open = ! open" class="flex items-center gap-2 text-left">
@@ -89,7 +113,7 @@
                                     <span x-show="! detail">Betaalgegevens</span>
                                     <span x-show="detail" x-cloak>Verbergen</span>
                                 </button>
-                                <form action="{{ route('bank.unlink', $payment) }}" method="POST">
+                                <form action="{{ route('bank.unlink', $payment) }}" method="POST" data-live>
                                     @csrf @method('DELETE')
                                     <button type="submit" class="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg">
                                         Koppeling ongedaan maken
@@ -160,8 +184,10 @@
                 </div>
             @endif
         </div>
+        </div>
 
         {{-- Al eerder geïmporteerd --}}
+        <div id="blok-eerder" class="blok-live">
         @if($recognised->isNotEmpty())
         <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <button type="button" @click="open = ! open" class="flex items-center gap-2 text-left">
@@ -210,8 +236,10 @@
             </div>
         </div>
         @endif
+        </div>
 
         {{-- Nog te matchen --}}
+        <div id="blok-te-matchen" class="blok-live">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                 Nog te matchen ({{ count($suggestions) }})
@@ -241,7 +269,7 @@
                 <div class="space-y-4">
                     @foreach($suggestions as $row)
                         @php $t = $row['transaction']; @endphp
-                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                        <div data-transactie="{{ $t->id }}" class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                             <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
                                 <div>
                                     <span class="text-lg font-bold text-gray-900 dark:text-white">€ {{ number_format($t->unallocatedAmount(), 2, ',', '.') }}</span>
@@ -277,7 +305,7 @@
                                             € {{ number_format($deel->amount, 2, ',', '.') }} naar
                                             <a href="{{ route('invoices.show', $deel->invoice) }}" class="underline">{{ $deel->invoice?->invoice_number }}</a>
                                         </span>
-                                        <form action="{{ route('bank.unlink', $deel) }}" method="POST">
+                                        <form action="{{ route('bank.unlink', $deel) }}" method="POST" data-live>
                                             @csrf @method('DELETE')
                                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">ongedaan maken</button>
                                         </form>
@@ -304,7 +332,7 @@
                                             ? 'bg-green-600 text-white'
                                             : ($redelijk ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200');
                                     @endphp
-                                    <form action="{{ route('bank.link', $t) }}" method="POST"
+                                    <form action="{{ route('bank.link', $t) }}" method="POST" data-live
                                           class="flex flex-wrap items-center gap-2 p-2 rounded border {{ $rij }}">
                                         @csrf
                                         <input type="hidden" name="invoice_id" value="{{ $c['invoice']->id }}">
@@ -331,7 +359,7 @@
                             @endif
 
                             {{-- Handmatig een factuur kiezen --}}
-                            <form action="{{ route('bank.link', $t) }}" method="POST" class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <form action="{{ route('bank.link', $t) }}" method="POST" data-live class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-200 dark:border-gray-600">
                                 @csrf
                                 <label class="text-xs text-gray-500 dark:text-gray-400">Handmatig:</label>
                                 <select name="invoice_id" required
@@ -355,6 +383,7 @@
                     @endforeach
                 </div>
             @endif
+        </div>
         </div>
     </div>
 

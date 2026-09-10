@@ -46,6 +46,14 @@ html[data-sidebar="icons"] #sidebar-inner li > a { justify-content: center; }
     display: none !important;
 }
 
+/* Blokken die na een koppeling opnieuw worden ingeladen. De browser probeert
+   bij het verdwijnen van inhoud zelf de scrollpositie te corrigeren; dat botst
+   met onze eigen correctie en levert een sprong van enkele tientallen pixels.
+   Hier zetten we het uit, zodat alleen onze eigen berekening telt. */
+.blok-live {
+    overflow-anchor: none;
+}
+
 /* Tom Select - Tailwind Styling (Light Mode) */
 .ts-wrapper .ts-control,
 .ts-wrapper.single .ts-control {
