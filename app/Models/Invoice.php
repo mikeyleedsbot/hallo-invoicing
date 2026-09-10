@@ -72,6 +72,66 @@ class Invoice extends Model
         };
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class);
+    }
+
+    /** Som van de gekoppelde banktransacties. */
+    public function paidAmount(): float
+    {
+        return round((float) $this->payments()->sum('amount'), 2);
+    }
+
+    /** Wat er nog openstaat; nooit negatief. */
+    public function outstandingAmount(): float
+    {
+        return round(max(0, (float) $this->total - $this->paidAmount()), 2);
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->outstandingAmount() <= 0.004;
+    }
+
+    public function isPartiallyPaid(): bool
+    {
+        return $this->paidAmount() > 0.004 && ! $this->isFullyPaid();
+    }
+
+    /**
+     * Zet de status op basis van wat er betaald is. Wordt aangeroepen na het
+     * koppelen én ontkoppelen van een transactie, zodat een factuur die niet
+     * meer volledig betaald is weer als openstaand terugkomt.
+     *
+     * Geannuleerde en concept-facturen blijven met rust.
+     */
+    public function refreshPaymentStatus(): void
+    {
+        if (in_array($this->status, ['cancelled', 'draft'], true)) {
+            return;
+        }
+
+        if ($this->isFullyPaid()) {
+            if ($this->status !== 'paid') {
+                $this->update([
+                    'status' => 'paid',
+                    'paid_at' => $this->paid_at ?? now()->toDateString(),
+                ]);
+            }
+
+            return;
+        }
+
+        // Niet (meer) volledig betaald: terug naar verzonden of verlopen
+        $overdue = $this->due_date && $this->due_date->isPast();
+
+        $this->update([
+            'status' => $overdue ? 'overdue' : 'sent',
+            'paid_at' => null,
+        ]);
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);

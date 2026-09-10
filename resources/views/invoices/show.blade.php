@@ -287,6 +287,71 @@
                         </div>
                     </div>
 
+                    {{-- Betalingen vanuit de bank --}}
+                    @php
+                        $payments = $invoice->payments()->with('transaction')->get();
+                        $paid = $invoice->paidAmount();
+                        $outstanding = $invoice->outstandingAmount();
+                    @endphp
+                    @if($payments->isNotEmpty() || $paid > 0)
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Betalingen</h3>
+
+                        <div class="space-y-2 mb-4 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700 dark:text-gray-300">Ontvangen</span>
+                                <span class="font-medium text-gray-900 dark:text-white">€ {{ number_format($paid, 2, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700 dark:text-gray-300">Nog openstaand</span>
+                                <span class="font-bold {{ $outstanding > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-green-700 dark:text-green-300' }}">
+                                    € {{ number_format($outstanding, 2, ',', '.') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        @if($invoice->isPartiallyPaid())
+                            <div class="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
+                                <p class="text-xs text-amber-900 dark:text-amber-100">
+                                    Deze factuur is deels betaald. Er staat nog
+                                    <strong>€ {{ number_format($outstanding, 2, ',', '.') }}</strong> open.
+                                </p>
+                            </div>
+                        @endif
+
+                        <div class="space-y-2">
+                            @foreach($payments as $payment)
+                            <div class="flex items-start justify-between gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <div class="text-sm">
+                                    <div class="font-medium text-gray-900 dark:text-white">
+                                        € {{ number_format($payment->amount, 2, ',', '.') }}
+                                        @if($payment->matched_by === 'auto')
+                                            <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">automatisch</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        {{ $payment->transaction?->booking_date?->format('d-m-Y') }}
+                                        &middot; {{ $payment->transaction?->counterparty_name ?: 'onbekend' }}
+                                    </div>
+                                    @if($payment->transaction?->description)
+                                        <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 break-words">
+                                            {{ \Illuminate\Support\Str::limit($payment->transaction->description, 90) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <form action="{{ route('bank.unlink', $payment) }}" method="POST"
+                                      onsubmit="return confirm('Deze koppeling ongedaan maken? De factuur komt dan weer op openstaand.')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="shrink-0 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded">
+                                        Ontkoppel
+                                    </button>
+                                </form>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
                     {{-- Quick Actions --}}
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acties</h3>

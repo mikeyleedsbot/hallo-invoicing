@@ -115,6 +115,15 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::get('/help/{topic}',  [HelpController::class, 'show'])->name('help.show');
 
     // Invoice Templates
+    // Bankafschriften importeren en koppelen aan facturen
+    Route::get('/bank',                          [App\Http\Controllers\BankImportController::class, 'index'])->name('bank.index');
+    Route::post('/bank/import',                  [App\Http\Controllers\BankImportController::class, 'store'])->name('bank.store');
+    Route::get('/bank/{session}',                [App\Http\Controllers\BankImportController::class, 'show'])->name('bank.show');
+    Route::post('/bank/transactie/{transaction}/koppel', [App\Http\Controllers\BankImportController::class, 'link'])->name('bank.link');
+    Route::delete('/bank/betaling/{payment}',    [App\Http\Controllers\BankImportController::class, 'unlink'])->name('bank.unlink');
+    Route::post('/bank/{session}/afronden',      [App\Http\Controllers\BankImportController::class, 'complete'])->name('bank.complete');
+    Route::delete('/bank/{session}',             [App\Http\Controllers\BankImportController::class, 'destroy'])->name('bank.destroy');
+
     Route::resource('templates', App\Http\Controllers\TemplateController::class);
     Route::post('/templates/{template}/set-default',  [App\Http\Controllers\TemplateController::class, 'setDefault'])->name('templates.set-default');
     Route::post('/templates/{template}/dupliceren',   [App\Http\Controllers\TemplateController::class, 'duplicate'])->name('templates.duplicate');

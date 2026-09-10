@@ -172,6 +172,23 @@
                         </a>
                     </li>
 
+                    <!-- Bank -->
+                    <li>
+                        <a href="{{ route('bank.index') }}"
+                           class="flex items-center p-2 rounded-lg group {{ request()->routeIs('bank.*') ? 'bg-blue-600 text-white' : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('bank.*') ? 'text-white' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' }}"
+                                 fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                                <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="ms-3 sidebar-label">Bank</span>
+                            @php $bankOpen = \App\Models\BankImportSession::where('status', 'open')->count(); @endphp
+                            @if($bankOpen > 0)
+                                <span class="ms-auto inline-flex items-center justify-center px-2 text-xs font-medium rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 sidebar-label">{{ $bankOpen }}</span>
+                            @endif
+                        </a>
+                    </li>
+
                     <!-- Offertes -->
                     <li>
                         <a href="{{ route('quotes.index') }}"
@@ -318,6 +335,26 @@
 
         <!-- Main Content -->
         <main class="flex-1 min-w-0 p-6 overflow-auto">
+            @php
+                $openImport = auth()->check()
+                    ? \App\Models\BankImportSession::where('status', 'open')->latest()->first()
+                    : null;
+            @endphp
+            @if($openImport && ! request()->routeIs('bank.show'))
+                <div class="mb-4 p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-100">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <p class="text-sm">
+                            Er staat nog een bankimport open ({{ $openImport->original_filename }}).
+                            Zolang die niet is afgerond blijven de niet-gekoppelde transacties bewaard.
+                        </p>
+                        <a href="{{ route('bank.show', $openImport) }}"
+                           class="shrink-0 px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg">
+                            Matching afmaken
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             {{ $slot }}
         </main>
 

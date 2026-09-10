@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+  <BkToCstmrStmt>
+    <GrpHdr><MsgId>TEST001</MsgId><CreDtTm>2026-01-20T10:00:00+01:00</CreDtTm></GrpHdr>
+    <Stmt>
+      <Id>TESTSTMT</Id>
+      <Acct><Id><IBAN>NL01BANK0123456789</IBAN></Id></Acct>
+      <Ntry>
+        <NtryRef>20260115-1</NtryRef>
+        <Amt Ccy="EUR">1210.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-01-15</Dt></BookgDt>
+        <ValDt><Dt>2026-01-15</Dt></ValDt>
+        <NtryDtls><TxDtls>
+          <RltdPties>
+            <Dbtr><Nm>Testklant B.V.</Nm></Dbtr>
+            <DbtrAcct><Id><IBAN>NL02BANK0987654321</IBAN></Id></DbtrAcct>
+          </RltdPties>
+          <RmtInf><Ustrd>Betaling factuur 20260018</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+        <AddtlNtryInf>Overboeking</AddtlNtryInf>
+      </Ntry>
+      <Ntry>
+        <NtryRef>20260116-2</NtryRef>
+        <Amt Ccy="EUR">75.50</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <BookgDt><Dt>2026-01-16</Dt></BookgDt>
+        <NtryDtls><TxDtls>
+          <RltdPties>
+            <Cdtr><Nm>Leverancier X</Nm></Cdtr>
+            <CdtrAcct><Id><IBAN>NL03BANK0555555555</IBAN></Id></CdtrAcct>
+          </RltdPties>
+        </TxDtls></NtryDtls>
+        <AddtlNtryInf>Maandelijkse kosten</AddtlNtryInf>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>
