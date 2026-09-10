@@ -596,4 +596,66 @@ class BankImportHttpTest extends TestCase
         $this->assertSame(0.0, $invoice->paidAmount());
         $this->assertSame(0, BankTransaction::count());
     }
+
+    public function test_gekoppelde_betaling_toont_de_omschrijving_naast_de_factuurgegevens(): void
+    {
+        Invoice::create([
+            'invoice_number' => '20260018',
+            'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 1210, 'vat_amount' => 0, 'total' => 1210,
+            'status' => 'sent',
+        ]);
+
+        $this->upload('camt053.xml');
+        $session = BankImportSession::firstOrFail();
+
+        $html = $this->as($this->user)
+            ->get(route('bank.show', $session))
+            ->assertOk()
+            ->getContent();
+
+        // De betaaldetails staan bij de automatische koppeling, zodat je kunt nakijken
+        $this->assertStringContainsString('Betaling factuur 20260018', $html);
+        $this->assertStringContainsString('Omschrijving', $html);
+        $this->assertStringContainsString('Testklant B.V.', $html);
+    }
+
+    public function test_transacties_staan_van_nieuw_naar_oud(): void
+    {
+        $session = BankImportSession::create([
+            'user_id' => $this->user->id,
+            'original_filename' => 'afschrift.csv',
+            'format' => 'csv',
+            'status' => BankImportSession::STATUS_OPEN,
+        ]);
+
+        foreach ([['2026-03-01', 'oudste bijschrijving'], ['2026-05-01', 'nieuwste bijschrijving'], ['2026-04-01', 'middelste bijschrijving']] as [$date, $description]) {
+            BankTransaction::create([
+                'user_id' => $this->user->id,
+                'bank_import_session_id' => $session->id,
+                'booking_date' => $date,
+                'amount' => 100.00,
+                'currency' => 'EUR',
+                'counterparty_name' => 'Testklant B.V.',
+                'description' => $description,
+                'fingerprint' => hash('sha256', $description),
+            ]);
+        }
+
+        $html = $this->as($this->user)
+            ->get(route('bank.show', $session))
+            ->assertOk()
+            ->getContent();
+
+        $nieuwste = strpos($html, 'nieuwste bijschrijving');
+        $middelste = strpos($html, 'middelste bijschrijving');
+        $oudste = strpos($html, 'oudste bijschrijving');
+
+        $this->assertNotFalse($nieuwste);
+        $this->assertTrue($nieuwste < $middelste, 'nieuwste hoort boven middelste te staan');
+        $this->assertTrue($middelste < $oudste, 'middelste hoort boven oudste te staan');
+    }
 }

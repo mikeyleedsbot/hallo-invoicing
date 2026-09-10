@@ -367,7 +367,7 @@
                                     </div>
                                     @if($payment->transaction?->description)
                                         <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 break-words">
-                                            {{ \Illuminate\Support\Str::limit($payment->transaction->description, 90) }}
+                                            <span class="text-gray-400 dark:text-gray-500">Omschrijving:</span> {{ $payment->transaction->description }}
                                         </div>
                                     @endif
                                 </div>

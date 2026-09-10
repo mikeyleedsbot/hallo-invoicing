@@ -135,7 +135,16 @@ class BankImportService
         $prepared = $this->matcher->prepare($this->openInvoices($session->user_id));
         $rows = [];
 
-        foreach ($session->transactions()->with('payments')->orderBy('booking_date')->get() as $transaction) {
+        // Nieuwste bijschrijving bovenaan: bij het naslaan zoek je meestal de
+        // meest recente betaling. Het automatisch koppelen loopt bewust wel
+        // chronologisch, zodat de oudste factuur het geld als eerste krijgt.
+        $transactions = $session->transactions()
+            ->with('payments')
+            ->orderByDesc('booking_date')
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($transactions as $transaction) {
             if (! $transaction->isIncoming() || $transaction->isFullyAllocated()) {
                 continue;
             }

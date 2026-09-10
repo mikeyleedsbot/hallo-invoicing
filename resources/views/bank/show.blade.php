@@ -42,27 +42,89 @@
             @if($matched->isEmpty())
                 <p class="text-sm text-gray-500 dark:text-gray-400">Nog niets gekoppeld.</p>
             @else
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    De betaalgegevens staan naast de factuurgegevens, zodat je een automatische koppeling zelf kunt nakijken.
+                </p>
                 <div class="space-y-2">
                     @foreach($matched as $payment)
-                    <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                        <div class="text-sm text-gray-900 dark:text-gray-100">
-                            <span class="font-medium">€ {{ number_format($payment->amount, 2, ',', '.') }}</span>
-                            naar factuur
-                            <a href="{{ route('invoices.show', $payment->invoice) }}" class="text-blue-600 hover:underline dark:text-blue-400">{{ $payment->invoice?->invoice_number }}</a>
-                            <span class="text-gray-500 dark:text-gray-400">
-                                &middot; {{ $payment->transaction?->booking_date?->format('d-m-Y') }}
-                                &middot; {{ $payment->transaction?->counterparty_name }}
-                            </span>
-                            @if($payment->matched_by === 'auto')
-                                <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">automatisch</span>
-                            @endif
+                    @php $t = $payment->transaction; @endphp
+                    <div class="p-3 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                            <div class="text-sm text-gray-900 dark:text-gray-100">
+                                <span class="font-medium">€ {{ number_format($payment->amount, 2, ',', '.') }}</span>
+                                naar factuur
+                                <a href="{{ route('invoices.show', $payment->invoice) }}" class="text-blue-600 hover:underline dark:text-blue-400">{{ $payment->invoice?->invoice_number }}</a>
+                                @if($payment->matched_by === 'auto')
+                                    <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">automatisch</span>
+                                @else
+                                    <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200">handmatig</span>
+                                @endif
+                            </div>
+                            <form action="{{ route('bank.unlink', $payment) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg">
+                                    Koppeling ongedaan maken
+                                </button>
+                            </form>
                         </div>
-                        <form action="{{ route('bank.unlink', $payment) }}" method="POST">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg">
-                                Koppeling ongedaan maken
-                            </button>
-                        </form>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            {{-- Wat er van de bank binnenkwam --}}
+                            <div class="p-2 rounded bg-white/70 dark:bg-gray-800/60 border border-green-200 dark:border-green-800">
+                                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Betaling</p>
+                                <dl class="text-xs text-gray-700 dark:text-gray-300 space-y-0.5">
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Datum</dt>
+                                        <dd>{{ $t?->booking_date?->format('d-m-Y') ?: 'onbekend' }}</dd>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Bedrag</dt>
+                                        <dd>€ {{ number_format($t?->amount ?? $payment->amount, 2, ',', '.') }}</dd>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Van</dt>
+                                        <dd class="break-words">{{ $t?->counterparty_name ?: 'onbekend' }}</dd>
+                                    </div>
+                                    @if($t?->counterparty_iban)
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">IBAN</dt>
+                                        <dd class="break-all font-mono">{{ $t->counterparty_iban }}</dd>
+                                    </div>
+                                    @endif
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Omschrijving</dt>
+                                        <dd class="break-words">{{ $t?->description ?: '—' }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+
+                            {{-- Waar het aan gekoppeld is --}}
+                            <div class="p-2 rounded bg-white/70 dark:bg-gray-800/60 border border-green-200 dark:border-green-800">
+                                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Factuur</p>
+                                <dl class="text-xs text-gray-700 dark:text-gray-300 space-y-0.5">
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Nummer</dt>
+                                        <dd>{{ $payment->invoice?->invoice_number }}</dd>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Klant</dt>
+                                        <dd class="break-words">{{ $payment->invoice?->customer?->company_name ?: $payment->invoice?->customer?->name }}</dd>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Datum</dt>
+                                        <dd>{{ $payment->invoice?->invoice_date?->format('d-m-Y') }}</dd>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Totaal</dt>
+                                        <dd>€ {{ number_format($payment->invoice?->total ?? 0, 2, ',', '.') }}</dd>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">Nog open</dt>
+                                        <dd>€ {{ number_format($payment->invoice?->outstandingAmount() ?? 0, 2, ',', '.') }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -82,12 +144,17 @@
             <div class="space-y-2">
                 @foreach($recognised as $t)
                 <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                    <div class="text-sm text-gray-900 dark:text-gray-100">
+                    <div class="text-sm text-gray-900 dark:text-gray-100 min-w-0">
                         <span class="font-medium">€ {{ number_format($t->amount, 2, ',', '.') }}</span>
                         <span class="text-gray-600 dark:text-gray-400">
                             &middot; {{ $t->booking_date?->format('d-m-Y') }}
                             &middot; {{ $t->counterparty_name ?: 'onbekend' }}
                         </span>
+                        @if($t->description)
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 break-words">
+                                <span class="text-gray-400 dark:text-gray-500">Omschrijving:</span> {{ $t->description }}
+                            </div>
+                        @endif
                     </div>
                     <div class="text-sm">
                         @forelse($t->payments as $payment)
@@ -149,10 +216,17 @@
                                         </span>
                                     @endif
                                 </div>
-                                <div class="text-sm text-gray-700 dark:text-gray-300">{{ $t->counterparty_name ?: 'Onbekende tegenpartij' }}</div>
+                                <div class="text-sm text-gray-700 dark:text-gray-300 text-right">
+                                    {{ $t->counterparty_name ?: 'Onbekende tegenpartij' }}
+                                    @if($t->counterparty_iban)
+                                        <div class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ $t->counterparty_iban }}</div>
+                                    @endif
+                                </div>
                             </div>
 
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3 break-words">{{ $t->description }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3 break-words">
+                                <span class="text-gray-400 dark:text-gray-500">Omschrijving:</span> {{ $t->description ?: '—' }}
+                            </p>
 
                             {{-- Al verdeelde delen van deze betaling. Eén bijschrijving mag over
                                  meerdere facturen verdeeld worden; wat overblijft koppel je hieronder. --}}

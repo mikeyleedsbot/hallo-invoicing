@@ -95,7 +95,9 @@ class BankImportController extends Controller
             'suggestions' => $suggestions,
             'matched' => InvoicePayment::with('invoice.customer', 'transaction')
                 ->whereHas('transaction', fn ($q) => $q->where('bank_import_session_id', $session->id))
-                ->get(),
+                ->get()
+                ->sortByDesc(fn (InvoicePayment $p) => [$p->transaction?->booking_date?->timestamp ?? 0, $p->id])
+                ->values(),
             'openInvoices' => $openInvoices,
             'invoiceOptions' => $invoiceOptions,
             'recognised' => $session->recognisedTransactions(),

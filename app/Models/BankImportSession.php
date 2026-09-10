@@ -48,7 +48,7 @@ class BankImportSession extends Model
 
         return $ids === []
             ? BankTransaction::whereRaw('1 = 0')->get()
-            : BankTransaction::with('payments.invoice')->whereIn('id', $ids)->orderBy('booking_date')->get();
+            : BankTransaction::with('payments.invoice')->whereIn('id', $ids)->orderByDesc('booking_date')->orderByDesc('id')->get();
     }
 
     public function isOpen(): bool
