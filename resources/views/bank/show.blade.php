@@ -33,24 +33,42 @@
             </div>
         @endif
 
-        {{-- Al gekoppeld --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Gekoppeld ({{ $matched->count() }})
-            </h2>
+        {{-- Al gekoppeld. Standaard dicht: bij een groot afschrift zijn dit er
+             al snel honderden en dan is de rest van de pagina niet te vinden. --}}
+        <div x-data="{ open: false, alles: false }" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <button type="button" @click="open = ! open" class="flex items-center gap-2 text-left">
+                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform" :class="open ? 'rotate-90' : ''"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        Gekoppeld ({{ $matched->count() }})
+                    </h2>
+                </button>
+
+                @if($matched->isNotEmpty())
+                <button type="button" x-show="open" x-cloak @click="alles = ! alles"
+                        class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
+                    <span x-show="! alles">Alle betaalgegevens tonen</span>
+                    <span x-show="alles" x-cloak>Alle betaalgegevens verbergen</span>
+                </button>
+                @endif
+            </div>
 
             @if($matched->isEmpty())
-                <p class="text-sm text-gray-500 dark:text-gray-400">Nog niets gekoppeld.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">Nog niets gekoppeld.</p>
             @else
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    De betaalgegevens staan naast de factuurgegevens, zodat je een automatische koppeling zelf kunt nakijken.
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" x-show="! open">
+                    Klap uit om te zien wat er gekoppeld is en om een koppeling na te kijken.
                 </p>
-                <div class="space-y-2">
+                <div x-show="open" x-cloak class="space-y-2 mt-4">
                     @foreach($matched as $payment)
                     @php $t = $payment->transaction; @endphp
-                    <div class="p-3 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-                            <div class="text-sm text-gray-900 dark:text-gray-100">
+                    <div x-data="{ detail: false }" x-init="$watch('alles', waarde => detail = waarde)"
+                         class="p-3 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                        <div class="flex flex-wrap items-baseline justify-between gap-2">
+                            <div class="text-sm text-gray-900 dark:text-gray-100 min-w-0">
                                 <span class="font-medium">€ {{ number_format($payment->amount, 2, ',', '.') }}</span>
                                 naar factuur
                                 <a href="{{ route('invoices.show', $payment->invoice) }}" class="text-blue-600 hover:underline dark:text-blue-400">{{ $payment->invoice?->invoice_number }}</a>
@@ -59,16 +77,28 @@
                                 @else
                                     <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200">handmatig</span>
                                 @endif
+                                {{-- Zonder uitklappen al genoeg om de koppeling te herkennen --}}
+                                <span class="text-gray-500 dark:text-gray-400">
+                                    &middot; {{ $t?->booking_date?->format('d-m-Y') }}
+                                    &middot; {{ $t?->counterparty_name ?: 'onbekend' }}
+                                </span>
                             </div>
-                            <form action="{{ route('bank.unlink', $payment) }}" method="POST">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg">
-                                    Koppeling ongedaan maken
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="detail = ! detail"
+                                        class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg">
+                                    <span x-show="! detail">Betaalgegevens</span>
+                                    <span x-show="detail" x-cloak>Verbergen</span>
                                 </button>
-                            </form>
+                                <form action="{{ route('bank.unlink', $payment) }}" method="POST">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg">
+                                        Koppeling ongedaan maken
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2">
+                        <div x-show="detail" x-cloak class="grid gap-3 sm:grid-cols-2 mt-2">
                             {{-- Wat er van de bank binnenkwam --}}
                             <div class="p-2 rounded bg-white/70 dark:bg-gray-800/60 border border-green-200 dark:border-green-800">
                                 <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Betaling</p>
@@ -133,15 +163,21 @@
 
         {{-- Al eerder geïmporteerd --}}
         @if($recognised->isNotEmpty())
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                Al eerder geïmporteerd ({{ $recognised->count() }})
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <div x-data="{ open: false }" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <button type="button" @click="open = ! open" class="flex items-center gap-2 text-left">
+                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform" :class="open ? 'rotate-90' : ''"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Al eerder geïmporteerd ({{ $recognised->count() }})
+                </h2>
+            </button>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 ms-6">
                 Deze regels stonden er al van een vorige import en zijn niet opnieuw toegevoegd.
             </p>
 
-            <div class="space-y-2">
+            <div x-show="open" x-cloak class="space-y-2 mt-4">
                 @foreach($recognised as $t)
                 <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
                     <div class="text-sm text-gray-900 dark:text-gray-100 min-w-0">
