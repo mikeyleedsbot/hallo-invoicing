@@ -97,21 +97,28 @@ class BankImportService
      */
     public function autoMatch(BankImportSession $session): int
     {
+        // Facturen één keer laden en voorbereiden. Dit stond eerder in de lus,
+        // waardoor bij duizenden facturen per transactie de hele lijst opnieuw
+        // werd opgehaald en genormaliseerd.
+        $prepared = $this->matcher->prepare($this->openInvoices($session->user_id));
+
         $matched = 0;
 
-        foreach ($session->transactions()->orderBy('booking_date')->get() as $transaction) {
+        foreach ($session->transactions()->with('payments')->orderBy('booking_date')->get() as $transaction) {
             if (! $transaction->isIncoming() || $transaction->isFullyAllocated()) {
                 continue;
             }
 
-            $candidates = $this->matcher->candidatesFor($transaction, $this->openInvoices($session->user_id));
-            $best = $this->matcher->autoMatch($candidates);
+            $best = $this->matcher->autoMatch(
+                $this->matcher->candidatesFor($transaction, $prepared)
+            );
 
             if ($best === null) {
                 continue;
             }
 
             $this->link($transaction, $best['invoice'], $best['amount'], InvoicePayment::BY_AUTO);
+            $this->matcher->markAllocated($prepared, $best['invoice']->id, $best['amount']);
             $matched++;
         }
 
@@ -125,17 +132,17 @@ class BankImportService
      */
     public function suggestions(BankImportSession $session): array
     {
-        $invoices = $this->openInvoices($session->user_id);
+        $prepared = $this->matcher->prepare($this->openInvoices($session->user_id));
         $rows = [];
 
-        foreach ($session->transactions()->orderBy('booking_date')->get() as $transaction) {
+        foreach ($session->transactions()->with('payments')->orderBy('booking_date')->get() as $transaction) {
             if (! $transaction->isIncoming() || $transaction->isFullyAllocated()) {
                 continue;
             }
 
             $rows[] = [
                 'transaction' => $transaction,
-                'candidates' => $this->matcher->candidatesFor($transaction, $invoices),
+                'candidates' => $this->matcher->candidatesFor($transaction, $prepared),
             ];
         }
 
@@ -167,6 +174,35 @@ class BankImportService
                 'bank_transaction_id' => $transaction->id,
                 'amount' => $amount,
                 'matched_by' => $by,
+            ]);
+
+            $invoice->refresh()->refreshPaymentStatus();
+
+            return $payment;
+        });
+    }
+
+    /**
+     * Rond het restant van een factuur af buiten de bank om, bijvoorbeeld
+     * omdat het verschil contant is voldaan. Wordt als gewone betaling
+     * vastgelegd, zodat het openstaande bedrag klopt met de status.
+     */
+    public function settleRemainder(Invoice $invoice): InvoicePayment
+    {
+        $outstanding = $invoice->outstandingAmount();
+
+        if ($outstanding <= 0.004) {
+            throw new BankImportException('Op deze factuur staat niets meer open.');
+        }
+
+        return DB::transaction(function () use ($invoice, $outstanding) {
+            $payment = InvoicePayment::create([
+                'user_id' => $invoice->user_id,
+                'invoice_id' => $invoice->id,
+                'bank_transaction_id' => null,
+                'amount' => $outstanding,
+                'method' => InvoicePayment::METHOD_CASH,
+                'matched_by' => InvoicePayment::BY_MANUAL,
             ]);
 
             $invoice->refresh()->refreshPaymentStatus();

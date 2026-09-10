@@ -305,4 +305,82 @@ class BankMatchingTest extends TestCase
         $this->expectException(BankImportException::class);
         $this->service->link($otherTransaction, $invoice, 100.00);
     }
+
+    public function test_restant_contant_afronden_zet_factuur_op_betaald(): void
+    {
+        $invoice = $this->makeInvoice('20260040', 1000.00);
+        $session = $this->makeSession();
+        $transaction = $this->makeTransaction($session, 600.00, 'Deelbetaling factuur 20260040');
+
+        $this->service->link($transaction, $invoice, 600.00);
+        $invoice->refresh();
+        $this->assertTrue($invoice->isPartiallyPaid());
+
+        $payment = $this->service->settleRemainder($invoice);
+        $invoice->refresh();
+
+        $this->assertSame(400.00, round((float) $payment->amount, 2));
+        $this->assertTrue($payment->isCash());
+        $this->assertNull($payment->bank_transaction_id);
+        $this->assertSame(0.0, $invoice->outstandingAmount());
+        $this->assertSame('paid', $invoice->status);
+        $this->assertFalse($invoice->isPartiallyPaidForDisplay());
+        $this->assertSame('via bank en contant', $invoice->statusSourceLabel());
+    }
+
+    public function test_contante_afronding_terugdraaien_zet_factuur_weer_op_deels_betaald(): void
+    {
+        $invoice = $this->makeInvoice('20260041', 1000.00);
+        $session = $this->makeSession();
+        $transaction = $this->makeTransaction($session, 600.00, 'Deelbetaling factuur 20260041');
+
+        $this->service->link($transaction, $invoice, 600.00);
+        $payment = $this->service->settleRemainder($invoice->refresh());
+
+        $this->service->unlink($payment);
+        $invoice->refresh();
+
+        $this->assertSame(600.00, $invoice->paidAmount());
+        $this->assertSame(400.00, $invoice->outstandingAmount());
+        $this->assertTrue($invoice->isPartiallyPaidForDisplay());
+        $this->assertSame('via bankkoppeling', $invoice->statusSourceLabel());
+    }
+
+    public function test_afronden_zonder_openstaand_bedrag_wordt_geweigerd(): void
+    {
+        $invoice = $this->makeInvoice('20260042', 250.00);
+        $session = $this->makeSession();
+        $transaction = $this->makeTransaction($session, 250.00, 'Betaling factuur 20260042');
+        $this->service->link($transaction, $invoice, 250.00);
+
+        $this->expectException(BankImportException::class);
+        $this->service->settleRemainder($invoice->refresh());
+    }
+
+    public function test_afronden_via_de_route_kan_niet_op_een_factuur_van_een_ander(): void
+    {
+        $other = $this->makeUser('ander3@example.test');
+
+        $otherCustomer = Customer::withoutGlobalScope('belongs_to_user')->create([
+            'user_id' => $other->id,
+            'name' => 'Andermans klant',
+            'country' => 'Nederland',
+        ]);
+
+        $otherInvoice = Invoice::withoutGlobalScope('belongs_to_user')->create([
+            'user_id' => $other->id,
+            'invoice_number' => '20260043',
+            'customer_id' => $otherCustomer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 100.00,
+            'vat_amount' => 0,
+            'total' => 100.00,
+            'status' => 'sent',
+        ]);
+
+        $this->post(route('bank.settle', $otherInvoice))->assertNotFound();
+        $this->assertSame(0, \App\Models\InvoicePayment::withoutGlobalScope('belongs_to_user')->count());
+    }
 }

@@ -115,6 +115,7 @@
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Alleen bijschrijvingen kunnen een verkoopfactuur betalen; afschrijvingen staan hier niet tussen.
+                Eén betaling mag over meerdere facturen verdeeld worden: koppel een deel, dan blijft het restant hier staan.
             </p>
             <div class="flex flex-wrap items-center gap-4 mb-4 text-xs text-gray-600 dark:text-gray-400">
                 <span class="inline-flex items-center gap-1.5">
@@ -143,13 +144,37 @@
                                     <span class="text-lg font-bold text-gray-900 dark:text-white">€ {{ number_format($t->unallocatedAmount(), 2, ',', '.') }}</span>
                                     <span class="text-sm text-gray-500 dark:text-gray-400 ms-2">{{ $t->booking_date?->format('d-m-Y') }}</span>
                                     @if($t->allocatedAmount() > 0)
-                                        <span class="ms-2 text-xs text-gray-500 dark:text-gray-400">(van € {{ number_format($t->amount, 2, ',', '.') }}, rest nog te verdelen)</span>
+                                        <span class="ms-2 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                            nog te verdelen van € {{ number_format($t->amount, 2, ',', '.') }}
+                                        </span>
                                     @endif
                                 </div>
                                 <div class="text-sm text-gray-700 dark:text-gray-300">{{ $t->counterparty_name ?: 'Onbekende tegenpartij' }}</div>
                             </div>
 
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3 break-words">{{ $t->description }}</p>
+
+                            {{-- Al verdeelde delen van deze betaling. Eén bijschrijving mag over
+                                 meerdere facturen verdeeld worden; wat overblijft koppel je hieronder. --}}
+                            @if($t->payments->isNotEmpty())
+                                <div class="mb-3 p-2 rounded border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                                    <p class="text-xs font-medium text-green-900 dark:text-green-100 mb-1">
+                                        Al verdeeld over {{ $t->payments->count() }}{{ $t->payments->count() === 1 ? ' factuur' : ' facturen' }}
+                                    </p>
+                                    @foreach($t->payments as $deel)
+                                    <div class="flex items-center justify-between gap-2 text-xs text-gray-800 dark:text-gray-200 py-0.5">
+                                        <span>
+                                            € {{ number_format($deel->amount, 2, ',', '.') }} naar
+                                            <a href="{{ route('invoices.show', $deel->invoice) }}" class="underline">{{ $deel->invoice?->invoice_number }}</a>
+                                        </span>
+                                        <form action="{{ route('bank.unlink', $deel) }}" method="POST">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">ongedaan maken</button>
+                                        </form>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            @endif
 
                             @if($row['candidates'] !== [])
                                 <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Waarschijnlijke facturen</p>

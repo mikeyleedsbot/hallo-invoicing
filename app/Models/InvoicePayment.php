@@ -17,8 +17,12 @@ class InvoicePayment extends Model
     public const BY_AUTO = 'auto';
     public const BY_MANUAL = 'manual';
 
+    /** Waar het geld vandaan kwam. */
+    public const METHOD_BANK = 'bank';
+    public const METHOD_CASH = 'cash';
+
     protected $fillable = [
-        'user_id', 'invoice_id', 'bank_transaction_id', 'amount', 'matched_by',
+        'user_id', 'invoice_id', 'bank_transaction_id', 'amount', 'method', 'matched_by',
     ];
 
     protected $casts = [
@@ -28,6 +32,16 @@ class InvoicePayment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function isCash(): bool
+    {
+        return $this->method === self::METHOD_CASH;
+    }
+
+    public function methodLabel(): string
+    {
+        return $this->isCash() ? 'contant/handmatig' : 'bank';
     }
 
     public function transaction(): BelongsTo

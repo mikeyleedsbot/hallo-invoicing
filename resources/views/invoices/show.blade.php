@@ -67,6 +67,14 @@
                 </div>
                 @endif
 
+                @if($errors->any())
+                <div class="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-200">
+                    @foreach($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+                @endif
+
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <a href="{{ route('invoices.index') }}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-500 inline-flex items-center gap-1 mb-2">
@@ -132,6 +140,17 @@
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $invoice->status_color }}">
                                         {{ $invoice->status_label }}
                                     </span>
+                                    @if($invoice->isPartiallyPaidForDisplay())
+                                        <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                            Nog openstaand: <strong>€ {{ number_format($invoice->outstandingAmount(), 2, ',', '.') }}</strong>
+                                            van € {{ number_format($invoice->total, 2, ',', '.') }}
+                                        </p>
+                                    @endif
+                                    @if($invoice->statusSourceLabel())
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $invoice->statusSourceLabel() }}@if($invoice->status_changed_at) op {{ $invoice->status_changed_at->format('d-m-Y H:i') }}@endif
+                                        </p>
+                                    @endif
                                 </div>
                             </div>
 
@@ -316,6 +335,13 @@
                                     Deze factuur is deels betaald. Er staat nog
                                     <strong>€ {{ number_format($outstanding, 2, ',', '.') }}</strong> open.
                                 </p>
+                                <form action="{{ route('bank.settle', $invoice) }}" method="POST" class="mt-3"
+                                      onsubmit="return confirm('Het restant van € {{ number_format($outstanding, 2, ',', '.') }} contant afronden? De factuur komt dan op betaald te staan.')">
+                                    @csrf
+                                    <button type="submit" class="w-full px-3 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors">
+                                        Restant € {{ number_format($outstanding, 2, ',', '.') }} contant afronden
+                                    </button>
+                                </form>
                             </div>
                         @endif
 
@@ -325,13 +351,19 @@
                                 <div class="text-sm">
                                     <div class="font-medium text-gray-900 dark:text-white">
                                         € {{ number_format($payment->amount, 2, ',', '.') }}
-                                        @if($payment->matched_by === 'auto')
+                                        @if($payment->isCash())
+                                            <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">contant</span>
+                                        @elseif($payment->matched_by === 'auto')
                                             <span class="ms-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">automatisch</span>
                                         @endif
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                        {{ $payment->transaction?->booking_date?->format('d-m-Y') }}
-                                        &middot; {{ $payment->transaction?->counterparty_name ?: 'onbekend' }}
+                                        @if($payment->isCash())
+                                            Handmatig afgerond op {{ $payment->created_at->format('d-m-Y') }}
+                                        @else
+                                            {{ $payment->transaction?->booking_date?->format('d-m-Y') }}
+                                            &middot; {{ $payment->transaction?->counterparty_name ?: 'onbekend' }}
+                                        @endif
                                     </div>
                                     @if($payment->transaction?->description)
                                         <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 break-words">
@@ -340,10 +372,10 @@
                                     @endif
                                 </div>
                                 <form action="{{ route('bank.unlink', $payment) }}" method="POST"
-                                      onsubmit="return confirm('Deze koppeling ongedaan maken? De factuur komt dan weer op openstaand.')">
+                                      onsubmit="return confirm('{{ $payment->isCash() ? 'Deze contante afronding terugdraaien? Het bedrag staat daarna weer open.' : 'Deze koppeling ongedaan maken? De factuur komt dan weer op openstaand.' }}')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="shrink-0 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded">
-                                        Ontkoppel
+                                        {{ $payment->isCash() ? 'Terugdraaien' : 'Ontkoppel' }}
                                     </button>
                                 </form>
                             </div>

@@ -45,7 +45,8 @@ class InvoiceController extends Controller
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'invoice_date';
         $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
 
-        $query = Invoice::with('customer');
+        // payments meeladen: de statusbadge kijkt naar wat er betaald is
+        $query = Invoice::with('customer', 'payments');
 
         // Sorteren op klantnaam vereist een join
         if ($sort === 'customer_name') {
@@ -334,6 +335,8 @@ class InvoiceController extends Controller
                 'prices_include_vat' => $pricesIncludeVat,
             ]);
 
+            $invoice->markStatusSetManually();
+
             // Delete old lines and create new ones
             $invoice->lines()->delete();
 
@@ -442,6 +445,7 @@ class InvoiceController extends Controller
         // Concept automatisch op Verzonden zetten.
         if ($invoice->status === 'draft') {
             $invoice->update(['status' => 'sent', 'sent_at' => now()]);
+            $invoice->markStatusSetManually();
         }
 
         return back()->with('success', 'Factuur ' . $invoice->invoice_number . ' is per e-mail verstuurd naar ' . $customer->email . ' via ' . $account->from_email . '.');
@@ -588,6 +592,7 @@ class InvoiceController extends Controller
             'status' => 'sent',
             'sent_at' => $validated['sent_date'],
         ]);
+        $invoice->markStatusSetManually();
 
         return redirect()
             ->route('invoices.show', $invoice)
@@ -604,6 +609,7 @@ class InvoiceController extends Controller
             'status' => 'paid',
             'paid_at' => $validated['paid_date'],
         ]);
+        $invoice->markStatusSetManually();
 
         return redirect()
             ->route('invoices.show', $invoice)
@@ -642,6 +648,8 @@ class InvoiceController extends Controller
                     default => $invoice->paid_at,
                 },
             ]);
+
+            $invoice->markStatusSetManually();
         }
 
         $labels = ['draft' => 'Concept', 'sent' => 'Verzonden', 'paid' => 'Betaald', 'overdue' => 'Verlopen', 'cancelled' => 'Geannuleerd'];

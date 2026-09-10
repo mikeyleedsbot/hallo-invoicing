@@ -121,6 +121,7 @@ Route::middleware(['auth', 'mfa'])->group(function () {
     Route::get('/bank/{session}',                [App\Http\Controllers\BankImportController::class, 'show'])->name('bank.show');
     Route::post('/bank/transactie/{transaction}/koppel', [App\Http\Controllers\BankImportController::class, 'link'])->name('bank.link');
     Route::delete('/bank/betaling/{payment}',    [App\Http\Controllers\BankImportController::class, 'unlink'])->name('bank.unlink');
+    Route::post('/bank/factuur/{invoice}/afronden', [App\Http\Controllers\BankImportController::class, 'settle'])->name('bank.settle');
     Route::post('/bank/{session}/afronden',      [App\Http\Controllers\BankImportController::class, 'complete'])->name('bank.complete');
     Route::delete('/bank/{session}',             [App\Http\Controllers\BankImportController::class, 'destroy'])->name('bank.destroy');
 

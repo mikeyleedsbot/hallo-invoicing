@@ -40,7 +40,11 @@ class BankTransaction extends Model
     /** Al aan facturen toegewezen bedrag. */
     public function allocatedAmount(): float
     {
-        return round((float) $this->payments()->sum('amount'), 2);
+        $sum = $this->relationLoaded('payments')
+            ? $this->payments->sum('amount')
+            : $this->payments()->sum('amount');
+
+        return round((float) $sum, 2);
     }
 
     /** Wat er van deze transactie nog te verdelen is. */

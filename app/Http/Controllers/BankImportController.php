@@ -127,10 +127,28 @@ class BankImportController extends Controller
     public function unlink(InvoicePayment $payment)
     {
         $number = $payment->invoice?->invoice_number;
+        $wasCash = $payment->isCash();
 
         $this->service->unlink($payment);
 
-        return back()->with('success', 'Koppeling met factuur ' . $number . ' ongedaan gemaakt.');
+        return back()->with('success', $wasCash
+            ? 'Contante afronding van factuur ' . $number . ' teruggedraaid.'
+            : 'Koppeling met factuur ' . $number . ' ongedaan gemaakt.');
+    }
+
+    /** Restant van een factuur buiten de bank om afronden. */
+    public function settle(Invoice $invoice)
+    {
+        try {
+            $payment = $this->service->settleRemainder($invoice);
+        } catch (BankImportException $e) {
+            return back()->withErrors(['settle' => $e->getMessage()]);
+        }
+
+        return back()->with(
+            'success',
+            'Restant van € ' . number_format($payment->amount, 2, ',', '.') . ' afgerond; factuur staat nu op betaald.'
+        );
     }
 
     public function complete(BankImportSession $session)

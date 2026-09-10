@@ -192,6 +192,272 @@ class BankImportHttpTest extends TestCase
             ->assertSee('20260018');
     }
 
+    public function test_een_bundelbetaling_over_meerdere_facturen_verdelen(): void
+    {
+        // Drie facturen die samen in één bijschrijving van 1210 zijn betaald
+        foreach ([['A-1', 500.00], ['A-2', 410.00], ['A-3', 300.00]] as [$number, $total]) {
+            Invoice::create([
+                'invoice_number' => $number,
+                'customer_id' => $this->customer->id,
+                'invoice_date' => '2026-01-01',
+                'due_date' => '2026-12-31',
+                'payment_terms' => 14,
+                'subtotal' => $total, 'vat_amount' => 0, 'total' => $total,
+                'status' => 'sent',
+            ]);
+        }
+
+        $this->upload('camt053.xml');
+        $session = BankImportSession::firstOrFail();
+        $transaction = BankTransaction::where('amount', '>', 0)->firstOrFail();
+
+        // Eerst twee delen koppelen; er blijft dan 300 over
+        foreach (['A-1' => 500.00, 'A-2' => 410.00] as $number => $amount) {
+            $invoice = Invoice::where('invoice_number', $number)->firstOrFail();
+
+            $this->as($this->user)
+                ->post(route('bank.link', $transaction), ['invoice_id' => $invoice->id, 'amount' => $amount])
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(300.00, $transaction->fresh()->unallocatedAmount());
+
+        // Zolang er nog iets te verdelen is, toont het scherm wat er al af is
+        $this->as($this->user)
+            ->get(route('bank.show', $session))
+            ->assertOk()
+            ->assertSee('Al verdeeld over 2 facturen')
+            ->assertSee('nog te verdelen van');
+
+        // En dan het laatste deel
+        $this->as($this->user)->post(route('bank.link', $transaction), [
+            'invoice_id' => Invoice::where('invoice_number', 'A-3')->firstOrFail()->id,
+            'amount' => 300.00,
+        ])->assertSessionHasNoErrors();
+
+        // Alle drie betaald uit één transactie
+        foreach (['A-1', 'A-2', 'A-3'] as $number) {
+            $this->assertSame('paid', Invoice::where('invoice_number', $number)->firstOrFail()->status);
+        }
+
+        $this->assertSame(3, InvoicePayment::count());
+        $this->assertSame(0.0, $transaction->fresh()->unallocatedAmount());
+
+        // Volledig verdeeld: alle drie de delen staan onder Gekoppeld
+        $this->as($this->user)
+            ->get(route('bank.show', $session))
+            ->assertOk()
+            ->assertSee('Gekoppeld (3)')
+            ->assertSee('A-1')->assertSee('A-2')->assertSee('A-3');
+    }
+
+    public function test_deel_van_een_bundelbetaling_ongedaan_maken(): void
+    {
+        foreach ([['B-1', 700.00], ['B-2', 510.00]] as [$number, $total]) {
+            Invoice::create([
+                'invoice_number' => $number,
+                'customer_id' => $this->customer->id,
+                'invoice_date' => '2026-01-01',
+                'due_date' => '2026-12-31',
+                'payment_terms' => 14,
+                'subtotal' => $total, 'vat_amount' => 0, 'total' => $total,
+                'status' => 'sent',
+            ]);
+        }
+
+        $this->upload('camt053.xml');
+        $transaction = BankTransaction::where('amount', '>', 0)->firstOrFail();
+
+        $first = Invoice::where('invoice_number', 'B-1')->firstOrFail();
+        $second = Invoice::where('invoice_number', 'B-2')->firstOrFail();
+
+        $this->as($this->user)->post(route('bank.link', $transaction), ['invoice_id' => $first->id, 'amount' => 700]);
+        $this->as($this->user)->post(route('bank.link', $transaction), ['invoice_id' => $second->id, 'amount' => 510]);
+
+        $payment = InvoicePayment::where('invoice_id', $second->id)->firstOrFail();
+        $this->as($this->user)->delete(route('bank.unlink', $payment))->assertSessionHas('success');
+
+        // Alleen de tweede gaat terug; de eerste blijft betaald
+        $this->assertSame('paid', $first->fresh()->status);
+        $this->assertSame('sent', $second->fresh()->status);
+        $this->assertSame(510.00, $transaction->fresh()->unallocatedAmount());
+    }
+
+    public function test_te_lage_betaling_toont_deels_betaald_met_restbedrag(): void
+    {
+        // Factuur van 2000, er komt 1210 binnen
+        $invoice = Invoice::create([
+            'invoice_number' => 'D-1',
+            'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 2000, 'vat_amount' => 0, 'total' => 2000,
+            'status' => 'sent',
+        ]);
+
+        $this->upload('camt053.xml');
+        $transaction = BankTransaction::where('amount', '>', 0)->firstOrFail();
+
+        $this->as($this->user)->post(route('bank.link', $transaction), [
+            'invoice_id' => $invoice->id, 'amount' => 1210,
+        ])->assertSessionHasNoErrors();
+
+        $invoice->refresh();
+        $this->assertSame(1210.00, $invoice->paidAmount());
+        $this->assertSame(790.00, $invoice->outstandingAmount());
+        $this->assertNotSame('paid', $invoice->status);
+        $this->assertSame('Deels betaald', $invoice->status_label);
+
+        // Zichtbaar op de factuurpagina én in het overzicht
+        $this->as($this->user)->get(route('invoices.show', $invoice))
+            ->assertOk()->assertSee('Deels betaald')->assertSee('790,00');
+
+        $this->as($this->user)->get(route('invoices.index'))
+            ->assertOk()->assertSee('Deels betaald')->assertSee('790,00');
+    }
+
+    public function test_betaling_telt_af_over_meerdere_facturen_en_raakt_op(): void
+    {
+        // Bijschrijving van 1210 die twee facturen dekt: 800 en 410
+        $groot = Invoice::create([
+            'invoice_number' => 'E-1', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 800, 'vat_amount' => 0, 'total' => 800, 'status' => 'sent',
+        ]);
+        $klein = Invoice::create([
+            'invoice_number' => 'E-2', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 410, 'vat_amount' => 0, 'total' => 410, 'status' => 'sent',
+        ]);
+        $derde = Invoice::create([
+            'invoice_number' => 'E-3', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 500, 'vat_amount' => 0, 'total' => 500, 'status' => 'sent',
+        ]);
+
+        $this->upload('camt053.xml');
+        $transaction = BankTransaction::where('amount', '>', 0)->firstOrFail();
+        $this->assertSame(1210.00, $transaction->unallocatedAmount());
+
+        $this->as($this->user)->post(route('bank.link', $transaction), ['invoice_id' => $groot->id, 'amount' => 800]);
+        $this->assertSame(410.00, $transaction->fresh()->unallocatedAmount());
+
+        $this->as($this->user)->post(route('bank.link', $transaction), ['invoice_id' => $klein->id, 'amount' => 410]);
+        $this->assertSame(0.0, $transaction->fresh()->unallocatedAmount());
+
+        // Betaling is op: er kan niets meer aan een derde factuur gekoppeld worden
+        $this->as($this->user)
+            ->post(route('bank.link', $transaction), ['invoice_id' => $derde->id, 'amount' => 100])
+            ->assertSessionHasErrors('amount');
+
+        $this->assertSame(2, InvoicePayment::count());
+        $this->assertSame('sent', $derde->fresh()->status);
+        $this->assertSame('paid', $groot->fresh()->status);
+        $this->assertSame('paid', $klein->fresh()->status);
+    }
+
+    public function test_status_blijft_handmatig_aanpasbaar_en_toont_de_herkomst(): void
+    {
+        $invoice = Invoice::create([
+            'invoice_number' => 'F-1', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 500, 'vat_amount' => 0, 'total' => 500, 'status' => 'sent',
+        ]);
+
+        // Handmatig op betaald zetten (bijvoorbeeld contant ontvangen)
+        $this->as($this->user)
+            ->post(route('invoices.mark-paid', $invoice), ['paid_date' => '2026-02-01'])
+            ->assertSessionHas('success');
+
+        $invoice->refresh();
+        $this->assertSame('paid', $invoice->status);
+        $this->assertSame('handmatig gezet', $invoice->statusSourceLabel());
+
+        $this->as($this->user)->get(route('invoices.show', $invoice))
+            ->assertOk()->assertSee('handmatig gezet');
+    }
+
+    public function test_bankkoppeling_toont_zich_als_bron_en_handmatig_blijft_staan(): void
+    {
+        $invoice = Invoice::create([
+            'invoice_number' => '20260018', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 1210, 'vat_amount' => 0, 'total' => 1210, 'status' => 'sent',
+        ]);
+
+        // Automatisch gekoppeld door de bankimport
+        $this->upload('camt053.xml');
+        $invoice->refresh();
+
+        $this->assertSame('paid', $invoice->status);
+        $this->assertSame('via bankkoppeling', $invoice->statusSourceLabel());
+        $this->as($this->user)->get(route('invoices.show', $invoice))
+            ->assertOk()->assertSee('via bankkoppeling');
+
+        // Ontkoppelen draait alleen terug wat de bank had gezet
+        $payment = InvoicePayment::firstOrFail();
+        $this->as($this->user)->delete(route('bank.unlink', $payment));
+
+        $invoice->refresh();
+        $this->assertSame('sent', $invoice->status);
+        $this->assertNull($invoice->statusSourceLabel());
+    }
+
+    /**
+     * De regel: zolang er geen bankbetalingen aan een factuur hangen, blijft
+     * een handmatig gezette status staan. Een import die er niets aan koppelt
+     * mag die keuze niet omgooien.
+     */
+    public function test_handmatige_status_blijft_staan_zonder_bankbetalingen(): void
+    {
+        $invoice = Invoice::create([
+            'invoice_number' => 'H-1', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 5000, 'vat_amount' => 0, 'total' => 5000, 'status' => 'paid',
+        ]);
+        $this->as($this->user)->post(route('invoices.mark-paid', $invoice), ['paid_date' => '2026-02-01']);
+        $this->assertSame('handmatig gezet', $invoice->fresh()->statusSourceLabel());
+
+        // Importeren zonder dat er iets aan deze factuur gekoppeld wordt
+        $this->upload('camt053.xml');
+
+        $invoice->refresh();
+        $this->assertSame('paid', $invoice->status);
+        $this->assertSame('handmatig gezet', $invoice->statusSourceLabel());
+    }
+
+    /**
+     * Koppel je wél een bankbetaling die de factuur niet dekt, dan volgt de
+     * status de bank en is dat ook zichtbaar. Je kunt hem daarna gewoon weer
+     * handmatig overrulen.
+     */
+    public function test_bankbetaling_neemt_de_status_over_maar_handmatig_kan_er_overheen(): void
+    {
+        $invoice = Invoice::create([
+            'invoice_number' => 'H-2', 'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01', 'due_date' => '2026-12-31', 'payment_terms' => 14,
+            'subtotal' => 5000, 'vat_amount' => 0, 'total' => 5000, 'status' => 'sent',
+        ]);
+
+        $this->upload('camt053.xml');
+        $transaction = BankTransaction::where('amount', '>', 0)->firstOrFail();
+        $this->as($this->user)->post(route('bank.link', $transaction), ['invoice_id' => $invoice->id, 'amount' => 1210]);
+
+        // Deels betaald, met de bank als bron
+        $invoice->refresh();
+        $this->assertSame('Deels betaald', $invoice->status_label);
+        $this->assertSame('via bankkoppeling', $invoice->statusSourceLabel());
+        $this->assertSame(3790.00, $invoice->outstandingAmount());
+
+        // De rest kwam contant binnen: handmatig op betaald zetten mag
+        $this->as($this->user)->post(route('invoices.mark-paid', $invoice), ['paid_date' => '2026-02-01']);
+
+        $invoice->refresh();
+        $this->assertSame('paid', $invoice->status);
+        $this->assertSame('handmatig gezet', $invoice->statusSourceLabel());
+    }
+
     public function test_afronden_gooit_niet_gekoppelde_transacties_weg(): void
     {
         $this->upload('camt053.xml');

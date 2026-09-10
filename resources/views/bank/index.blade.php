@@ -31,18 +31,41 @@
                 Het formaat wordt automatisch herkend.
             </p>
 
-            <form action="{{ route('bank.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
+            <form action="{{ route('bank.store') }}" method="POST" enctype="multipart/form-data"
+                  x-data="statementUpload()" @submit="start($event)"
+                  class="flex flex-wrap items-end gap-3">
                 @csrf
                 <div class="flex-1 min-w-[16rem]">
                     <label for="statement" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Bestand</label>
                     <input type="file" name="statement" id="statement" required
-                           accept=".csv,.txt,.xml,.sta,.940,.zip"
-                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                           accept=".csv,.txt,.xml,.sta,.940,.zip" :disabled="busy"
+                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-60">
                 </div>
-                <button type="submit"
-                        class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
-                    Importeren
+                <button type="submit" :disabled="busy"
+                        class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg inline-flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <svg x-show="busy" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span x-text="busy ? (uploading ? 'Uploaden…' : 'Verwerken…') : 'Importeren'">Importeren</span>
                 </button>
+
+                {{-- Voortgang van het uploaden. Dit is de werkelijke voortgang die
+                     de browser meldt, geen geschatte animatie. --}}
+                <div x-show="busy" x-cloak class="w-full">
+                    <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                        <span x-text="uploading ? 'Bestand uploaden' : 'Transacties inlezen en matchen'"></span>
+                        <span x-show="uploading" x-text="percent + '%'"></span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
+                        <div class="h-2 bg-blue-600 transition-all duration-150"
+                             :class="uploading ? '' : 'animate-pulse'"
+                             :style="uploading ? ('width: ' + percent + '%') : 'width: 100%'"></div>
+                    </div>
+                    <p x-show="!uploading" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Het bestand staat er; even geduld terwijl de transacties worden ingelezen.
+                    </p>
+                </div>
             </form>
         </div>
 
@@ -106,4 +129,59 @@
             verwijderd. Er blijven dus geen bankgegevens bewaard die nergens voor nodig zijn.
         </p>
     </div>
+
+    <script>
+        function statementUpload() {
+            return {
+                busy: false,
+                uploading: false,
+                percent: 0,
+
+                start(event) {
+                    const form = event.target;
+
+                    // Zonder XMLHttpRequest gewoon op de normale manier versturen
+                    if (!window.XMLHttpRequest || !form.querySelector('input[type=file]').files.length) {
+                        this.busy = true;
+                        return;
+                    }
+
+                    event.preventDefault();
+                    this.busy = true;
+                    this.uploading = true;
+                    this.percent = 0;
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', form.action);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+                    // Echte voortgang, gemeld door de browser
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            this.percent = Math.round((e.loaded / e.total) * 100);
+                        }
+                    });
+
+                    // Upload klaar: vanaf hier is de server aan het werk
+                    xhr.upload.addEventListener('load', () => {
+                        this.uploading = false;
+                        this.percent = 100;
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        window.location = xhr.responseURL || form.action;
+                    });
+
+                    xhr.addEventListener('error', () => {
+                        // Bij een netwerkfout terugvallen op een gewone verzending
+                        this.busy = false;
+                        this.uploading = false;
+                        form.submit();
+                    });
+
+                    xhr.send(new FormData(form));
+                },
+            };
+        }
+    </script>
 </x-app-layout>

@@ -28,10 +28,91 @@ class InvoiceMatcher
     public const SUGGEST_THRESHOLD = 30;
 
     /**
-     * @param  Collection<int, Invoice>  $invoices  openstaande facturen van deze gebruiker
+     * Bereid de facturenlijst één keer voor.
+     *
+     * Zonder dit werd voor elke transactie opnieuw elk factuurnummer en elke
+     * klantnaam genormaliseerd; bij duizenden facturen liep dat volledig uit
+     * de hand. Het openstaande bedrag staat er ook in en wordt na een
+     * koppeling bijgewerkt via markAllocated().
+     *
+     * @param  Collection<int, Invoice>  $invoices
+     * @return array<int, array<string, mixed>>
+     */
+    public function prepare(Collection $invoices): array
+    {
+        $rows = [];
+        $byNumber = [];
+        $byName = [];
+
+        foreach ($invoices as $invoice) {
+            $outstanding = $invoice->outstandingAmount();
+
+            if ($outstanding <= 0.004) {
+                continue;
+            }
+
+            $names = [];
+            $tokenSets = [];
+
+            foreach ([$invoice->customer?->company_name, $invoice->customer?->name] as $candidate) {
+                $name = $this->normalize((string) $candidate);
+
+                if (strlen($name) < 3) {
+                    continue;
+                }
+
+                $names[] = $name;
+                $tokenSets[] = array_values(array_filter(
+                    $this->tokens($candidate),
+                    fn ($t) => strlen($t) >= 3
+                ));
+            }
+
+            $needle = $this->normalize((string) $invoice->invoice_number);
+
+            $rows[$invoice->id] = [
+                'invoice' => $invoice,
+                'outstanding' => $outstanding,
+                'needle' => $needle,
+                'names' => $names,
+                'tokenSets' => $tokenSets,
+            ];
+
+            // Index op factuurnummer, zodat we niet elke factuur langs hoeven
+            if (strlen($needle) >= 4) {
+                $byNumber[$needle][] = $invoice->id;
+            }
+
+            // Index op klantnaam: er zijn veel minder klanten dan facturen
+            foreach ($names as $name) {
+                $byName[$name][] = $invoice->id;
+            }
+        }
+
+        return ['rows' => $rows, 'byNumber' => $byNumber, 'byName' => $byName];
+    }
+
+    /** Werk het openstaande bedrag bij nadat er iets is gekoppeld. */
+    public function markAllocated(array &$prepared, int $invoiceId, float $amount): void
+    {
+        if (! isset($prepared['rows'][$invoiceId])) {
+            return;
+        }
+
+        $prepared['rows'][$invoiceId]['outstanding'] = round(
+            $prepared['rows'][$invoiceId]['outstanding'] - $amount, 2
+        );
+
+        if ($prepared['rows'][$invoiceId]['outstanding'] <= 0.004) {
+            unset($prepared['rows'][$invoiceId]);
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $prepared  uit prepare()
      * @return array<int, array{invoice: Invoice, score: int, reasons: string[], amount: float}>
      */
-    public function candidatesFor(BankTransaction $transaction, Collection $invoices): array
+    public function candidatesFor(BankTransaction $transaction, array $prepared): array
     {
         if (! $transaction->isIncoming()) {
             return [];
@@ -47,19 +128,52 @@ class InvoiceMatcher
         $haystack = $this->normalize($rawHaystack);
         $party = $this->normalize($transaction->counterparty_name ?? '');
 
+        // Alleen facturen langslopen waar überhaupt een signaal voor is: een
+        // factuurnummer uit de omschrijving of een passende klantnaam. Zonder
+        // deze voorselectie werd elke transactie tegen elke factuur gescoord.
+        $ids = [];
+
+        foreach ($this->numberKeys($rawHaystack) as $key) {
+            foreach ($prepared['byNumber'][$key] ?? [] as $id) {
+                $ids[$id] = true;
+            }
+        }
+
+        if ($party !== '') {
+            foreach ($prepared['byName'] as $name => $nameIds) {
+                if (str_contains($party, $name) || str_contains($name, $party)) {
+                    foreach ($nameIds as $id) {
+                        $ids[$id] = true;
+                    }
+                    continue;
+                }
+
+                // Gedeeltelijke overeenkomst op woordniveau
+                foreach ($nameIds as $id) {
+                    if (($prepared['rows'][$id] ?? null) && $this->nameScore($prepared['rows'][$id], $party) > 0) {
+                        $ids[$id] = true;
+                    }
+                    break; // tokens zijn per naam gelijk; één controle volstaat
+                }
+            }
+        }
+
         $candidates = [];
 
-        foreach ($invoices as $invoice) {
-            $outstanding = $invoice->outstandingAmount();
+        foreach (array_keys($ids) as $id) {
+            $row = $prepared['rows'][$id] ?? null;
 
-            if ($outstanding <= 0.004) {
+            if ($row === null) {
                 continue;
             }
+
+            $invoice = $row['invoice'];
+            $outstanding = $row['outstanding'];
 
             $score = 0;
             $reasons = [];
 
-            $numberHit = $this->numberAppearsIn($invoice->invoice_number, $haystack, $rawHaystack);
+            $numberHit = $this->needleAppearsIn($row['needle'], $haystack, $rawHaystack);
 
             if ($numberHit) {
                 $score += 60;
@@ -77,7 +191,7 @@ class InvoiceMatcher
                 $reasons[] = 'bedrag hoger dan openstaand';
             }
 
-            $nameScore = $this->nameScore($invoice, $party);
+            $nameScore = $this->nameScore($row, $party);
             if ($nameScore > 0) {
                 $score += $nameScore;
                 $reasons[] = 'klantnaam komt overeen';
@@ -134,10 +248,42 @@ class InvoiceMatcher
      * herkend, zodat "Factuur 2026-0018" ook matcht op "20260018". Te korte
      * nummers slaan we over: die leveren toevalstreffers op.
      */
-    private function numberAppearsIn(string $invoiceNumber, string $haystack, string $raw): bool
+    /**
+     * Mogelijke factuurnummers uit een omschrijving.
+     *
+     * Losse reeksen letters/cijfers, plus reeksen die aan elkaar geplakt zijn
+     * over een scheidingsteken heen, zodat "2026-0018" ook 20260018 oplevert.
+     *
+     * @return string[]
+     */
+    private function numberKeys(string $raw): array
     {
-        $needle = $this->normalize($invoiceNumber);
+        preg_match_all('/[0-9A-Za-z]+/', $raw, $m);
+        $parts = $m[0] ?? [];
+        $keys = [];
 
+        foreach ($parts as $i => $part) {
+            $joined = '';
+
+            // Het deel zelf en maximaal drie aaneengeplakte vervolgdelen
+            for ($n = 0; $n < 4 && isset($parts[$i + $n]); $n++) {
+                $joined .= $parts[$i + $n];
+
+                if (strlen($joined) >= 4) {
+                    $keys[strtolower($joined)] = true;
+                }
+
+                if (strlen($joined) > 40) {
+                    break;
+                }
+            }
+        }
+
+        return array_keys($keys);
+    }
+
+    private function needleAppearsIn(string $needle, string $haystack, string $raw): bool
+    {
         if (strlen($needle) < 4 || $haystack === '') {
             return false;
         }
@@ -163,7 +309,7 @@ class InvoiceMatcher
      * Overlap tussen klantnaam en tegenpartij, op woordniveau zodat
      * "Renoplan Bouw B.V." ook matcht op "Renoplan Bouw BV".
      */
-    private function nameScore(Invoice $invoice, string $party): int
+    private function nameScore(array $row, string $party): int
     {
         if ($party === '') {
             return 0;
@@ -171,18 +317,12 @@ class InvoiceMatcher
 
         $best = 0;
 
-        foreach ([$invoice->customer?->company_name, $invoice->customer?->name] as $candidate) {
-            $name = $this->normalize((string) $candidate);
-
-            if (strlen($name) < 3) {
-                continue;
-            }
-
+        foreach ($row['names'] as $index => $name) {
             if (str_contains($party, $name) || str_contains($name, $party)) {
                 return 25;
             }
 
-            $tokens = array_filter($this->tokens($candidate), fn ($t) => strlen($t) >= 3);
+            $tokens = $row['tokenSets'][$index] ?? [];
 
             if ($tokens === []) {
                 continue;
@@ -195,8 +335,7 @@ class InvoiceMatcher
                 }
             }
 
-            $ratio = $hits / count($tokens);
-            $best = max($best, (int) round($ratio * 20));
+            $best = max($best, (int) round(($hits / count($tokens)) * 20));
         }
 
         return $best;
