@@ -148,6 +148,50 @@ class BankImportHttpTest extends TestCase
         $this->assertStringContainsString('bg-green-600', $html);
     }
 
+    public function test_opnieuw_importeren_neemt_gekoppelde_transacties_niet_dubbel_mee(): void
+    {
+        Invoice::create([
+            'invoice_number' => '20260018',
+            'customer_id' => $this->customer->id,
+            'invoice_date' => '2026-01-01',
+            'due_date' => '2026-12-31',
+            'payment_terms' => 14,
+            'subtotal' => 1210, 'vat_amount' => 0, 'total' => 1210,
+            'status' => 'sent',
+        ]);
+
+        // Eerste import: bijschrijving wordt automatisch gekoppeld
+        $this->upload('camt053.xml');
+        $eerste = BankImportSession::firstOrFail();
+        $this->assertSame(2, $eerste->imported_count);
+        $this->assertSame(1, InvoicePayment::count());
+
+        // Afronden: de niet-gekoppelde afschrijving verdwijnt
+        $this->as($this->user)->post(route('bank.complete', $eerste));
+        $this->assertSame(1, BankTransaction::count());
+
+        // Tweede import van hetzelfde afschrift (overlappende periode)
+        $this->upload('camt053.xml');
+        $tweede = BankImportSession::latest('id')->firstOrFail();
+
+        // De gekoppelde regel wordt herkend en overgeslagen, de weggegooide
+        // afschrijving komt gewoon terug als nieuwe regel
+        $this->assertSame(1, $tweede->skipped_count);
+        $this->assertSame(1, $tweede->imported_count);
+
+        // En er is niets dubbel gekoppeld
+        $this->assertSame(1, InvoicePayment::count());
+        $this->assertSame(1210.00, Invoice::first()->paidAmount());
+
+        // Het matchscherm laat zien welke regel al bestond en waaraan die hangt
+        $this->as($this->user)
+            ->get(route('bank.show', $tweede))
+            ->assertOk()
+            ->assertSee('Al eerder geïmporteerd (1)')
+            ->assertSee('gekoppeld aan')
+            ->assertSee('20260018');
+    }
+
     public function test_afronden_gooit_niet_gekoppelde_transacties_weg(): void
     {
         $this->upload('camt053.xml');

@@ -98,6 +98,7 @@ class BankImportController extends Controller
                 ->get(),
             'openInvoices' => $openInvoices,
             'invoiceOptions' => $invoiceOptions,
+            'recognised' => $session->recognisedTransactions(),
         ]);
     }
 

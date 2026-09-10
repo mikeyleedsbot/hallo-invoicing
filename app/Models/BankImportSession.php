@@ -20,7 +20,7 @@ class BankImportSession extends Model
     protected $fillable = [
         'user_id', 'original_filename', 'format', 'account_iban',
         'period_from', 'period_to', 'imported_count', 'skipped_count',
-        'status', 'completed_at',
+        'recognised_transaction_ids', 'status', 'completed_at',
     ];
 
     protected $casts = [
@@ -29,11 +29,26 @@ class BankImportSession extends Model
         'completed_at' => 'datetime',
         'imported_count' => 'integer',
         'skipped_count' => 'integer',
+        'recognised_transaction_ids' => 'array',
     ];
 
     public function transactions(): HasMany
     {
         return $this->hasMany(BankTransaction::class);
+    }
+
+    /**
+     * Regels die bij deze import al bleken te bestaan omdat ze eerder zijn
+     * geïmporteerd en gekoppeld. Ze zitten niet in transactions(), want er is
+     * bewust geen tweede rij van gemaakt.
+     */
+    public function recognisedTransactions()
+    {
+        $ids = $this->recognised_transaction_ids ?: [];
+
+        return $ids === []
+            ? BankTransaction::whereRaw('1 = 0')->get()
+            : BankTransaction::with('payments.invoice')->whereIn('id', $ids)->orderBy('booking_date')->get();
     }
 
     public function isOpen(): bool

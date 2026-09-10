@@ -69,6 +69,45 @@
             @endif
         </div>
 
+        {{-- Al eerder geïmporteerd --}}
+        @if($recognised->isNotEmpty())
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                Al eerder geïmporteerd ({{ $recognised->count() }})
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Deze regels stonden er al van een vorige import en zijn niet opnieuw toegevoegd.
+            </p>
+
+            <div class="space-y-2">
+                @foreach($recognised as $t)
+                <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+                    <div class="text-sm text-gray-900 dark:text-gray-100">
+                        <span class="font-medium">€ {{ number_format($t->amount, 2, ',', '.') }}</span>
+                        <span class="text-gray-600 dark:text-gray-400">
+                            &middot; {{ $t->booking_date?->format('d-m-Y') }}
+                            &middot; {{ $t->counterparty_name ?: 'onbekend' }}
+                        </span>
+                    </div>
+                    <div class="text-sm">
+                        @forelse($t->payments as $payment)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                gekoppeld aan
+                                <a href="{{ route('invoices.show', $payment->invoice) }}" class="underline">{{ $payment->invoice?->invoice_number }}</a>
+                            </span>
+                        @empty
+                            <a href="{{ route('bank.show', $t->bank_import_session_id) }}"
+                               class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                staat nog open in een andere import
+                            </a>
+                        @endforelse
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- Nog te matchen --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">

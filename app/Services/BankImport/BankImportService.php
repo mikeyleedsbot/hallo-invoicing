@@ -45,17 +45,21 @@ class BankImportService
 
             $imported = 0;
             $skipped = 0;
+            $recognised = [];
 
             foreach ($parsed['transactions'] as $t) {
                 $fingerprint = $t->fingerprint();
 
-                $exists = BankTransaction::withoutGlobalScope('belongs_to_user')
+                // Zelfde regel als eerder? Dan niet opnieuw opslaan, maar wel
+                // onthouden zodat het matchscherm kan tonen dat hij er al is
+                $existing = BankTransaction::withoutGlobalScope('belongs_to_user')
                     ->where('user_id', $userId)
                     ->where('fingerprint', $fingerprint)
-                    ->exists();
+                    ->first();
 
-                if ($exists) {
+                if ($existing !== null) {
                     $skipped++;
+                    $recognised[] = $existing->id;
                     continue;
                 }
 
@@ -76,7 +80,11 @@ class BankImportService
                 $imported++;
             }
 
-            $session->update(['imported_count' => $imported, 'skipped_count' => $skipped]);
+            $session->update([
+                'imported_count' => $imported,
+                'skipped_count' => $skipped,
+                'recognised_transaction_ids' => $recognised,
+            ]);
 
             return $session->fresh();
         });
