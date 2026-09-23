@@ -57,6 +57,7 @@ class TeamSwitchingTest extends TestCase
             'token'      => Str::random(64),
             'role'       => Team::ROLE_MEMBER,
             'invited_by' => $inviter->id,
+            'approved_at' => now(),
         ]);
 
         $this->post(route('team-invitations.activate', $invitation->token))

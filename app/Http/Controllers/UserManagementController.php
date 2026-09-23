@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TeamInvitation;
 use App\Models\User;
 use App\Services\MailService;
 use App\Services\TeamService;
@@ -30,13 +31,17 @@ class UserManagementController extends Controller
         };
 
         $pendingUsers  = $applySearch(User::pending())->orderByDesc('created_at')->get();
-        $approvedUsers = $applySearch(User::approved())->orderBy('name')->get();
+        $approvedUsers = $applySearch(User::approved())->with('teams')->orderBy('name')->get();
         $rejectedUsers = $applySearch(User::rejected())->orderBy('name')->get();
+
+        // Aangevraagde teamleden: wachten op facturatie in Salesforce
+        $memberRequests = TeamInvitation::whereNull('approved_at')->whereNull('accepted_at')
+            ->with('team', 'inviter')->orderBy('created_at')->get();
 
         // Backwards-compat: sommige oudere views verwachten nog 'users'.
         $users = $approvedUsers;
 
-        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers', 'search'));
+        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers', 'search', 'memberRequests'));
     }
 
     public function approve(User $user)
@@ -60,6 +65,39 @@ class UserManagementController extends Controller
         }
 
         return back()->with('success', $user->name . ' is goedgekeurd en heeft een e-mail ontvangen.');
+    }
+
+    /** Teamlid-aanvraag goedkeuren (facturatie geregeld) en de uitnodiging versturen. */
+    public function approveMemberRequest(TeamInvitation $invitation)
+    {
+        abort_unless(Auth::user()->is_admin, 403);
+
+        if ($invitation->isApproved()) {
+            return back()->withErrors(['error' => 'Deze aanvraag is al goedgekeurd.']);
+        }
+
+        $invitation->update(['approved_at' => now()]);
+
+        $sent = (new MailService())->sendInvite(
+            $invitation->email,
+            $invitation->email,
+            $invitation->team->name,
+            route('team-invitations.accept', ['token' => $invitation->token])
+        );
+
+        return $sent
+            ? back()->with('success', 'Goedgekeurd; uitnodiging verstuurd naar ' . $invitation->email . '.')
+            : back()->withErrors(['error' => 'Goedgekeurd, maar de uitnodigingsmail kon niet worden verstuurd. Controleer de e-mailinstellingen.']);
+    }
+
+    public function rejectMemberRequest(TeamInvitation $invitation)
+    {
+        abort_unless(Auth::user()->is_admin, 403);
+        abort_if($invitation->isApproved(), 404);
+
+        $invitation->delete();
+
+        return back()->with('success', 'Aanvraag voor ' . $invitation->email . ' afgewezen.');
     }
 
     public function reject(Request $request, User $user)

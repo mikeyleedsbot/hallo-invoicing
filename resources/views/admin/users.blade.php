@@ -49,6 +49,54 @@
         {{-- Zoeken --}}
         <x-search-bar :action="route('users.index')" :search="$search" placeholder="Zoek op naam of e-mail..." />
 
+        {{-- Aangevraagde teamleden: eerst facturatie in Salesforce, dan goedkeuren --}}
+        @if(isset($memberRequests) && $memberRequests->count() > 0)
+        <div class="bg-white rounded-xl shadow-sm border border-amber-200 dark:bg-gray-800 dark:border-amber-800">
+            <div class="px-6 py-4 border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 rounded-t-xl">
+                <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                    Aangevraagde teamleden
+                    <span class="ml-2 inline-flex items-center justify-center w-6 h-6 text-xs font-semibold text-white bg-amber-600 rounded-full">{{ $memberRequests->count() }}</span>
+                </h2>
+                <p class="mt-1 text-sm text-amber-800 dark:text-amber-200">Regel de facturatie in Salesforce en keur daarna goed; pas dan krijgt het nieuwe lid een uitnodiging.</p>
+            </div>
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th class="px-6 py-3">Team</th>
+                        <th class="px-6 py-3">Nieuw lid</th>
+                        <th class="px-6 py-3">Aangevraagd door</th>
+                        <th class="px-6 py-3">Aangevraagd</th>
+                        <th class="px-6 py-3 text-right">Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($memberRequests as $memberRequest)
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $memberRequest->team->name }}</td>
+                        <td class="px-6 py-4">{{ $memberRequest->email }}</td>
+                        <td class="px-6 py-4">{{ $memberRequest->inviter->name }}</td>
+                        <td class="px-6 py-4">{{ $memberRequest->created_at->diffForHumans() }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <form method="POST" action="{{ route('team-requests.approve', $memberRequest) }}"
+                                      onsubmit="return confirm('Is de facturatie voor {{ $memberRequest->email }} geregeld? Dan wordt de uitnodiging verstuurd.');">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">Goedkeuren</button>
+                                </form>
+                                <form method="POST" action="{{ route('team-requests.reject', $memberRequest) }}"
+                                      onsubmit="return confirm('Aanvraag voor {{ $memberRequest->email }} afwijzen?');">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">Afwijzen</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
         {{-- Aanvragen in behandeling --}}
         @if(isset($pendingUsers) && $pendingUsers->count() > 0)
         <div class="bg-white rounded-xl shadow-sm border border-amber-200 dark:bg-gray-800 dark:border-amber-800">
@@ -114,6 +162,7 @@
                         <tr>
                             <th scope="col" class="px-6 py-4">Naam</th>
                             <th scope="col" class="px-6 py-4">E-mail</th>
+                            <th scope="col" class="px-6 py-4">Teams</th>
                             <th scope="col" class="px-6 py-4">Rol</th>
                             <th scope="col" class="px-6 py-4">MFA</th>
                             <th scope="col" class="px-6 py-4">Aangemaakt</th>
@@ -133,6 +182,21 @@
                                 @endif
                             </th>
                             <td class="px-6 py-4">{{ $u->email }}</td>
+                            <td class="px-6 py-4" x-data="{ allTeams: false }">
+                                <div class="flex flex-wrap items-center gap-1">
+                                    @forelse($u->teams->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE) as $team)
+                                        <span @if($loop->index >= 3) x-show="allTeams" x-cloak @endif
+                                              class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">{{ $team->name }}</span>
+                                    @empty
+                                        <span class="text-gray-400">—</span>
+                                    @endforelse
+                                    @if($u->teams->count() > 3)
+                                        <button type="button" @click.stop="allTeams = !allTeams"
+                                                class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-500"
+                                                x-text="allTeams ? 'minder' : '+{{ $u->teams->count() - 3 }}'">+{{ $u->teams->count() - 3 }}</button>
+                                    @endif
+                                </div>
+                            </td>
                             <td class="px-6 py-4">
                                 @if($u->is_admin)
                                     <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Admin</span>
@@ -244,7 +308,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12">
+                            <td colspan="7" class="px-6 py-12">
                                 <div class="text-center">
                                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                                         <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

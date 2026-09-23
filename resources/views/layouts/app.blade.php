@@ -109,7 +109,7 @@
                                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ Auth::user()->email }}</p>
                                 </div>
 
-                                @php $myTeams = Auth::user()->teams()->orderBy('teams.name')->get(); @endphp
+                                @php $myTeams = Auth::user()->teams->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE); @endphp
                                 @if($myTeams->count() > 1)
                                 <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-600">
                                     <p class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500">Werkt in</p>

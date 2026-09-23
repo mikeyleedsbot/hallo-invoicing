@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use App\Models\TeamInvitation;
+use App\Models\User;
 use App\Services\MailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TeamController extends Controller
@@ -36,9 +38,12 @@ class TeamController extends Controller
         }
 
         if ($team->invitations()->whereNull('accepted_at')->where('email', $validated['email'])->exists()) {
-            return back()->withErrors(['email' => 'Er staat al een openstaande uitnodiging voor dit e-mailadres.']);
+            return back()->withErrors(['email' => 'Er staat al een openstaande aanvraag of uitnodiging voor dit e-mailadres.']);
         }
 
+        // Geen directe uitnodiging: elk extra lid kost geld en moet eerst in
+        // Salesforce gefactureerd worden. Een admin keurt goed en verstuurt dan
+        // pas de uitnodiging (zie UserManagementController::approveMemberRequest).
         $invitation = TeamInvitation::create([
             'team_id'    => $team->id,
             'email'      => $validated['email'],
@@ -47,15 +52,18 @@ class TeamController extends Controller
             'invited_by' => Auth::id(),
         ]);
 
-        $inviteUrl = route('team-invitations.accept', ['token' => $invitation->token]);
-        $mailer    = new MailService();
-        $sent      = $mailer->sendInvite($invitation->email, $invitation->email, $team->name, $inviteUrl);
+        $admins = User::where('is_admin', true)->where('status', User::STATUS_APPROVED)->get();
+        $mailer = new MailService();
 
-        $msg = $sent
-            ? 'Uitnodiging verstuurd naar ' . $invitation->email . '.'
-            : 'Uitnodiging aangemaakt maar de mail kon niet worden verstuurd. Controleer de e-mailinstellingen.';
+        foreach ($admins as $admin) {
+            try {
+                $mailer->sendTeamMemberRequestNotification($admin, $invitation);
+            } catch (\Throwable $e) {
+                Log::error('Teamlid-aanvraag notificatie mislukt', ['error' => $e->getMessage()]);
+            }
+        }
 
-        return back()->with($sent ? 'success' : 'warning', $msg);
+        return back()->with('success', 'Aanvraag voor ' . $invitation->email . ' ingediend. Na goedkeuring (facturatie) ontvangt diegene een uitnodiging.');
     }
 
     public function cancelInvite(TeamInvitation $invitation)
@@ -65,7 +73,7 @@ class TeamController extends Controller
 
         $invitation->delete();
 
-        return back()->with('success', 'Uitnodiging ingetrokken.');
+        return back()->with('success', $invitation->isApproved() ? 'Uitnodiging ingetrokken.' : 'Aanvraag ingetrokken.');
     }
 
     public function removeMember(\App\Models\User $user)

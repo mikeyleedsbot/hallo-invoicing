@@ -16,7 +16,7 @@ class TeamService
     public function createForOwner(User $user): Team
     {
         $team = Team::create([
-            'name'     => $user->company_name ?: ($user->name . '’s team'),
+            'name'     => $user->company_name ?: $user->name,
             'owner_id' => $user->id,
         ]);
 

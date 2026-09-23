@@ -31,7 +31,7 @@ return new class extends Migration
             foreach ($users as $user) {
                 DB::transaction(function () use ($user) {
                     $teamId = DB::table('teams')->insertGetId([
-                        'name'       => $user->company_name ?: ($user->name . "'s team"),
+                        'name'       => $user->company_name ?: ($user->name),
                         'owner_id'   => $user->id,
                         'created_at' => now(),
                         'updated_at' => now(),

@@ -76,6 +76,8 @@ Route::middleware(['auth', 'mfa', 'team'])->group(function () {
         Route::post('/gebruikers/{user}/resend-invite',        [UserManagementController::class, 'resendInvite'])->name('users.resend-invite');
         Route::post('/gebruikers/{user}/approve',              [UserManagementController::class, 'approve'])->name('users.approve');
         Route::post('/gebruikers/{user}/reject',               [UserManagementController::class, 'reject'])->name('users.reject');
+        Route::post('/teamlid-aanvragen/{invitation}/approve', [UserManagementController::class, 'approveMemberRequest'])->name('team-requests.approve');
+        Route::post('/teamlid-aanvragen/{invitation}/reject',  [UserManagementController::class, 'rejectMemberRequest'])->name('team-requests.reject');
         Route::post('/gebruikers/{user}/impersonate',          [App\Http\Controllers\ImpersonationController::class, 'start'])->name('users.impersonate');
 
         // E-mailinstellingen (admin only)

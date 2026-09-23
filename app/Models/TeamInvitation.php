@@ -13,10 +13,12 @@ class TeamInvitation extends Model
         'token',
         'role',
         'invited_by',
+        'approved_at',
         'accepted_at',
     ];
 
     protected $casts = [
+        'approved_at' => 'datetime',
         'accepted_at' => 'datetime',
     ];
 
@@ -30,6 +32,12 @@ class TeamInvitation extends Model
         return $this->belongsTo(User::class, 'invited_by');
     }
 
+    /** Goedgekeurd door een admin (facturatie geregeld), dus uitnodiging verstuurd. */
+    public function isApproved(): bool
+    {
+        return $this->approved_at !== null;
+    }
+
     public function isAccepted(): bool
     {
         return $this->accepted_at !== null;
@@ -37,6 +45,7 @@ class TeamInvitation extends Model
 
     public function isExpired(): bool
     {
-        return $this->created_at->diffInHours(now()) > 72;
+        // De 72 uur lopen vanaf het versturen, niet vanaf de aanvraag
+        return ($this->approved_at ?? $this->created_at)->diffInHours(now()) > 72;
     }
 }

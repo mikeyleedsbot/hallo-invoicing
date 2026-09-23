@@ -16,7 +16,8 @@ class TeamInvitationController extends Controller
     {
         $invitation = TeamInvitation::where('token', $token)->first();
 
-        if (!$invitation) {
+        // Nog niet goedgekeurd = nog niet verstuurd; behandelen als onbekend
+        if (!$invitation || !$invitation->isApproved()) {
             return view('auth.invite-invalid', ['reason' => 'not_found']);
         }
 
@@ -37,7 +38,7 @@ class TeamInvitationController extends Controller
     {
         $invitation = TeamInvitation::where('token', $token)->first();
 
-        if (!$invitation || $invitation->isAccepted() || $invitation->isExpired()) {
+        if (!$invitation || !$invitation->isApproved() || $invitation->isAccepted() || $invitation->isExpired()) {
             return redirect()->route('login')->withErrors(['email' => 'Ongeldige of verlopen uitnodigingslink.']);
         }
 

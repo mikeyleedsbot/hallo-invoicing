@@ -80,13 +80,13 @@
         @if($invitations->count() > 0)
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Openstaande uitnodigingen</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Aanvragen en uitnodigingen</h2>
             </div>
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-6 py-3">E-mail</th>
-                        <th class="px-6 py-3">Verstuurd</th>
+                        <th class="px-6 py-3">Status</th>
                         <th class="px-6 py-3 text-right">Acties</th>
                     </tr>
                 </thead>
@@ -94,10 +94,18 @@
                     @foreach($invitations as $invitation)
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $invitation->email }}</td>
-                        <td class="px-6 py-4">{{ $invitation->created_at->diffForHumans() }}</td>
+                        <td class="px-6 py-4">
+                            @if($invitation->isApproved())
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Uitgenodigd</span>
+                            <span class="ms-1">{{ $invitation->approved_at->diffForHumans() }}</span>
+                            @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Wacht op goedkeuring</span>
+                            <span class="ms-1">aangevraagd {{ $invitation->created_at->diffForHumans() }}</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-right">
                             <form method="POST" action="{{ route('team.cancel-invite', $invitation) }}"
-                                  onsubmit="return confirm('Uitnodiging voor {{ $invitation->email }} intrekken?');">
+                                  onsubmit="return confirm('{{ $invitation->isApproved() ? 'Uitnodiging' : 'Aanvraag' }} voor {{ $invitation->email }} intrekken?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="font-medium text-red-600 hover:underline dark:text-red-500">Intrekken</button>
@@ -110,10 +118,11 @@
         </div>
         @endif
 
-        {{-- Teamlid uitnodigen --}}
+        {{-- Teamlid aanvragen --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Teamlid uitnodigen</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Teamlid aanvragen</h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Een extra teamlid brengt extra kosten met zich mee. Na je aanvraag regelen wij de facturatie; daarna ontvangt het nieuwe lid automatisch een uitnodiging.</p>
             </div>
             <form method="POST" action="{{ route('team.invite') }}" class="p-6 flex items-end gap-3">
                 @csrf
@@ -121,7 +130,7 @@
                     <x-input-label for="email" value="E-mailadres" />
                     <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" value="{{ old('email') }}" required />
                 </div>
-                <x-primary-button>Uitnodigen</x-primary-button>
+                <x-primary-button>Aanvragen</x-primary-button>
             </form>
         </div>
         @endif
