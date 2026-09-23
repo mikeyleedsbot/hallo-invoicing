@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,10 +13,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class BankTransaction extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     protected $fillable = [
-        'user_id', 'bank_import_session_id', 'booking_date', 'value_date',
+        'user_id', 'team_id', 'bank_import_session_id', 'booking_date', 'value_date',
         'amount', 'currency', 'counterparty_name', 'counterparty_iban',
         'description', 'bank_reference', 'fingerprint',
     ];

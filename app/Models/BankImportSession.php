@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class BankImportSession extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     public const STATUS_OPEN = 'open';
     public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
-        'user_id', 'original_filename', 'format', 'account_iban',
+        'user_id', 'team_id', 'original_filename', 'format', 'account_iban',
         'period_from', 'period_to', 'imported_count', 'skipped_count',
         'recognised_transaction_ids', 'status', 'completed_at',
     ];

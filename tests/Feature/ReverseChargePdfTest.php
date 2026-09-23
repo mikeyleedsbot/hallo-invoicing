@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceTemplate;
 use App\Models\User;
+use App\Services\TeamService;
 use App\Services\InvoicePdfGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use ReflectionMethod;
@@ -39,6 +40,7 @@ class ReverseChargePdfTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ]);
+        (new TeamService())->createForOwner($this->user);
 
         $this->actingAs($this->user);
 

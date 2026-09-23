@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,6 +33,7 @@ class InvoiceEditTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ]);
+        (new TeamService())->createForOwner($this->user);
 
         $this->actingAs($this->user);
 

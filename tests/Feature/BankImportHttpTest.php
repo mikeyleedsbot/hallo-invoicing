@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
 use App\Models\User;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -40,7 +41,7 @@ class BankImportHttpTest extends TestCase
 
     private function makeUser(string $email): User
     {
-        return User::create([
+        $user = User::create([
             'name' => 'Tester ' . $email,
             'email' => $email,
             'password' => bcrypt('password'),
@@ -49,6 +50,10 @@ class BankImportHttpTest extends TestCase
             'mfa_enabled' => true,
             'mfa_confirmed_at' => now(),
         ]);
+
+        (new TeamService())->createForOwner($user);
+
+        return $user;
     }
 
     private function as(User $user)

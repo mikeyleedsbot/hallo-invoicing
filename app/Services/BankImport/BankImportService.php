@@ -28,13 +28,13 @@ class BankImportService
      * Lees een geüpload bestand in en zet de transacties klaar. Regels die al
      * eerder geïmporteerd zijn (zelfde vingerafdruk) worden overgeslagen.
      */
-    public function import(string $path, string $originalName, int $userId): BankImportSession
+    public function import(string $path, string $originalName, int $teamId): BankImportSession
     {
         $parsed = $this->reader->read($path, $originalName);
 
-        return DB::transaction(function () use ($parsed, $originalName, $userId) {
+        return DB::transaction(function () use ($parsed, $originalName, $teamId) {
             $session = BankImportSession::create([
-                'user_id' => $userId,
+                'team_id' => $teamId,
                 'original_filename' => $originalName,
                 'format' => $parsed['format'],
                 'account_iban' => $parsed['iban'],
@@ -52,8 +52,8 @@ class BankImportService
 
                 // Zelfde regel als eerder? Dan niet opnieuw opslaan, maar wel
                 // onthouden zodat het matchscherm kan tonen dat hij er al is
-                $existing = BankTransaction::withoutGlobalScope('belongs_to_user')
-                    ->where('user_id', $userId)
+                $existing = BankTransaction::withoutGlobalScope('belongs_to_team')
+                    ->where('team_id', $teamId)
                     ->where('fingerprint', $fingerprint)
                     ->first();
 
@@ -64,7 +64,7 @@ class BankImportService
                 }
 
                 BankTransaction::create([
-                    'user_id' => $userId,
+                    'team_id' => $teamId,
                     'bank_import_session_id' => $session->id,
                     'booking_date' => $t->bookingDate,
                     'value_date' => $t->valueDate,
@@ -100,7 +100,7 @@ class BankImportService
         // Facturen één keer laden en voorbereiden. Dit stond eerder in de lus,
         // waardoor bij duizenden facturen per transactie de hele lijst opnieuw
         // werd opgehaald en genormaliseerd.
-        $prepared = $this->matcher->prepare($this->openInvoices($session->user_id));
+        $prepared = $this->matcher->prepare($this->openInvoices($session->team_id));
 
         $matched = 0;
 
@@ -132,7 +132,7 @@ class BankImportService
      */
     public function suggestions(BankImportSession $session): array
     {
-        $prepared = $this->matcher->prepare($this->openInvoices($session->user_id));
+        $prepared = $this->matcher->prepare($this->openInvoices($session->team_id));
         $rows = [];
 
         // Nieuwste bijschrijving bovenaan: bij het naslaan zoek je meestal de
@@ -166,7 +166,7 @@ class BankImportService
      */
     public function link(BankTransaction $transaction, Invoice $invoice, float $amount, string $by = InvoicePayment::BY_MANUAL): InvoicePayment
     {
-        if ($transaction->user_id !== $invoice->user_id) {
+        if ($transaction->team_id !== $invoice->team_id) {
             throw new BankImportException('Deze transactie hoort niet bij deze factuur.');
         }
 
@@ -178,7 +178,7 @@ class BankImportService
 
         return DB::transaction(function () use ($transaction, $invoice, $amount, $by) {
             $payment = InvoicePayment::create([
-                'user_id' => $transaction->user_id,
+                'team_id' => $transaction->team_id,
                 'invoice_id' => $invoice->id,
                 'bank_transaction_id' => $transaction->id,
                 'amount' => $amount,
@@ -206,7 +206,7 @@ class BankImportService
 
         return DB::transaction(function () use ($invoice, $outstanding) {
             $payment = InvoicePayment::create([
-                'user_id' => $invoice->user_id,
+                'team_id' => $invoice->team_id,
                 'invoice_id' => $invoice->id,
                 'bank_transaction_id' => null,
                 'amount' => $outstanding,
@@ -282,11 +282,11 @@ class BankImportService
         });
     }
 
-    /** Openstaande verkoopfacturen van deze gebruiker. */
-    private function openInvoices(int $userId): Collection
+    /** Openstaande verkoopfacturen van dit team. */
+    private function openInvoices(int $teamId): Collection
     {
-        return Invoice::withoutGlobalScope('belongs_to_user')
-            ->where('user_id', $userId)
+        return Invoice::withoutGlobalScope('belongs_to_team')
+            ->where('team_id', $teamId)
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->with('customer', 'payments')
             ->get()
