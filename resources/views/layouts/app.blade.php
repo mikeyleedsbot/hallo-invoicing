@@ -60,8 +60,15 @@
                             <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M15.6,75c6.1-9.7,10.8-20.6,14.2-32.8,3.4-12.2,5.2-24.6,5.3-37.2h29.3c0,8.2-1,16.8-3,25.6-2,8.8-5,17.1-8.8,25-3.8,7.9-8.2,14.3-13.1,19.4H15.6Z" fill="#e7343f" stroke-width="0"/>
                             </svg>
-                            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-gray-900 dark:text-white">
-                                Hallo Invoicing
+                            <span class="flex flex-col min-w-0">
+                                <span class="text-xl font-semibold leading-6 sm:text-2xl sm:leading-7 whitespace-nowrap text-gray-900 dark:text-white">
+                                    Hallo Invoicing
+                                </span>
+                                @if(Auth::user()->currentTeam)
+                                <span class="text-xs font-medium leading-4 truncate max-w-[10rem] sm:max-w-[14rem] text-blue-600 dark:text-blue-400" title="Huidig team">
+                                    {{ Auth::user()->currentTeam->name }}
+                                </span>
+                                @endif
                             </span>
                         </a>
                     </div>
