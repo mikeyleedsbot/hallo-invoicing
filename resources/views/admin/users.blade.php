@@ -47,7 +47,51 @@
         @endif
 
         {{-- Zoeken --}}
-        <x-search-bar :action="route('users.index')" :search="$search" placeholder="Zoek op naam of e-mail..." />
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <form method="GET" action="{{ route('users.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="hidden" name="sort" value="{{ $sort }}">
+                <input type="hidden" name="direction" value="{{ $direction }}">
+                <div>
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Zoek op naam, e-mail of bedrijf..."
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+                </div>
+                <div>
+                    <select name="role" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Alle rollen</option>
+                        <option value="admin" @selected($filters['role'] === 'admin')>Admin</option>
+                        <option value="user"  @selected($filters['role'] === 'user')>Gebruiker</option>
+                    </select>
+                </div>
+                <div>
+                    <select name="mfa" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Alle MFA-statussen</option>
+                        <option value="active"  @selected($filters['mfa'] === 'active')>MFA actief</option>
+                        <option value="none"    @selected($filters['mfa'] === 'none')>Geen MFA</option>
+                        <option value="invited" @selected($filters['mfa'] === 'invited')>Uitgenodigd</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" name="team" list="team-names" value="{{ $filters['team'] }}" placeholder="Team..." autocomplete="off"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400">
+                    <datalist id="team-names">
+                        @foreach($teams as $teamName)
+                            <option value="{{ $teamName }}"></option>
+                        @endforeach
+                    </datalist>
+                </div>
+                <div class="md:col-span-4 flex justify-end gap-2">
+                    @if($search !== '' || array_filter($filters))
+                        <a href="{{ route('users.index') }}"
+                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                            Wissen
+                        </a>
+                    @endif
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                        Filteren
+                    </button>
+                </div>
+            </form>
+        </div>
 
         {{-- Aangevraagde teamleden: eerst facturatie in Salesforce, dan goedkeuren --}}
         @if(isset($memberRequests) && $memberRequests->count() > 0)
@@ -160,12 +204,12 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400" style="overflow:visible;">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-6 py-4">Naam</th>
-                            <th scope="col" class="px-6 py-4">E-mail</th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="name" label="Naam" :sort="$sort" :direction="$direction" /></th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="email" label="E-mail" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4">Teams</th>
-                            <th scope="col" class="px-6 py-4">Rol</th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="is_admin" label="Rol" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4">MFA</th>
-                            <th scope="col" class="px-6 py-4">Aangemaakt</th>
+                            <th scope="col" class="px-6 py-4"><x-sort-header column="created_at" label="Aangemaakt" :sort="$sort" :direction="$direction" /></th>
                             <th scope="col" class="px-6 py-4"><span class="sr-only">Acties</span></th>
                         </tr>
                     </thead>
@@ -315,8 +359,13 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         </svg>
                                     </div>
+                                    @if($search !== '' || array_filter($filters))
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Geen gebruikers gevonden</h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-6">Pas de filters aan of <a href="{{ route('users.index') }}" class="text-blue-600 hover:underline dark:text-blue-500">wis ze</a>.</p>
+                                    @else
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Nog geen gebruikers</h3>
                                     <p class="text-gray-600 dark:text-gray-400 mb-6">Maak een eerste gebruiker aan.</p>
+                                    @endif
                                     <button @click="openCreateModal()"
                                             class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

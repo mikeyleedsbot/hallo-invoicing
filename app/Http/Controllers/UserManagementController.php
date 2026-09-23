@@ -24,14 +24,42 @@ class UserManagementController extends Controller
             if ($search !== '') {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('company_name', 'like', "%{$search}%");
                 });
             }
             return $query;
         };
 
         $pendingUsers  = $applySearch(User::pending())->orderByDesc('created_at')->get();
-        $approvedUsers = $applySearch(User::approved())->with('teams')->orderBy('name')->get();
+        $filters = [
+            'role' => (string) $request->query('role', ''),
+            'mfa'  => (string) $request->query('mfa', ''),
+            'team' => trim((string) $request->query('team', '')),
+        ];
+
+        $allowedSorts = ['name', 'email', 'is_admin', 'created_at'];
+        $sort      = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'name';
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+
+        $approvedUsers = $applySearch(User::approved())
+            ->when($filters['role'] === 'admin', fn ($q) => $q->where('is_admin', true))
+            ->when($filters['role'] === 'user', fn ($q) => $q->where('is_admin', false))
+            // Zelfde volgorde als de MFA-badge: uitgenodigd gaat voor MFA actief
+            ->when($filters['mfa'] === 'invited', fn ($q) => $q->whereNotNull('invite_token'))
+            ->when($filters['mfa'] === 'active', fn ($q) => $q->whereNull('invite_token')->where('mfa_enabled', true))
+            ->when($filters['mfa'] === 'none', fn ($q) => $q->whereNull('invite_token')->where('mfa_enabled', false))
+            // Teamnaam = bedrijfsnaam of naam van de eigenaar (zie Team::name), dus daarop zoeken
+            ->when($filters['team'] !== '', fn ($q) => $q->whereHas('teams.owner', fn ($o) => $o->where(fn ($w) => $w
+                ->where('company_name', 'like', "%{$filters['team']}%")
+                ->orWhere('name', 'like', "%{$filters['team']}%"))))
+            ->with('teams')
+            ->orderBy($sort, $direction)
+            ->orderBy('name')
+            ->get();
+
+        // ponytail: alle teamnamen als autocomplete; bij duizenden teams een zoek-endpoint maken
+        $teams = \App\Models\Team::all()->pluck('name')->unique()->sort(SORT_NATURAL | SORT_FLAG_CASE);
         $rejectedUsers = $applySearch(User::rejected())->orderBy('name')->get();
 
         // Aangevraagde teamleden: wachten op facturatie in Salesforce
@@ -41,7 +69,7 @@ class UserManagementController extends Controller
         // Backwards-compat: sommige oudere views verwachten nog 'users'.
         $users = $approvedUsers;
 
-        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers', 'search', 'memberRequests'));
+        return view('admin.users', compact('users', 'pendingUsers', 'approvedUsers', 'rejectedUsers', 'search', 'memberRequests', 'filters', 'sort', 'direction', 'teams'));
     }
 
     public function approve(User $user)

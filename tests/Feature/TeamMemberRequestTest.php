@@ -121,4 +121,28 @@ class TeamMemberRequestTest extends TestCase
             ->assertSee('User eigenaar1@example.test')
             ->assertSee('+2', false);
     }
+
+    public function test_gebruikersbeheer_filtert_en_sorteert(): void
+    {
+        $admin = $this->makeUser('admin@example.test', admin: true);
+        $anna  = $this->makeUser('anna@example.test');
+        $this->makeUser('bert@example.test');
+
+        $this->as($admin)->get(route('users.index', ['role' => 'admin']))->assertOk()
+            ->assertSee($this->cell('admin@example.test'), false)->assertDontSee($this->cell('bert@example.test'), false);
+
+        $this->as($admin)->get(route('users.index', ['team' => 'anna@']))->assertOk()
+            ->assertSee($this->cell('anna@example.test'), false)->assertDontSee($this->cell('bert@example.test'), false);
+
+        $this->as($admin)->get(route('users.index', ['sort' => 'email', 'direction' => 'desc']))->assertOk()
+            ->assertSeeInOrder([$this->cell('bert@example.test'), $this->cell('anna@example.test'), $this->cell('admin@example.test')], false);
+
+        // Onbekende sorteerkolom valt terug op naam (geen SQL-injectie via orderBy)
+        $this->as($admin)->get(route('users.index', ['sort' => 'password']))->assertOk();
+    }
+
+    private function cell(string $email): string
+    {
+        return '<td class="px-6 py-4">' . $email . '</td>';
+    }
 }
