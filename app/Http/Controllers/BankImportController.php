@@ -15,8 +15,8 @@ use Illuminate\Validation\Rule;
 /**
  * Bankafschriften importeren en koppelen aan verkoopfacturen.
  *
- * Elk model gebruikt BelongsToUser, dus route-binding vindt alleen records van
- * de ingelogde gebruiker; een id van een ander bedrijf geeft simpelweg 404.
+ * Elk model gebruikt BelongsToTeam, dus route-binding vindt alleen records van
+ * het huidige team; een id van een ander bedrijf geeft simpelweg 404.
  */
 class BankImportController extends Controller
 {
@@ -53,7 +53,7 @@ class BankImportController extends Controller
             $session = $this->service->import(
                 $file->getRealPath(),
                 $file->getClientOriginalName(),
-                auth()->id()
+                auth()->user()->currentTeam->id
             );
         } catch (BankImportException $e) {
             return back()->withErrors(['statement' => $e->getMessage()]);
@@ -107,8 +107,8 @@ class BankImportController extends Controller
     public function link(Request $request, BankTransaction $transaction)
     {
         $validated = $request->validate([
-            // Rule::exists met user_id: een factuur van een ander account bestaat hier niet
-            'invoice_id' => ['required', Rule::exists('invoices', 'id')->where('user_id', auth()->id())],
+            // Rule::exists met team_id: een factuur van een ander team bestaat hier niet
+            'invoice_id' => ['required', Rule::exists('invoices', 'id')->where('team_id', auth()->user()->currentTeam->id)],
             'amount' => ['required', 'numeric', 'min:0.01'],
         ], [], [
             'invoice_id' => 'Factuur',

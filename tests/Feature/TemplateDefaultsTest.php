@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceTemplate;
 use App\Models\Quote;
 use App\Models\User;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -35,6 +36,8 @@ class TemplateDefaultsTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ]);
+
+        (new TeamService())->createForOwner($this->user);
 
         $this->actingAs($this->user);
 

@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Quote;
 use App\Models\User;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,6 +30,8 @@ class BulkStatusTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ]);
+
+        (new TeamService())->createForOwner($this->user);
 
         $this->actingAs($this->user);
         $this->customer = Customer::create([
@@ -134,6 +137,7 @@ class BulkStatusTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ]);
+        (new TeamService())->createForOwner($other);
 
         $this->as($other)
             ->post(route('invoices.bulk-status'), [

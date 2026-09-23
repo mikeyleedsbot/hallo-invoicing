@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Services\TeamService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -34,6 +35,20 @@ class UserFactory extends Factory
             'status' => \App\Models\User::STATUS_APPROVED,
             'approved_at' => now(),
         ];
+    }
+
+    /**
+     * Elke factory-user krijgt automatisch een eigen team als eigenaar,
+     * zodat de team-scoping (BelongsToTeam / EnsureTeamContext) in tests
+     * werkt zonder dat elke test dit los hoeft te regelen.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (\App\Models\User $user) {
+            if (!$user->current_team_id) {
+                (new TeamService())->createForOwner($user);
+            }
+        });
     }
 
     /**

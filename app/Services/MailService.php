@@ -160,6 +160,58 @@ HTML;
     }
 
     /**
+     * Notificatie naar een admin dat een team een extra lid aanvraagt. De
+     * admin regelt de facturatie (Salesforce) en keurt daarna goed.
+     */
+    public function sendTeamMemberRequestNotification(\App\Models\User $admin, \App\Models\TeamInvitation $invitation): bool
+    {
+        $fromName  = $this->fromName();
+        $subject   = 'Nieuw teamlid aangevraagd: ' . $invitation->team->name;
+        $url       = url(route('users.index'));
+        $adminName = e($admin->name);
+        $team      = e($invitation->team->name);
+        $email     = e($invitation->email);
+        $requester = e($invitation->inviter->name . ' (' . $invitation->inviter->email . ')');
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="nl">
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);border-radius:12px 12px 0 0;padding:40px 40px 32px;text-align:center;">
+        <h1 style="margin:0;color:white;font-size:22px;font-weight:700;">Nieuw teamlid aangevraagd</h1>
+      </td></tr>
+      <tr><td style="background:white;padding:40px;">
+        <p style="margin:0 0 16px;color:#111827;">Hoi {$adminName},</p>
+        <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6;">Een team wil een extra lid toevoegen. Regel de facturatie in Salesforce en keur de aanvraag daarna goed; pas dan krijgt het nieuwe lid een uitnodiging.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:24px;">
+          <tr><td style="padding:16px 20px;">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;width:130px;font-weight:600;">Team</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$team}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;font-weight:600;">Nieuw lid</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$email}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;font-weight:600;">Aangevraagd door</td><td style="padding:4px 0;color:#111827;font-size:13px;">{$requester}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+          <a href="{$url}" style="display:inline-block;background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;">Open gebruikersbeheer →</a>
+        </td></tr></table>
+      </td></tr>
+      <tr><td style="background:#f9fafb;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;color:#9ca3af;font-size:12px;">© {$fromName} Invoicing — automatische notificatie</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>
+HTML;
+
+        return $this->send($admin->email, $subject, $html);
+    }
+
+    /**
      * Bericht naar de gebruiker dat z'n account is goedgekeurd.
      */
     public function sendAccountApproved(\App\Models\User $user): bool

@@ -433,7 +433,7 @@ class TemplateController extends Controller
 
     /**
      * Serve private template files (logo/background) via authenticated route.
-     * BelongsToUser scope zorgt ervoor dat alleen eigen templates toegankelijk zijn.
+     * BelongsToTeam scope zorgt ervoor dat alleen team-eigen templates toegankelijk zijn.
      */
     public function serveFile(InvoiceTemplate $template, string $type)
     {

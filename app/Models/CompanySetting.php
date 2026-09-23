@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 
 class CompanySetting extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     protected $fillable = [
         'user_id',
+        'team_id',
         'company_name',
         'address',
         'postal_code',
@@ -28,10 +29,10 @@ class CompanySetting extends Model
         'logo_path',
     ];
 
-    // Per-user singleton: elke gebruiker heeft eigen bedrijfsgegevens
+    // Per-team singleton: elk team heeft eigen bedrijfsgegevens
     public static function get()
     {
-        $userId = auth()->id();
+        $team = auth()->check() ? auth()->user()->currentTeam : null;
 
         $defaults = [
             'company_name' => 'Mijn Bedrijf',
@@ -44,20 +45,20 @@ class CompanySetting extends Model
             'iban' => '',
         ];
 
-        if (!$userId) {
+        if (!$team) {
             // CLI / seeder context: pak het eerste record
-            return static::withoutGlobalScope('belongs_to_user')->firstOrCreate(
+            return static::withoutGlobalScope('belongs_to_team')->firstOrCreate(
                 ['id' => 1],
                 $defaults
             );
         }
 
-        // Per-user singleton: vul defaults met bekende userdata
-        $defaults['company_name'] = auth()->user()->company_name ?? 'Mijn Bedrijf';
+        // Per-team singleton: vul defaults met bekende teamdata
+        $defaults['company_name'] = $team->name ?? 'Mijn Bedrijf';
         $defaults['email'] = auth()->user()->email ?? '';
 
         return static::firstOrCreate(
-            ['user_id' => $userId],
+            ['team_id' => $team->id],
             $defaults
         );
     }

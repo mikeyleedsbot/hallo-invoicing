@@ -5,26 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 
 class Invoice extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     protected static function booted(): void
     {
         // Factuurteller in de instellingen automatisch doorschuiven
         static::created(function (Invoice $invoice) {
-            $prefix = AppSetting::withoutGlobalScope('belongs_to_user')
-                ->where('user_id', $invoice->user_id)
+            $prefix = AppSetting::withoutGlobalScope('belongs_to_team')
+                ->where('team_id', $invoice->team_id)
                 ->value('invoice_prefix') ?? 'INV';
 
-            AppSetting::advanceCounter('invoice_number_start', $invoice->invoice_number, $invoice->user_id, $prefix);
+            AppSetting::advanceCounter('invoice_number_start', $invoice->invoice_number, $invoice->team_id, $prefix);
         });
     }
 
     protected $fillable = [
         'user_id',
+        'team_id',
         'invoice_number',
         'customer_id',
         'template_id',

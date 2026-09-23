@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 
 class InvoiceTemplate extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     /** Documentsoorten waarvoor een template standaard kan zijn */
     public const TYPE_INVOICE = 'invoice';
@@ -15,6 +15,7 @@ class InvoiceTemplate extends Model
 
     protected $fillable = [
         'user_id',
+        'team_id',
         'name',
         'is_default_invoice',
         'is_default_quote',

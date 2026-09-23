@@ -60,8 +60,15 @@
                             <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M15.6,75c6.1-9.7,10.8-20.6,14.2-32.8,3.4-12.2,5.2-24.6,5.3-37.2h29.3c0,8.2-1,16.8-3,25.6-2,8.8-5,17.1-8.8,25-3.8,7.9-8.2,14.3-13.1,19.4H15.6Z" fill="#e7343f" stroke-width="0"/>
                             </svg>
-                            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-gray-900 dark:text-white">
-                                Hallo Invoicing
+                            <span class="flex flex-col min-w-0">
+                                <span class="text-xl font-semibold leading-6 sm:text-2xl sm:leading-7 whitespace-nowrap text-gray-900 dark:text-white">
+                                    Hallo Invoicing
+                                </span>
+                                @if(Auth::user()->currentTeam)
+                                <span class="text-xs font-medium leading-4 truncate max-w-[10rem] sm:max-w-[14rem] text-blue-600 dark:text-blue-400" title="Huidig team">
+                                    {{ Auth::user()->currentTeam->name }}
+                                </span>
+                                @endif
                             </span>
                         </a>
                     </div>
@@ -103,11 +110,38 @@
                                  x-transition:leave="transition ease-in duration-75"
                                  x-transition:leave-start="opacity-100 scale-100"
                                  x-transition:leave-end="opacity-0 scale-95"
-                                 class="absolute right-0 z-50 mt-2 w-48 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600">
+                                 class="absolute right-0 z-50 mt-2 w-[16rem] text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600">
                                 <div class="px-4 py-3">
                                     <p class="text-sm text-gray-900 dark:text-white">{{ Auth::user()->name }}</p>
                                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{{ Auth::user()->email }}</p>
                                 </div>
+
+                                @php $myTeams = Auth::user()->teams->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE); @endphp
+                                @if($myTeams->count() > 1)
+                                <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-600">
+                                    <p class="text-xs font-semibold text-gray-400 uppercase dark:text-gray-500">Werkt in</p>
+                                </div>
+                                <ul class="py-1 border-b border-gray-100 dark:border-gray-600">
+                                    @foreach($myTeams as $myTeam)
+                                    <li>
+                                        @if($myTeam->id === Auth::user()->current_team_id)
+                                        <span class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                            {{ $myTeam->name }}
+                                        </span>
+                                        @else
+                                        <form method="POST" action="{{ route('team.switch', $myTeam) }}">
+                                            @csrf
+                                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                {{ $myTeam->name }}
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </li>
+                                    @endforeach
+                                </ul>
+                                @endif
+
                                 <ul class="py-1">
                                     <li>
                                         <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
@@ -239,6 +273,18 @@
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
                             </svg>
                             <span class="ms-3 sidebar-label">Bedrijfsgegevens</span>
+                        </a>
+                    </li>
+
+                    <!-- Team -->
+                    <li>
+                        <a href="{{ route('team.show') }}"
+                           class="flex items-center p-2 rounded-lg group {{ request()->routeIs('team.*') ? 'bg-blue-600 text-white' : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('team.*') ? 'text-white' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' }}"
+                                 fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                            </svg>
+                            <span class="ms-3 sidebar-label">Team</span>
                         </a>
                     </li>
 

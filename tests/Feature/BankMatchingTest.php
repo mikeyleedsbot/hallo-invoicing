@@ -7,6 +7,7 @@ use App\Models\BankTransaction;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\TeamService;
 use App\Services\BankImport\BankImportException;
 use App\Services\BankImport\BankImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,7 +44,7 @@ class BankMatchingTest extends TestCase
 
     private function makeUser(string $email): User
     {
-        return User::create([
+        $user = User::create([
             'name' => 'Tester ' . $email,
             'email' => $email,
             'password' => bcrypt('password'),
@@ -52,6 +53,10 @@ class BankMatchingTest extends TestCase
             'mfa_enabled' => true,
             'mfa_confirmed_at' => now(),
         ]);
+
+        (new TeamService())->createForOwner($user);
+
+        return $user;
     }
 
     private function makeInvoice(string $number, float $total, string $status = 'sent'): Invoice
@@ -69,10 +74,13 @@ class BankMatchingTest extends TestCase
         ]);
     }
 
-    private function makeSession(?int $userId = null): BankImportSession
+    private function makeSession(?User $owner = null): BankImportSession
     {
+        $owner ??= $this->user;
+
         return BankImportSession::create([
-            'user_id' => $userId ?? $this->user->id,
+            'user_id' => $owner->id,
+            'team_id' => $owner->current_team_id,
             'original_filename' => 'afschrift.csv',
             'format' => 'csv',
             'status' => BankImportSession::STATUS_OPEN,
@@ -291,9 +299,10 @@ class BankMatchingTest extends TestCase
         $invoice = $this->makeInvoice('20260029', 100.00);
 
         $other = $this->makeUser('ander2@example.test');
-        $otherSession = $this->makeSession($other->id);
-        $otherTransaction = BankTransaction::withoutGlobalScope('belongs_to_user')->create([
+        $otherSession = $this->makeSession($other);
+        $otherTransaction = BankTransaction::withoutGlobalScope('belongs_to_team')->create([
             'user_id' => $other->id,
+            'team_id' => $other->current_team_id,
             'bank_import_session_id' => $otherSession->id,
             'booking_date' => '2026-02-01',
             'amount' => 100.00,
@@ -361,14 +370,16 @@ class BankMatchingTest extends TestCase
     {
         $other = $this->makeUser('ander3@example.test');
 
-        $otherCustomer = Customer::withoutGlobalScope('belongs_to_user')->create([
+        $otherCustomer = Customer::withoutGlobalScope('belongs_to_team')->create([
             'user_id' => $other->id,
+            'team_id' => $other->current_team_id,
             'name' => 'Andermans klant',
             'country' => 'Nederland',
         ]);
 
-        $otherInvoice = Invoice::withoutGlobalScope('belongs_to_user')->create([
+        $otherInvoice = Invoice::withoutGlobalScope('belongs_to_team')->create([
             'user_id' => $other->id,
+            'team_id' => $other->current_team_id,
             'invoice_number' => '20260043',
             'customer_id' => $otherCustomer->id,
             'invoice_date' => '2026-01-01',
@@ -381,6 +392,6 @@ class BankMatchingTest extends TestCase
         ]);
 
         $this->post(route('bank.settle', $otherInvoice))->assertNotFound();
-        $this->assertSame(0, \App\Models\InvoicePayment::withoutGlobalScope('belongs_to_user')->count());
+        $this->assertSame(0, \App\Models\InvoicePayment::withoutGlobalScope('belongs_to_team')->count());
     }
 }

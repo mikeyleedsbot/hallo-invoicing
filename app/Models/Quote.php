@@ -5,26 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 
 class Quote extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     protected static function booted(): void
     {
         // Offerteteller in de instellingen automatisch doorschuiven
         static::created(function (Quote $quote) {
-            $prefix = AppSetting::withoutGlobalScope('belongs_to_user')
-                ->where('user_id', $quote->user_id)
+            $prefix = AppSetting::withoutGlobalScope('belongs_to_team')
+                ->where('team_id', $quote->team_id)
                 ->value('quote_prefix') ?? 'OFF';
 
-            AppSetting::advanceCounter('quote_number_start', $quote->quote_number, $quote->user_id, $prefix);
+            AppSetting::advanceCounter('quote_number_start', $quote->quote_number, $quote->team_id, $prefix);
         });
     }
 
     protected $fillable = [
         'user_id',
+        'team_id',
         'quote_number',
         'customer_id',
         'template_id',

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\MailAccount;
 use App\Models\User;
 use App\Services\CustomerMailService;
+use App\Services\TeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -20,7 +21,7 @@ class MailConnectionTest extends TestCase
 
     private function makeUser(array $extra = []): User
     {
-        return User::create(array_merge([
+        $user = User::create(array_merge([
             'name'              => 'Test User',
             'email'             => uniqid('u', true) . '@example.test',
             'password'          => bcrypt('password'),
@@ -29,6 +30,10 @@ class MailConnectionTest extends TestCase
             'mfa_enabled'       => true,
             'mfa_confirmed_at'  => now(),
         ], $extra));
+
+        (new TeamService())->createForOwner($user);
+
+        return $user;
     }
 
     /** Request-builder die ingelogd is én MFA gepasseerd heeft. */

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Traits\BelongsToTeam;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class InvoicePayment extends Model
 {
-    use BelongsToUser;
+    use BelongsToTeam;
 
     public const BY_AUTO = 'auto';
     public const BY_MANUAL = 'manual';
@@ -22,7 +22,7 @@ class InvoicePayment extends Model
     public const METHOD_CASH = 'cash';
 
     protected $fillable = [
-        'user_id', 'invoice_id', 'bank_transaction_id', 'amount', 'method', 'matched_by',
+        'user_id', 'team_id', 'invoice_id', 'bank_transaction_id', 'amount', 'method', 'matched_by',
     ];
 
     protected $casts = [
