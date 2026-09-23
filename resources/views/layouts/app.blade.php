@@ -102,7 +102,7 @@
                             </button>
 
                             <!-- Dropdown Menu -->
-                            <div x-show="dropdownOpen"
+                            <div x-show="dropdownOpen" x-cloak
                                  @click.away="dropdownOpen = false"
                                  x-transition:enter="transition ease-out duration-100"
                                  x-transition:enter-start="opacity-0 scale-95"
