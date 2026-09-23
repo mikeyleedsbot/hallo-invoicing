@@ -124,7 +124,8 @@
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Teamlid aanvragen</h2>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Een extra teamlid brengt extra kosten met zich mee. Na je aanvraag regelen wij de facturatie; daarna ontvangt het nieuwe lid automatisch een uitnodiging.</p>
             </div>
-            <form method="POST" action="{{ route('team.invite') }}" class="p-6 flex items-end gap-3">
+            <form method="POST" action="{{ route('team.invite') }}" class="p-6 flex items-end gap-3"
+                  onsubmit="return confirm('Teamlid ' + this.email.value + ' aanvragen? Een extra teamlid brengt extra licentiekosten met zich mee.')">
                 @csrf
                 <div class="flex-1">
                     <x-input-label for="email" value="E-mailadres" />
