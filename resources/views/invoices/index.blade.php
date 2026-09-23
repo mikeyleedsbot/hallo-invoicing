@@ -222,6 +222,16 @@
                                         <span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $invoice->status_color }}">
                                             {{ $invoice->status_label }}
                                         </span>
+                                        @if($invoice->isPartiallyPaidForDisplay())
+                                            <span class="block mt-1 text-xs text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                                                nog € {{ number_format($invoice->outstandingAmount(), 2, ',', '.') }}
+                                            </span>
+                                        @endif
+                                        @if($invoice->statusSourceLabel())
+                                            <span class="block mt-0.5 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                                {{ $invoice->statusSourceLabel() }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-right" x-data="{ open: false, style: '', toggle($el) { var r = $el.getBoundingClientRect(); var dropH = 200; var right = window.innerWidth - r.right; if (r.bottom + dropH > window.innerHeight) { this.style = 'position:fixed; bottom:' + (window.innerHeight - r.top) + 'px; right:' + right + 'px;'; } else { this.style = 'position:fixed; top:' + r.bottom + 'px; right:' + right + 'px;'; } this.open = !this.open; } }">
 

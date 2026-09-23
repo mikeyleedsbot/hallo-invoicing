@@ -49,9 +49,11 @@ class QuoteController extends Controller
         if ($sort === 'customer_name') {
             $query->join('customers', 'quotes.customer_id', '=', 'customers.id')
                   ->orderBy('customers.name', $direction)
+                  ->orderBy('quotes.id', $direction)
                   ->select('quotes.*');
         } else {
-            $query->orderBy($sort, $direction);
+            $query->orderBy($sort, $direction)
+                  ->orderBy('quotes.id', $direction);
         }
 
         if ($filters['search'] !== '') {

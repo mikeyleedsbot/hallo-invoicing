@@ -45,15 +45,18 @@ class InvoiceController extends Controller
         $sort = in_array($request->query('sort'), $allowedSorts) ? $request->query('sort') : 'invoice_date';
         $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
 
-        $query = Invoice::with('customer');
+        // payments meeladen: de statusbadge kijkt naar wat er betaald is
+        $query = Invoice::with('customer', 'payments');
 
         // Sorteren op klantnaam vereist een join
         if ($sort === 'customer_name') {
             $query->join('customers', 'invoices.customer_id', '=', 'customers.id')
                   ->orderBy('customers.name', $direction)
+                  ->orderBy('invoices.id', $direction)
                   ->select('invoices.*');
         } else {
-            $query->orderBy($sort, $direction);
+            $query->orderBy($sort, $direction)
+                  ->orderBy('invoices.id', $direction);
         }
 
         if ($filters['search'] !== '') {
@@ -269,6 +272,7 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', Rule::exists('customers', 'id')->where('team_id', auth()->user()->currentTeam->id)],
             'template_id' => ['nullable', Rule::exists('invoice_templates', 'id')->where('team_id', auth()->user()->currentTeam->id)],
+            'invoice_number' => ['required', Rule::unique('invoices')->where('user_id', auth()->id())->ignore($invoice->id)],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'payment_terms' => 'nullable|integer',
@@ -318,6 +322,7 @@ class InvoiceController extends Controller
             $invoice->update([
                 'customer_id' => $validated['customer_id'],
                 'template_id' => $validated['template_id'] ?? InvoiceTemplate::getDefaultForInvoices()?->id,
+                'invoice_number' => $validated['invoice_number'],
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
                 'payment_terms' => $validated['payment_terms'] ?? 14,
@@ -329,6 +334,8 @@ class InvoiceController extends Controller
                 'vat_reverse_charged' => $reverseCharged,
                 'prices_include_vat' => $pricesIncludeVat,
             ]);
+
+            $invoice->markStatusSetManually();
 
             // Delete old lines and create new ones
             $invoice->lines()->delete();
@@ -438,6 +445,7 @@ class InvoiceController extends Controller
         // Concept automatisch op Verzonden zetten.
         if ($invoice->status === 'draft') {
             $invoice->update(['status' => 'sent', 'sent_at' => now()]);
+            $invoice->markStatusSetManually();
         }
 
         return back()->with('success', 'Factuur ' . $invoice->invoice_number . ' is per e-mail verstuurd naar ' . $customer->email . ' via ' . $account->from_email . '.');
@@ -584,6 +592,7 @@ class InvoiceController extends Controller
             'status' => 'sent',
             'sent_at' => $validated['sent_date'],
         ]);
+        $invoice->markStatusSetManually();
 
         return redirect()
             ->route('invoices.show', $invoice)
@@ -600,6 +609,7 @@ class InvoiceController extends Controller
             'status' => 'paid',
             'paid_at' => $validated['paid_date'],
         ]);
+        $invoice->markStatusSetManually();
 
         return redirect()
             ->route('invoices.show', $invoice)
@@ -638,6 +648,8 @@ class InvoiceController extends Controller
                     default => $invoice->paid_at,
                 },
             ]);
+
+            $invoice->markStatusSetManually();
         }
 
         $labels = ['draft' => 'Concept', 'sent' => 'Verzonden', 'paid' => 'Betaald', 'overdue' => 'Verlopen', 'cancelled' => 'Geannuleerd'];

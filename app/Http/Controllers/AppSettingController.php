@@ -99,8 +99,8 @@ class AppSettingController extends Controller
             'date_format' => 'required|string|max:20',
             'invoice_prefix' => 'required|string|max:10',
             'quote_prefix' => 'required|string|max:10',
-            'invoice_number_start' => 'required|integer|min:1|max:99999',
-            'quote_number_start' => 'required|integer|min:1|max:99999',
+            'invoice_number_start' => ['required', 'regex:/^\\d{1,10}$/'],
+            'quote_number_start' => ['required', 'regex:/^\\d{1,10}$/'],
             'credit_surcharge_enabled' => 'nullable|boolean',
             'credit_surcharge_percent' => 'required|integer|in:1,2,3,4,5',
             'invoice_email_subject' => 'nullable|string|max:255',
@@ -116,6 +116,7 @@ class AppSettingController extends Controller
             'in'       => ':attribute heeft een ongeldige waarde.',
             'string'   => ':attribute moet tekst zijn.',
             'boolean'  => ':attribute moet aan of uit zijn.',
+            'regex'    => ':attribute mag alleen cijfers bevatten (maximaal 10).',
         ], [
             'default_vat_rate'         => 'Standaard BTW-tarief',
             'default_payment_terms'    => 'Standaard betalingstermijn',
@@ -154,6 +155,19 @@ class AppSettingController extends Controller
             if (isset($validated[$field]) && trim($validated[$field]) === '') {
                 $validated[$field] = null;
             }
+        }
+
+        // Het aantal cijfers van de teller bepaalt de breedte van het nummer:
+        // "0006" geeft 20260006, "6" geeft 20266. De teller zelf is een int,
+        // dus de breedte wordt apart bewaard.
+        foreach ([
+            'invoice_number_start' => 'invoice_number_padding',
+            'quote_number_start'   => 'quote_number_padding',
+        ] as $startField => $paddingField) {
+            $typed = trim((string) $validated[$startField]);
+
+            $validated[$paddingField] = max(1, min(10, strlen($typed)));
+            $validated[$startField]   = max(1, (int) $typed);
         }
 
         // Checkbox: niet meegestuurd = uit

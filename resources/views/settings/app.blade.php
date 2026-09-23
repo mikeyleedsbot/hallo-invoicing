@@ -117,7 +117,7 @@
                             <input type="text" name="invoice_prefix" value="{{ old('invoice_prefix', $settings->invoice_prefix) }}" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="INV">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->invoice_prefix ?? 'INV' }}00001</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->nextInvoiceNumber() }}</p>
                         </div>
 
                         <div>
@@ -127,19 +127,20 @@
                             <input type="text" name="quote_prefix" value="{{ old('quote_prefix', $settings->quote_prefix) }}" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 placeholder="OFF">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->quote_prefix ?? 'OFF' }}00001</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Bijvoorbeeld: {{ $settings->nextQuoteNumber() }}</p>
                         </div>
 
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Factuurteller
                             </label>
-                            <input type="number" name="invoice_number_start" min="1" max="99999"
-                                value="{{ old('invoice_number_start', $settings->invoice_number_start ?? 1) }}" required
+                            <input type="text" name="invoice_number_start" inputmode="numeric" pattern="\d{1,10}" maxlength="10"
+                                value="{{ old('invoice_number_start', $settings->formattedCounter('invoice_number_start', 'invoice_number_padding')) }}" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Volgende factuur wordt <strong>{{ $settings->nextInvoiceNumber() }}</strong>.
                                 De teller schuift na elke factuur automatisch door; al bestaande nummers worden overgeslagen.
+                                <br>Voorloopnullen bepalen de lengte: <strong>0006</strong> geeft {{ $settings->invoice_prefix }}0006, <strong>6</strong> geeft {{ $settings->invoice_prefix }}6.
                             </p>
                         </div>
 
@@ -147,12 +148,13 @@
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Offerteteller
                             </label>
-                            <input type="number" name="quote_number_start" min="1" max="99999"
-                                value="{{ old('quote_number_start', $settings->quote_number_start ?? 1) }}" required
+                            <input type="text" name="quote_number_start" inputmode="numeric" pattern="\d{1,10}" maxlength="10"
+                                value="{{ old('quote_number_start', $settings->formattedCounter('quote_number_start', 'quote_number_padding')) }}" required
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Volgende offerte wordt <strong>{{ $settings->nextQuoteNumber() }}</strong>.
                                 De teller schuift na elke offerte automatisch door; al bestaande nummers worden overgeslagen.
+                                <br>Voorloopnullen bepalen de lengte: <strong>0006</strong> geeft {{ $settings->quote_prefix }}0006, <strong>6</strong> geeft {{ $settings->quote_prefix }}6.
                             </p>
                         </div>
                     </div>

@@ -245,7 +245,7 @@
                                 <div id="canvas"
                                      class="relative bg-white border-2 border-gray-400 shadow-2xl"
                                      :style="canvasBackgroundStyle()"
-                                     @click="deselectField()">
+                                     @click="onCanvasClick()">
 
                                     {{-- Logo Preview (draggable + resizable) --}}
                                     <template x-if="logoUrl && logoPosition">
@@ -285,11 +285,14 @@
 
                                     {{-- Placed Fields on Canvas --}}
                                     <template x-for="(field, key) in placedFields" :key="key">
-                                        <div class="absolute draggable-placed border-2 cursor-move flex items-center transition group"
+                                        <div class="absolute draggable-placed border-2 cursor-move flex transition group"
                                              :class="{
                                                 'justify-start': (field.align || 'left') === 'left',
                                                 'justify-center': field.align === 'center',
                                                 'justify-end': field.align === 'right',
+                                                'items-start': (field.verticalAlign || 'top') === 'top',
+                                                'items-center': field.verticalAlign === 'middle',
+                                                'items-end': field.verticalAlign === 'bottom',
                                                 'border-solid border-blue-600 bg-blue-50 bg-opacity-70 ring-2 ring-blue-400 ring-offset-1': isSelected(key),
                                                 'border-dashed border-indigo-500 bg-indigo-50 bg-opacity-60 hover:bg-indigo-100 hover:border-indigo-600': !isSelected(key)
                                              }"
@@ -346,6 +349,7 @@
                                                         class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 shadow-lg"
                                                         title="Veld bewerken">✎</button>
                                                 <button @click.stop="removeField(key)"
+                                                        x-show="!isProtectedField(key)"
                                                         class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
                                                         title="Veld verwijderen">✕</button>
                                             </div>
@@ -375,14 +379,6 @@
                                                  style="width:8px;height:8px;bottom:-3px;right:-3px;cursor:se-resize;"></div>
                                         </div>
                                     </template>
-
-                                    {{-- Ghost: verlegde BTW vermelding (vaste positie, niet verplaatsbaar) --}}
-                                    {{-- Coördinaten spiegelen InvoicePdfGenerator: left=50, top=862, width=750, fontSize=13px --}}
-                                    <div class="absolute pointer-events-none select-none"
-                                         style="left:50px;top:862px;width:750px;font-size:13px;font-family:Arial,sans-serif;font-weight:bold;color:#92400e;border:1px dashed #f59e0b;background-color:rgba(255,251,235,0.55);padding:4px 8px;box-sizing:border-box;opacity:0.65;z-index:5;line-height:1.4;">
-                                        BTW verlegd — De BTW is verlegd naar de afnemer.
-                                        <span style="position:absolute;top:-14px;left:0;font-size:8px;font-weight:normal;color:#92400e;background:rgba(255,251,235,0.9);padding:1px 4px;border:1px dashed #f59e0b;border-bottom:none;white-space:nowrap;">Vaste BTW verlegd melding (indien van toepassing)</span>
-                                    </div>
 
                                     {{-- Empty State --}}
                                     <template x-if="Object.keys(placedFields).length === 0">
@@ -453,7 +449,8 @@
              @click.self="closeFieldEditor()"
              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
              style="display: none;">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" x-data="{ editorTab: 'instellingen' }">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" x-data="{ editorTab: 'instellingen' }"
+                 x-effect="if (editorTab === 'tekst' && isRect(editingField)) editorTab = 'instellingen'">
                 <div class="p-6 pb-0">
                     <h3 class="text-xl font-bold mb-4">✎ Veld Bewerken</h3>
 
@@ -463,6 +460,12 @@
                                 :class="editorTab === 'instellingen' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
                                 class="px-4 py-2 text-sm transition">
                             Instellingen
+                        </button>
+                        <button @click="editorTab = 'tekst'"
+                                x-show="!isRect(editingField)"
+                                :class="editorTab === 'tekst' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 py-2 text-sm transition">
+                            Tekstopmaak
                         </button>
                         <button @click="editorTab = 'plaatsing'"
                                 :class="editorTab === 'plaatsing' ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
@@ -492,22 +495,6 @@
                                        x-model="placedFields[editingField].staticText"
                                        placeholder="Typ hier je tekst..."
                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-400 focus:outline-none">
-                            </div>
-
-                            {{-- Tekstkleur --}}
-                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
-                                <div class="flex items-center gap-2">
-                                    <input type="color"
-                                           :value="placedFields[editingField]?.color || '#111827'"
-                                           @input="placedFields[editingField].color = $event.target.value"
-                                           class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                    <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
-                                    <button @click="placedFields[editingField].color = ''"
-                                            class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
-                                        ↺ Standaard
-                                    </button>
-                                </div>
                             </div>
 
                             {{-- Vlak-/achtergrondkleur --}}
@@ -582,6 +569,50 @@
                                 </div>
                             </template>
 
+                            {{-- Pagina zichtbaarheid --}}
+                            <div x-show="editingField !== 'items_table'">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <button @click="placedFields[editingField].pageVisibility = 'all'"
+                                            :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        📄 Alle
+                                    </button>
+                                    <button @click="placedFields[editingField].pageVisibility = 'first'"
+                                            :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        1️⃣ Eerste
+                                    </button>
+                                    <button @click="placedFields[editingField].pageVisibility = 'last'"
+                                            :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
+                                        🔚 Laatste
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    "Alle" = herhaalt op elke pagina bij lange facturen
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- TAB: Tekstopmaak --}}
+                        <div x-show="editorTab === 'tekst'" class="space-y-4">
+                            {{-- Tekstkleur --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color"
+                                           :value="placedFields[editingField]?.color || '#111827'"
+                                           @input="placedFields[editingField].color = $event.target.value"
+                                           class="w-10 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
+                                    <span class="text-xs text-gray-500" x-text="placedFields[editingField]?.color || 'standaard (zwart)'"></span>
+                                    <button @click="placedFields[editingField].color = ''"
+                                            class="ml-auto text-xs bg-gray-200 text-gray-700 rounded px-2 py-1 hover:bg-gray-300">
+                                        ↺ Standaard
+                                    </button>
+                                </div>
+                            </div>
+
                             {{-- Lettertype --}}
                             <div x-show="!isRect(editingField)">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Lettertype</label>
@@ -645,30 +676,29 @@
                                 </div>
                             </div>
 
-                            {{-- Pagina zichtbaarheid --}}
-                            <div x-show="editingField !== 'items_table'">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Zichtbaar op pagina</label>
-                                <div class="grid grid-cols-3 gap-1">
-                                    <button @click="placedFields[editingField].pageVisibility = 'all'"
-                                            :class="(!placedFields[editingField]?.pageVisibility || placedFields[editingField]?.pageVisibility === 'all') ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                        📄 Alle
+                            {{-- Verticale uitlijning binnen het veld --}}
+                            <div x-show="editingField !== 'items_table' && !isRect(editingField)">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Verticale uitlijning</label>
+                                <div class="flex gap-2">
+                                    <button @click="placedFields[editingField].verticalAlign = 'top'"
+                                            :class="(placedFields[editingField]?.verticalAlign || 'top') === 'top' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↑ Boven
                                     </button>
-                                    <button @click="placedFields[editingField].pageVisibility = 'first'"
-                                            :class="placedFields[editingField]?.pageVisibility === 'first' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                        1️⃣ Eerste
+                                    <button @click="placedFields[editingField].verticalAlign = 'middle'"
+                                            :class="placedFields[editingField]?.verticalAlign === 'middle' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↕ Midden
                                     </button>
-                                    <button @click="placedFields[editingField].pageVisibility = 'last'"
-                                            :class="placedFields[editingField]?.pageVisibility === 'last' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
-                                            class="py-2 px-2 rounded text-xs font-medium hover:bg-indigo-500 hover:text-white transition">
-                                        🔚 Laatste
+                                    <button @click="placedFields[editingField].verticalAlign = 'bottom'"
+                                            :class="placedFields[editingField]?.verticalAlign === 'bottom' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                                            class="flex-1 py-2 px-3 rounded font-medium hover:bg-blue-500 hover:text-white transition">
+                                        ↓ Onder
                                     </button>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">
-                                    "Alle" = herhaalt op elke pagina bij lange facturen
-                                </p>
+                                <p class="mt-1 text-xs text-gray-500">Bepaalt waar de tekst binnen het veld staat. Zichtbaar zodra het veld hoger is dan de tekst.</p>
                             </div>
+
                         </div>
 
                         {{-- TAB: Plaatsing --}}
@@ -737,6 +767,12 @@
                 selectedField: null,
                 selectedFields: [],   // multi-select set (array of keys)
                 _selectionBox: null,  // rubber-band state
+                // Na een sleepactie stuurt de browser nog een click na. Die zou de
+                // zojuist gemaakte selectie meteen wissen (canvas) of terugbrengen
+                // tot een enkel veld (veld). Deze vlaggen slaan die click over.
+                _suppressCanvasClick: false,
+                _suppressFieldClick: false,
+                _didDrag: false,
                 history: [],
                 historyIndex: -1,
                 _arrowDebounceTimer: null,
@@ -785,7 +821,17 @@
                     { id: 'total', align: 'left', label: 'Totaal' },
                     { id: 'payment_terms', align: 'left', label: 'Betalingsvoorwaarden' },
                     { id: 'notes', align: 'left', label: 'Opmerkingen' },
+                    { id: 'reverse_charge_note', align: 'left', label: 'BTW verlegd-vermelding' },
                 ],
+
+                // Velden die niet verwijderd mogen worden. De verlegd-vermelding
+                // is wettelijk verplicht op een factuur met verlegde BTW; hij mag
+                // wel verplaatst en opgemaakt worden, net als elk ander veld.
+                protectedFields: ['reverse_charge_note'],
+
+                isProtectedField(key) {
+                    return this.protectedFields.includes(key);
+                },
 
                 init() {
                     this.initializePlacedFields();
@@ -883,7 +929,20 @@
                     this.$nextTick(() => this.setupDragAndDrop());
                 },
 
+                onCanvasClick() {
+                    if (this._suppressCanvasClick) {
+                        this._suppressCanvasClick = false;
+                        return;
+                    }
+                    this.deselectField();
+                },
+
                 selectField(key, addToGroup) {
+                    if (this._suppressFieldClick) {
+                        this._suppressFieldClick = false;
+                        return;
+                    }
+
                     if (addToGroup) {
                         // Shift+click: toggle membership in multi-select
                         const idx = this.selectedFields.indexOf(key);
@@ -1014,6 +1073,9 @@
                     canvasEl.addEventListener('mousedown', function(e) {
                         if (e.target !== canvasEl) return;
                         if (e.button !== 0) return;
+                        // Een vlag van een vorige sleep die buiten het canvas eindigde
+                        // mag deze klik niet opeten
+                        self._suppressCanvasClick = false;
                         pendingStart = toCanvas(e.clientX, e.clientY);
                     });
 
@@ -1073,6 +1135,10 @@
                         const matched = hitTest(selX, selY, selW, selH);
                         self.selectedFields = matched;
                         self.selectedField  = matched.length ? matched[matched.length - 1] : null;
+
+                        // Er is echt een kader getrokken: de click die hierna volgt
+                        // mag de selectie niet wissen
+                        self._suppressCanvasClick = true;
                     });
                 },
 
@@ -1098,6 +1164,7 @@
                                 move(event) {
                                     const dx = event.dx / scale;
                                     const dy = event.dy / scale;
+                                    self._didDrag = true;
                                     const isGroupDrag = self.selectedFields.length > 1 && self.selectedFields.indexOf('logo') !== -1;
                                     const keys = isGroupDrag ? self.selectedFields : ['logo'];
 
@@ -1113,6 +1180,8 @@
                                 },
                                 end(event) {
                                     event.target.style.zIndex = '';
+                                    self._suppressFieldClick = self._didDrag;
+                                    self._didDrag = false;
                                     self.pushHistory();
                                 }
                             }
@@ -1158,6 +1227,7 @@
                                     const fieldKey = event.target.dataset.fieldKey;
                                     const dx = event.dx / scale;
                                     const dy = event.dy / scale;
+                                    self._didDrag = true;
 
                                     // If dragging a field that belongs to a multi-selection, move the whole group
                                     const isGroupDrag = self.selectedFields.length > 1 && self.selectedFields.indexOf(fieldKey) !== -1;
@@ -1179,6 +1249,10 @@
                                     target.style.opacity = '';
                                     target.style.boxShadow = '';
                                     target.classList.remove('ring-2', 'ring-blue-500');
+                                    // Alleen na echt slepen de navolgende click overslaan,
+                                    // zodat een groepsselectie niet inklapt tot een veld
+                                    self._suppressFieldClick = self._didDrag;
+                                    self._didDrag = false;
                                     self.pushHistory();
                                 }
                             }
@@ -1408,6 +1482,10 @@
                 },
 
                 removeField(fieldKey) {
+                    if (this.isProtectedField(fieldKey)) {
+                        alert('De BTW verlegd-vermelding is verplicht op een factuur met verlegde BTW en kan niet worden verwijderd. Je kunt hem wel verplaatsen en opmaken.');
+                        return;
+                    }
                     if (confirm(`Veld "${this.placedFields[fieldKey].label}" verwijderen?`)) {
                         this.pushHistory();
                         // Create new object without the field (proper reactivity)
@@ -1458,9 +1536,15 @@
                 clearAll() {
                     if (confirm('Alle velden van canvas verwijderen? Dit leegt de hele template.')) {
                         this.pushHistory();
-                        this.placedFields = {};
+                        // Beschermde velden (zoals de verplichte verlegd-vermelding)
+                        // blijven staan
+                        const kept = {};
+                        for (const [key, value] of Object.entries(this.placedFields)) {
+                            if (this.isProtectedField(key)) kept[key] = value;
+                        }
+                        this.placedFields = kept;
                         this.logoPosition = null;
-                        console.log('Cleared all fields');
+                        console.log('Cleared all fields, kept:', Object.keys(kept));
                     }
                 },
 

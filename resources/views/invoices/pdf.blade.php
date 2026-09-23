@@ -376,11 +376,11 @@
         <!-- Totals -->
         <div class="totals-section">
             <table class="totals-table">
+                @unless($invoice->vat_reverse_charged)
                 <tr>
                     <td class="label">Subtotaal (excl. BTW)</td>
                     <td class="value">€ {{ number_format($invoice->subtotal, 2, ',', '.') }}</td>
                 </tr>
-                @unless($invoice->vat_reverse_charged)
                 <tr>
                     <td class="label">BTW</td>
                     <td class="value">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td>

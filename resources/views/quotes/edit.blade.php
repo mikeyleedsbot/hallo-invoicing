@@ -27,6 +27,16 @@
             </a>
         </div>
 
+            {{-- Validatiefouten: zonder deze melding lijkt opslaan stil te mislukken --}}
+            @if($errors->any())
+            <div class="p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800">
+                <p class="font-medium mb-1">Opslaan is niet gelukt. Controleer de volgende velden:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                </ul>
+            </div>
+            @endif
+
         <form action="{{ route('quotes.update', $quote) }}" method="POST" @submit="submitForm" class="space-y-6">
             @csrf
             @method('PUT')
@@ -59,7 +69,7 @@
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Offertenummer <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="quote_number" value="{{ $quote->quote_number }}" required
+                        <input type="text" name="quote_number" value="{{ old('quote_number', $quote->quote_number) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         @error('quote_number')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
@@ -86,7 +96,7 @@
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Offertedatum <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="quote_date" value="{{ $quote->quote_date->format('Y-m-d') }}" required
+                        <input type="date" name="quote_date" value="{{ old('quote_date', $quote->quote_date->format('Y-m-d')) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         @error('quote_date')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
@@ -97,7 +107,7 @@
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             Geldig tot <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="valid_until" value="{{ $quote->valid_until->format('Y-m-d') }}" required
+                        <input type="date" name="valid_until" value="{{ old('valid_until', $quote->valid_until->format('Y-m-d')) }}" required
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         @error('valid_until')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
