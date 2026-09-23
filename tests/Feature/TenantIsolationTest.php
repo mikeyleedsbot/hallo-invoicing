@@ -257,4 +257,16 @@ class TenantIsolationTest extends TestCase
         $response->assertSessionHasErrors('customer_id');
         $this->assertDatabaseMissing('quotes', ['quote_number' => 'QUO-HACK-001']);
     }
+
+    public function test_ingelogd_zonder_team_ziet_geen_data(): void
+    {
+        $this->actingAs($this->userA);
+        Customer::create(['name' => 'Klant A']);
+
+        $teamloos = $this->makeUser('c@example.test');
+        $teamloos->update(['current_team_id' => null]);
+        $this->actingAs($teamloos);
+
+        $this->assertSame(0, Customer::count());
+    }
 }

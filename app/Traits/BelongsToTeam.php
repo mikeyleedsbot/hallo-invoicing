@@ -23,9 +23,12 @@ trait BelongsToTeam
     public static function bootBelongsToTeam(): void
     {
         static::addGlobalScope('belongs_to_team', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->currentTeam) {
-                $builder->where($builder->getModel()->getTable() . '.team_id', auth()->user()->currentTeam->id);
+            if (!auth()->check()) {
+                return;
             }
+
+            // Ingelogd zonder team: niets tonen in plaats van alles (fail closed)
+            $builder->where($builder->getModel()->getTable() . '.team_id', auth()->user()->current_team_id ?? 0);
         });
 
         static::creating(function ($model) {
