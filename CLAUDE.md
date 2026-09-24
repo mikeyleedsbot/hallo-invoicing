@@ -50,3 +50,13 @@ dubbelklikken via computer-use. Heeft auto-recovery voor corrupte
 Expliciet dark-variants opgeven op tekst in gekleurde callouts
 (bijv. `text-blue-900 dark:text-blue-100`). Zonder dark-variant erft de
 tekst van de parent en wordt vaak onleesbaar.
+
+## Verificatie van wijzigingen
+
+- Gebruik NOOIT de browser of javascript_tool om deze site te verifiëren. Site-permissies zijn uitgeschakeld voor *.test en elke actie geeft een handmatige prompt.
+- Verifieer wijzigingen in deze volgorde:
+  1. `php artisan test` (Feature/Livewire tests)
+  2. `curl -s https://website.test/...` (statuscode, HTML-output, headers)
+  3. `tail -50 storage/logs/laravel.log` bij fouten
+- Schrijf bij nieuwe functionaliteit direct een Feature- of Livewire-test in plaats van handmatig in de browser te checken.
+- Browser alleen gebruiken als ik er expliciet om vraag.
