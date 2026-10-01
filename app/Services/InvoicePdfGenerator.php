@@ -70,13 +70,6 @@ class InvoicePdfGenerator
         $tFontPt  = $tp ? $this->pt($tp['fontSize'] ?? 10) : 7;
         $tFontFam = $tp ? $this->safeFontFamily($tp['fontFamily'] ?? 'Arial') : 'Arial';
 
-        // Schatting: rijen per pagina op basis van font + padding
-        // Rij hoogte ≈ fontPt * 1.4 (line-height) + 6pt padding = in mm: pt * 0.353mm/pt
-        $rowHeightMm = ($tFontPt * 1.4 + 6) * 0.353;
-        $headerRowMm = ($tFontPt * 1.4 + 6) * 0.353 * 1.2; // header iets groter
-        $availableMm = $tH - $headerRowMm;
-        $rowsPerPage = max(1, (int) floor($availableMm / $rowHeightMm));
-
         // Velden splitsen op basis van pageVisibility (editor-instelling heeft prioriteit).
         // Fallback: boven tabel Y = alle pagina's, onder tabel Y = alleen laatste pagina.
         // Decoratieve vlakken (static_rect_*) worden eerst gesorteerd zodat ze
@@ -142,8 +135,9 @@ class InvoicePdfGenerator
 
         // Rijen opdelen in pagina-chunks
         $items  = $data['items_table'] ?? [];
+        $reverseChargedTable = (bool) ($data['vat_reverse_charged'] ?? false);
         $chunks = is_array($items) && count($items) > 0
-            ? array_chunk($items, $rowsPerPage)
+            ? $this->paginateRows($items, $tH, $tW, $tFontPt, $reverseChargedTable)
             : [[]];
 
         $totalPages = max(1, count($chunks));
@@ -284,6 +278,53 @@ body { font-family:Arial,sans-serif; }
 
         $html .= '</body></html>';
         return $html;
+    }
+
+    /**
+     * Verdeel rijen over pagina's op basis van de geschatte hoogte per rij.
+     *
+     * Een omschrijving kan over meerdere regels afbreken; met een vast aantal
+     * rijen per pagina valt de tabel dan buiten het tabelblok (overflow:hidden)
+     * en verdwijnen de onderste rijen onzichtbaar. Daarom wordt per rij het
+     * aantal regels geschat en pas een nieuwe pagina begonnen als de rij niet
+     * meer past. Bewust iets ruim geschat: liever een rij te vroeg naar de
+     * volgende pagina dan een afgekapte rij.
+     */
+    private function paginateRows(array $items, float $blockHeightMm, float $blockWidthMm, float $fontPt, bool $reverseCharged): array
+    {
+        $ptPerMm   = 1 / 0.3528;
+        $lineHt    = $fontPt * 1.2;
+        $padding   = 9; // pt: padding boven/onder + rand + marge
+        $headerHt  = $lineHt + $padding;
+        $available = $blockHeightMm * $ptPerMm - $headerHt;
+
+        // Vaste kolommen (px in de CSS, 1px = 0.75pt) + celpadding
+        $fixedCols = $reverseCharged ? 3 : 5;
+        $fixedPt   = ($reverseCharged ? 36 + 52 + 52 : 36 + 52 * 4) * 0.75 + $fixedCols * 8;
+        $descPt    = max(40, $blockWidthMm * $ptPerMm - $fixedPt - 10);
+        $charsPerLine = max(5, (int) floor($descPt / ($fontPt * 0.55)));
+
+        $chunks = [];
+        $current = [];
+        $used = 0.0;
+        foreach ($items as $item) {
+            $desc  = trim((string) ($item['description'] ?? ''));
+            $lines = max(1, count(explode("\n", wordwrap($desc, $charsPerLine, "\n", true))));
+            $rowHt = $lines * $lineHt + $padding;
+
+            if ($current !== [] && $used + $rowHt > $available) {
+                $chunks[] = $current;
+                $current  = [];
+                $used     = 0.0;
+            }
+            $current[] = $item;
+            $used += $rowHt;
+        }
+        if ($current !== []) {
+            $chunks[] = $current;
+        }
+
+        return $chunks ?: [[]];
     }
 
     private function renderAbs(array $p, mixed $value): string
