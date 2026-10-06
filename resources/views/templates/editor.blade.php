@@ -143,7 +143,8 @@
 
                             {{-- Company Info Fields --}}
                             <div class="mb-4">
-                                <h4 class="text-xs font-semibold text-gray-600 uppercase mb-2">Bedrijfsgegevens</h4>
+                                <h4 class="text-xs font-semibold text-blue-800 uppercase">Eigen gegevens</h4>
+                                <p class="text-xs text-gray-500 mb-2">Jouw bedrijf, uit de bedrijfsinstellingen. Niet van de klant.</p>
                                 <div class="space-y-2">
                                     <template x-for="field in companyFields" :key="field.id">
                                         <button @click="addFieldToCanvas(field.id, field.label)"
@@ -159,7 +160,8 @@
 
                             {{-- Client Info Fields --}}
                             <div class="mb-4">
-                                <h4 class="text-xs font-semibold text-gray-600 uppercase mb-2">Klantgegevens</h4>
+                                <h4 class="text-xs font-semibold text-green-800 uppercase">Klantgegevens</h4>
+                                <p class="text-xs text-gray-500 mb-2">Van de klant op de factuur of offerte.</p>
                                 <div class="space-y-2">
                                     <template x-for="field in clientFields" :key="field.id">
                                         <button @click="addFieldToCanvas(field.id, field.label)"
@@ -798,11 +800,13 @@
                     { id: 'company_bank', align: 'left', label: 'Banknaam' },
                 ],
                 clientFields: [
+                    { id: 'client_company', align: 'left', label: 'Klant Bedrijfsnaam' },
                     { id: 'client_name', align: 'left', label: 'Klantnaam' },
                     { id: 'client_address', align: 'left', label: 'Klantadres' },
                     { id: 'client_postal_code', align: 'left', label: 'Klant Postcode' },
                     { id: 'client_city', align: 'left', label: 'Klant Plaats' },
                     { id: 'client_email', align: 'left', label: 'Klant E-mail' },
+                    { id: 'client_vat', align: 'left', label: 'Klant BTW-nummer' },
                 ],
                 invoiceFields: [
                     { id: 'invoice_number', align: 'left', label: 'Factuurnummer' },

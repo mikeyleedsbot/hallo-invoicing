@@ -59,12 +59,16 @@ class TemplatePresets
             'invoice_date'        => ['x' => 605, 'y' => 182, 'width' => 195, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
             'due_date'            => ['x' => 605, 'y' => 210, 'width' => 195, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
 
-            'static_text_lbl_client' => ['x' => 50, 'y' => 272, 'width' => 320, 'height' => 24, 'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold', 'staticText' => 'Aan:', 'label' => 'Aan:'],
-            'client_name'         => ['x' => 50,  'y' => 300, 'width' => 320, 'height' => 26,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
-            'client_address'      => ['x' => 50,  'y' => 330, 'width' => 320, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_postal_code'  => ['x' => 50,  'y' => 358, 'width' => 90,  'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_city'         => ['x' => 145, 'y' => 358, 'width' => 225, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
-            'client_email'        => ['x' => 50,  'y' => 386, 'width' => 320, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
+            // Klantblok: bedrijfsnaam van de klant bovenaan, daaronder de
+            // contactpersoon. Het BTW-nummer van de klant staat standaard niet
+            // op de factuur, maar is in de editor als veld toe te voegen.
+            'static_text_lbl_client' => ['x' => 50, 'y' => 258, 'width' => 320, 'height' => 24, 'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold', 'staticText' => 'Aan:', 'label' => 'Aan:'],
+            'client_company'      => ['x' => 50,  'y' => 286, 'width' => 320, 'height' => 26,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left', 'fontWeight' => 'bold'],
+            'client_name'         => ['x' => 50,  'y' => 314, 'width' => 320, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_address'      => ['x' => 50,  'y' => 342, 'width' => 320, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_postal_code'  => ['x' => 50,  'y' => 370, 'width' => 90,  'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_city'         => ['x' => 145, 'y' => 370, 'width' => 225, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
+            'client_email'        => ['x' => 50,  'y' => 398, 'width' => 320, 'height' => 24,  'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
 
             'items_table'         => ['x' => 50,  'y' => 440, 'width' => 750, 'height' => 300, 'fontSize' => 16, 'fontFamily' => 'inherit', 'align' => 'left'],
 
@@ -127,12 +131,13 @@ class TemplatePresets
             'due_date'            => ['y' => 150, 'color' => '#ffffff'],
 
             // Klantblok onder de band
-            'static_text_lbl_client' => ['y' => 262, 'color' => '#1e3a8a'],
-            'client_name'         => ['y' => 290],
-            'client_address'      => ['y' => 320],
-            'client_postal_code'  => ['y' => 348],
-            'client_city'         => ['y' => 348],
-            'client_email'        => ['y' => 376],
+            'static_text_lbl_client' => ['y' => 248, 'color' => '#1e3a8a'],
+            'client_company'      => ['y' => 276],
+            'client_name'         => ['y' => 304],
+            'client_address'      => ['y' => 332],
+            'client_postal_code'  => ['y' => 360],
+            'client_city'         => ['y' => 360],
+            'client_email'        => ['y' => 388],
 
             'items_table' => ['headerBg' => '#1e3a8a', 'headerColor' => '#ffffff', 'borderStyle' => 'horizontal', 'borderColor' => '#dbeafe', 'zebra' => true],
 
